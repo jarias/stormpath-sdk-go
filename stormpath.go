@@ -56,12 +56,12 @@ func (client *StormpathClient) Get(url string, followRedirects bool) (resp *http
 	nonce := uuid.String()
 
 	Authenticate(req, []byte(""), time.Now().In(time.UTC), client.Credentials, nonce)
+
 	if followRedirects {
 		return client.HttpClient.Do(req)
 	} else {
 		return client.HttpClient.Transport.RoundTrip(req)
 	}
-
 }
 
 func Authenticate(req *http.Request, payload []byte, date time.Time, credentials *Credentials, nonce string) {
