@@ -45,8 +45,8 @@ func NewStormpathClient(credentials *Credentials) *StormpathClient {
 	return &StormpathClient{Credentials: credentials, HttpClient: httpClient}
 }
 
-func (client *StormpathClient) Get(url string, followRedirects bool) (resp *http.Response, err error) {
-	req, err := http.NewRequest("GET", url, nil)
+func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Response, err error) {
+	req, err := request.ToHttpRequest()
 
 	if err != nil {
 		return nil, err
@@ -55,9 +55,9 @@ func (client *StormpathClient) Get(url string, followRedirects bool) (resp *http
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, []byte(""), time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, request.Payload, time.Now().In(time.UTC), client.Credentials, nonce)
 
-	if followRedirects {
+	if request.FollowRedirects {
 		return client.HttpClient.Do(req)
 	} else {
 		return client.HttpClient.Transport.RoundTrip(req)
