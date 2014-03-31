@@ -4,7 +4,6 @@ import (
 	. "github.com/jarias/stormpath"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"net/url"
 )
 
 var _ = Describe("Request", func() {
@@ -22,7 +21,7 @@ var _ = Describe("Request", func() {
 	Context("HTTP request", func() {
 		Describe("Converting to an HTTP request", func() {
 			It("should convert a stormpath request to a http.Request", func() {
-				r := StormpathRequest{Method: "GET", URL: "http://test/test", FollowRedirects: true, Query: url.Values{}, Payload: []byte("")}
+				r := StormpathRequest{Method: "GET", URL: "http://test/test", FollowRedirects: true, PageRequest: PageRequest{}, Filter: ApplicationFilter{}, Payload: []byte("")}
 				req, err := r.ToHttpRequest()
 
 				Expect(err).NotTo(HaveOccurred())

@@ -16,6 +16,10 @@ const (
 	LIMIT  = "limit"
 )
 
+type Filter interface {
+	ToUrlQueryValues() url.Values
+}
+
 type PageRequest struct {
 	Limit  int
 	Offset int
@@ -25,33 +29,48 @@ type StormpathRequest struct {
 	Method          string
 	URL             string
 	FollowRedirects bool
-	Query           url.Values
 	Payload         []byte
+	PageRequest     PageRequest
+	Filter          Filter
 }
 
-func NewDefaultPageRequest() *PageRequest {
-	return &PageRequest{Limit: 25, Offset: 0}
+func NewPageRequest(limit int, offset int) PageRequest {
+	return PageRequest{Limit: limit, Offset: offset}
 }
 
-func NewStormpathRequest(method string, url string, query url.Values) *StormpathRequest {
-	return &StormpathRequest{Method: method, URL: url, Query: query, Payload: []byte(""), FollowRedirects: true}
+func NewDefaultPageRequest() PageRequest {
+	return PageRequest{Limit: 25, Offset: 0}
 }
 
-func NewStormpathRequestNoRedirects(method string, url string, query url.Values) *StormpathRequest {
-	return &StormpathRequest{Method: method, URL: url, Query: query, Payload: []byte(""), FollowRedirects: false}
+func NewStormpathRequest(method string, url string, pageRequest PageRequest, filter Filter) *StormpathRequest {
+	return &StormpathRequest{Method: method, URL: url, PageRequest: pageRequest, Filter: filter, Payload: []byte(""), FollowRedirects: true}
 }
 
-func (pageRequest *PageRequest) ToUrlQueryValues() url.Values {
+func NewStormpathRequestNoRedirects(method string, url string, pageRequest PageRequest, filter Filter) *StormpathRequest {
+	return &StormpathRequest{Method: method, URL: url, PageRequest: pageRequest, Filter: filter, Payload: []byte(""), FollowRedirects: false}
+}
+
+func (pageRequest PageRequest) ToUrlQueryValues() url.Values {
 	val := url.Values{}
 
-	val.Add(OFFSET, strconv.Itoa(pageRequest.Offset))
-	val.Add(LIMIT, strconv.Itoa(pageRequest.Limit))
+	if pageRequest.Offset >= 0 && pageRequest.Limit > 0 {
+		val.Add(OFFSET, strconv.Itoa(pageRequest.Offset))
+		val.Add(LIMIT, strconv.Itoa(pageRequest.Limit))
+	}
 
 	return val
 }
 
 func (request *StormpathRequest) ToHttpRequest() (req *http.Request, err error) {
-	url := request.URL + "?" + request.Query.Encode()
+	query := request.PageRequest.ToUrlQueryValues()
+
+	filterQuery := request.Filter.ToUrlQueryValues()
+
+	for k, v := range filterQuery {
+		query[k] = v
+	}
+
+	url := request.URL + "?" + query.Encode()
 	req, err = http.NewRequest(request.Method, url, bytes.NewReader(request.Payload))
 
 	if err != nil {

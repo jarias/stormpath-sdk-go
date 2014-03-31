@@ -30,7 +30,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant applications", func() {
 			tenant, _ := CurrentTenant(cred)
 
-			apps, err := tenant.GetApplications(NewDefaultPageRequest())
+			apps, err := tenant.GetApplications(NewDefaultPageRequest(), ApplicationFilter{})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(apps.Href).NotTo(BeEmpty())
@@ -42,12 +42,24 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant applications by page", func() {
 			tenant, _ := CurrentTenant(cred)
 
-			apps, err := tenant.GetApplications(&PageRequest{Limit: 1, Offset: 0})
+			apps, err := tenant.GetApplications(NewPageRequest(1, 0), ApplicationFilter{})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(apps.Href).NotTo(BeEmpty())
 			Expect(apps.Offset).To(Equal(0))
 			Expect(apps.Limit).To(Equal(1))
+			Expect(apps.Items).To(HaveLen(1))
+		})
+
+		It("should retrive all the tenant applications by page and filter", func() {
+			tenant, _ := CurrentTenant(cred)
+
+			f := ApplicationFilter{Name: "stormpath"}
+
+			apps, err := tenant.GetApplications(NewDefaultPageRequest(), f)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(apps.Href).NotTo(BeEmpty())
 			Expect(apps.Items).To(HaveLen(1))
 		})
 	})

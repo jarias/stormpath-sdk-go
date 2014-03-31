@@ -1,10 +1,9 @@
 package stormpath
 
-import (
-	"net/url"
+const (
+	TENANT_BASE_URL = "https://api.stormpath.com/v1/tenants"
+	LOCATION_HEADER = "Location"
 )
-
-const tenantBaseUrl = "https://api.stormpath.com/v1/tenants"
 
 type Tenant struct {
 	Href         string
@@ -19,25 +18,18 @@ type Tenant struct {
 	Client *StormpathClient
 }
 
-type Applications struct {
-	Href   string
-	Offset int
-	Limit  int
-	Items  []Application
-}
-
 func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 	tenant := &Tenant{Client: NewStormpathClient(credentials)}
 
-	resp, err := tenant.Client.Do(NewStormpathRequestNoRedirects("GET", tenantBaseUrl+"/current", url.Values{}))
+	resp, err := tenant.Client.Do(NewStormpathRequestNoRedirects(GET, TENANT_BASE_URL+"/current", PageRequest{}, ApplicationFilter{}))
 
 	if err != nil {
 		return nil, err
 	}
 
-	location := resp.Header.Get("Location")
+	location := resp.Header.Get(LOCATION_HEADER)
 
-	resp, err = tenant.Client.Do(NewStormpathRequest("GET", location, url.Values{}))
+	resp, err = tenant.Client.Do(NewStormpathRequest(GET, location, PageRequest{}, ApplicationFilter{}))
 
 	if err != nil {
 		return nil, err
@@ -48,10 +40,10 @@ func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 	return tenant, err
 }
 
-func (tenant *Tenant) GetApplications(pageRequest *PageRequest) (*Applications, error) {
+func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters ApplicationFilter) (*Applications, error) {
 	apps := &Applications{}
 
-	resp, err := tenant.Client.Do(NewStormpathRequest(GET, tenant.Applications.Href, pageRequest.ToUrlQueryValues()))
+	resp, err := tenant.Client.Do(NewStormpathRequest(GET, tenant.Applications.Href, pageRequest, filters))
 
 	if err != nil {
 		return nil, err
