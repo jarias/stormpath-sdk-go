@@ -1,0 +1,22 @@
+{
+	"ImportPath": "github.com/jarias/stormpath",
+	"GoVersion": "go1.2.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/dmotylev/goproperties",
+			"Rev": "03c369aaf5615d405c2dd116ce138b170d5246a3"
+		},
+		{
+			"ImportPath": "github.com/nu7hatch/gouuid",
+			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo",
+			"Rev": "3632cbe0b58a9005513942e9d4c4920e375d6778"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Rev": "bad854a45453ec22d99c8bd982e2302f64d3fc37"
+		}
+	]
+}
