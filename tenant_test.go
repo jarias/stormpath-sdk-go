@@ -10,7 +10,11 @@ var _ = Describe("Tenant", func() {
 	var cred *Credentials
 
 	BeforeEach(func() {
-		cred, _ = NewDefaultCredentials()
+		var err error
+		cred, err = NewDefaultCredentials()
+		if err != nil {
+			panic(err)
+		}
 	})
 
 	Describe("CurrentTentant", func() {
