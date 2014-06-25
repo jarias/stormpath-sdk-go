@@ -6,12 +6,13 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
-	"github.com/nu7hatch/gouuid"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/nu7hatch/gouuid"
 )
 
 const (
@@ -145,12 +146,18 @@ func encodeUrl(value string, path bool, canonical bool) string {
 }
 
 func canonicalizeQueryString(req *http.Request) string {
+	var keys []string
 	queryValues := req.URL.Query()
 
 	result := ""
+	for k, _ := range queryValues {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
-	for k, v := range queryValues {
+	for _, k := range keys {
 		key := encodeUrl(k, false, true)
+		v := queryValues[k]
 		for _, vv := range v {
 			value := encodeUrl(vv, false, true)
 
@@ -207,7 +214,7 @@ func signedHeadersString(headers http.Header) string {
 	for k := range headers {
 		keys = append(keys, k)
 	}
-
+	sort.Strings(keys)
 	first := true
 	for _, k := range keys {
 		if !first {
