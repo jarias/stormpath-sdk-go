@@ -2,6 +2,7 @@ package stormpath_test
 
 import (
 	. "github.com/jarias/stormpath"
+	"github.com/jarias/stormpath/logger"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -15,6 +16,8 @@ var _ = Describe("Tenant", func() {
 		if err != nil {
 			panic(err)
 		}
+
+		logger.Init(false)
 	})
 
 	Describe("CurrentTentant", func() {
@@ -30,11 +33,50 @@ var _ = Describe("Tenant", func() {
 		})
 	})
 
+	Describe("Tenant.GetDirectories", func() {
+		It("should retrive all the tenant directories", func() {
+			tenant, _ := CurrentTenant(cred)
+
+			directories, err := tenant.GetDirectories(NewDefaultPageRequest(), DefaultFilter{})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(directories.Href).NotTo(BeEmpty())
+			Expect(directories.Offset).To(Equal(0))
+			Expect(directories.Limit).To(Equal(25))
+			Expect(directories.Items).NotTo(BeEmpty())
+		})
+
+		It("should retrive all the tenant directories by page", func() {
+			tenant, _ := CurrentTenant(cred)
+
+			directories, err := tenant.GetDirectories(NewPageRequest(1, 0), DefaultFilter{})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(directories.Href).NotTo(BeEmpty())
+			Expect(directories.Offset).To(Equal(0))
+			Expect(directories.Limit).To(Equal(1))
+			Expect(directories.Items).To(HaveLen(1))
+		})
+
+		It("should retrive all the tenant directories by page and filter", func() {
+			tenant, _ := CurrentTenant(cred)
+
+			f := DefaultFilter{Name: "Stormpath Administrators"}
+
+			directories, err := tenant.GetDirectories(NewDefaultPageRequest(), f)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(directories.Href).NotTo(BeEmpty())
+			Expect(directories.Items).To(HaveLen(1))
+		})
+
+	})
+
 	Describe("Tenant.GetApplications", func() {
 		It("should retrive all the tenant applications", func() {
 			tenant, _ := CurrentTenant(cred)
 
-			apps, err := tenant.GetApplications(NewDefaultPageRequest(), ApplicationFilter{})
+			apps, err := tenant.GetApplications(NewDefaultPageRequest(), DefaultFilter{})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(apps.Href).NotTo(BeEmpty())
@@ -46,7 +88,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant applications by page", func() {
 			tenant, _ := CurrentTenant(cred)
 
-			apps, err := tenant.GetApplications(NewPageRequest(1, 0), ApplicationFilter{})
+			apps, err := tenant.GetApplications(NewPageRequest(1, 0), DefaultFilter{})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(apps.Href).NotTo(BeEmpty())
@@ -58,7 +100,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant applications by page and filter", func() {
 			tenant, _ := CurrentTenant(cred)
 
-			f := ApplicationFilter{Name: "stormpath"}
+			f := DefaultFilter{Name: "stormpath"}
 
 			apps, err := tenant.GetApplications(NewDefaultPageRequest(), f)
 

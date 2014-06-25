@@ -21,7 +21,7 @@ var _ = Describe("Request", func() {
 	Context("HTTP request", func() {
 		Describe("Converting to an HTTP request", func() {
 			It("should convert a stormpath request to a http.Request", func() {
-				r := StormpathRequest{Method: "GET", URL: "http://test/test", FollowRedirects: true, PageRequest: PageRequest{}, Filter: ApplicationFilter{}, Payload: []byte("")}
+				r := StormpathRequest{Method: "GET", URL: "http://test/test", FollowRedirects: true, PageRequest: PageRequest{}, Filter: DefaultFilter{}, Payload: []byte("")}
 				req, err := r.ToHttpRequest()
 
 				Expect(err).NotTo(HaveOccurred())

@@ -17,7 +17,7 @@ type Tenant struct {
 func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 	tenant := &Tenant{Client: NewStormpathClient(credentials)}
 
-	resp, err := tenant.Client.Do(NewStormpathRequestNoRedirects(GET, TenantBaseUrl+"/current", PageRequest{}, ApplicationFilter{}))
+	resp, err := tenant.Client.Do(NewStormpathRequestNoRedirects(GET, TenantBaseUrl+"/current", PageRequest{}, DefaultFilter{}))
 
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 
 	location := resp.Header.Get(LocationHeader)
 
-	resp, err = tenant.Client.Do(NewStormpathRequest(GET, location, PageRequest{}, ApplicationFilter{}))
+	resp, err = tenant.Client.Do(NewStormpathRequest(GET, location, PageRequest{}, DefaultFilter{}))
 
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 	return tenant, err
 }
 
-func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters ApplicationFilter) (*Applications, error) {
+func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters DefaultFilter) (*Applications, error) {
 	apps := &Applications{}
 
 	resp, err := tenant.Client.Do(NewStormpathRequest(GET, tenant.Applications.Href, pageRequest, filters))
@@ -48,4 +48,18 @@ func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters Applicati
 	err = Unmarshal(resp, apps)
 
 	return apps, err
+}
+
+func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filters DefaultFilter) (*Directories, error) {
+	directories := &Directories{}
+
+	resp, err := tenant.Client.Do(NewStormpathRequest(GET, tenant.Directories.Href, pageRequest, filters))
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = Unmarshal(resp, directories)
+
+	return directories, err
 }

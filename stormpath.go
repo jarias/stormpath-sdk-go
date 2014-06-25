@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jarias/stormpath/logger"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -59,8 +60,10 @@ func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Respons
 	Authenticate(req, request.Payload, time.Now().In(time.UTC), client.Credentials, nonce)
 
 	if request.FollowRedirects {
+		logger.INFO.Printf("Executing request [%s] following redirects", req.URL)
 		return client.HttpClient.Do(req)
 	} else {
+		logger.INFO.Printf("Executing request [%s] without following redirects", req.URL)
 		return client.HttpClient.Transport.RoundTrip(req)
 	}
 }
