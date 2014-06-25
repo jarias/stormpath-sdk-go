@@ -27,14 +27,10 @@ var _ = Describe("Credentials", func() {
 		Expect(credentials.Secret).To(BeEmpty())
 	})
 
-	/*
-		Can't assume that ~/.config/stormpath/apiKeys.properties exists in the dev env
-
-		It("should load the API credentials from a default file location", func() {
-			credentials, err := NewDefaultCredentials()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(credentials.Id).NotTo(BeEmpty())
-			Expect(credentials.Secret).NotTo(BeEmpty())
-		})
-	*/
+	It("should load the API credentials from a default file location", func() {
+		credentials, err := NewDefaultCredentials()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(credentials.Id).NotTo(BeEmpty())
+		Expect(credentials.Secret).NotTo(BeEmpty())
+	})
 })
