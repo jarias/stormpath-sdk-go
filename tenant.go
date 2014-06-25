@@ -1,33 +1,29 @@
 package stormpath
 
 const (
-	TENANT_BASE_URL = "https://api.stormpath.com/v1/tenants"
-	LOCATION_HEADER = "Location"
+	TenantBaseUrl  = "https://api.stormpath.com/v1/tenants"
+	LocationHeader = "Location"
 )
 
 type Tenant struct {
-	Href         string
-	Name         string
-	Key          string
-	Applications struct {
-		Href string
-	}
-	Directories struct {
-		Href string
-	}
-	Client *StormpathClient
+	Href         string           `json:"href"`
+	Name         string           `json:"name"`
+	Key          string           `json:"key"`
+	Applications Link             `json:"applications"`
+	Directories  Link             `json:"directories"`
+	Client       *StormpathClient `json:"-"`
 }
 
 func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 	tenant := &Tenant{Client: NewStormpathClient(credentials)}
 
-	resp, err := tenant.Client.Do(NewStormpathRequestNoRedirects(GET, TENANT_BASE_URL+"/current", PageRequest{}, ApplicationFilter{}))
+	resp, err := tenant.Client.Do(NewStormpathRequestNoRedirects(GET, TenantBaseUrl+"/current", PageRequest{}, ApplicationFilter{}))
 
 	if err != nil {
 		return nil, err
 	}
 
-	location := resp.Header.Get(LOCATION_HEADER)
+	location := resp.Header.Get(LocationHeader)
 
 	resp, err = tenant.Client.Do(NewStormpathRequest(GET, location, PageRequest{}, ApplicationFilter{}))
 
