@@ -11,13 +11,6 @@ type Directory struct {
 	Client      *StormpathClient `json:"-"`
 }
 
-type Directories struct {
-	Href   string       `json:"href"`
-	Offset int          `json:"offset"`
-	Limit  int          `json:"limit"`
-	Items  []*Directory `json:"items"`
-}
-
 func NewDirectory(name string) *Directory {
 	return &Directory{Name: name}
 }

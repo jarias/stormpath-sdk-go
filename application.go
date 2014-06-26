@@ -11,52 +11,37 @@ const (
 )
 
 type Application struct {
-	Href                       string           `json:"href,omitempty"`
-	Name                       string           `json:"name"`
-	Description                string           `json:"description,omitempty"`
-	Status                     string           `json:"status,omitempty"`
-	Accounts                   *Link            `json:"accounts,omitempty"`
-	Groups                     *Link            `json:"groups,omitempty"`
-	Tenant                     *Link            `json:"tenant,omitempty"`
-	PasswordResetTokens        *Link            `json:"passwordResetTokens,omitempty"`
-	AccountStoreMappings       *Link            `json:"accountStoreMappings,omitempty"`
-	DefaultAccountStoreMapping *Link            `json:"defaultAccountStoreMapping,omitempty"`
-	DefaultGroupStoreMapping   *Link            `json:"defaultGroupStoreMapping,omitempty"`
-	Client                     *StormpathClient `json:"-"`
+	Href                       string `json:"href,omitempty"`
+	Name                       string `json:"name"`
+	Description                string `json:"description,omitempty"`
+	Status                     string `json:"status,omitempty"`
+	Accounts                   *Link  `json:"accounts,omitempty"`
+	Groups                     *Link  `json:"groups,omitempty"`
+	Tenant                     *Link  `json:"tenant,omitempty"`
+	PasswordResetTokens        *Link  `json:"passwordResetTokens,omitempty"`
+	AccountStoreMappings       *Link  `json:"accountStoreMappings,omitempty"`
+	DefaultAccountStoreMapping *Link  `json:"defaultAccountStoreMapping,omitempty"`
+	DefaultGroupStoreMapping   *Link  `json:"defaultGroupStoreMapping,omitempty"`
 }
 
-type Applications struct {
-	Href   string         `json:"href"`
-	Offset int            `json:"offset"`
-	Limit  int            `json:"limit"`
-	Items  []*Application `json:"items"`
-}
-
-func NewApplication(name string, client *StormpathClient) *Application {
-	return &Application{Name: name, Client: client}
+func NewApplication(name string) *Application {
+	return &Application{Name: name}
 }
 
 func (app *Application) Save() error {
 	var extraParams = url.Values{}
 	extraParams.Add("createDirectory", "true")
-	resp, err := app.Client.Do(&StormpathRequest{
+
+	return Client.DoWithResult(&StormpathRequest{
 		Method:      POST,
 		URL:         ApplicationBaseUrl,
 		Payload:     app,
 		ExtraParams: extraParams,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	err = unmarshal(resp, app)
-
-	return err
+	}, app)
 }
 
 func (app *Application) Delete() error {
-	_, err := app.Client.Do(&StormpathRequest{
+	_, err := Client.Do(&StormpathRequest{
 		Method: DELETE,
 		URL:    app.Href,
 	})
@@ -70,7 +55,7 @@ func (app *Application) Purge() error {
 		return err
 	}
 	for _, m := range accountStoreMappings.Items {
-		app.Client.Do(&StormpathRequest{
+		Client.Do(&StormpathRequest{
 			Method: DELETE,
 			URL:    m.AccountStore.Href,
 		})
@@ -82,21 +67,12 @@ func (app *Application) Purge() error {
 func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter DefaultFilter) (*AccountStoreMappings, error) {
 	accountStoreMappings := &AccountStoreMappings{}
 
-	resp, err := app.Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         app.AccountStoreMappings.Href,
 		PageRequest: &pageRequest,
 		Filter:      &filter,
-	})
-
-	if err != nil {
-		return accountStoreMappings, err
-	}
-
-	err = unmarshal(resp, accountStoreMappings)
-	for _, m := range accountStoreMappings.Items {
-		m.Client = app.Client
-	}
+	}, accountStoreMappings)
 
 	return accountStoreMappings, err
 }
@@ -104,37 +80,22 @@ func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter 
 func (app *Application) GetAccounts(pageRequest PageRequest, filter AccountFilter) (*Accounts, error) {
 	accounts := &Accounts{}
 
-	resp, err := app.Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         app.Accounts.Href,
 		PageRequest: &pageRequest,
 		Filter:      &filter,
-	})
-
-	if err != nil {
-		return accounts, err
-	}
-
-	err = unmarshal(resp, accounts)
-	for _, a := range accounts.Items {
-		a.Client = app.Client
-	}
+	}, accounts)
 
 	return accounts, err
 }
 
 func (app *Application) RegisterAccount(account *Account) error {
-	resp, err := app.Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method:  POST,
 		URL:     app.Accounts.Href,
 		Payload: account,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	err = unmarshal(resp, account)
+	}, account)
 
 	return err
 }
@@ -147,17 +108,11 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	loginAttemptPayload["type"] = "basic"
 	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
-	resp, err := app.Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method:  POST,
 		URL:     app.Href + "/loginAttempts",
 		Payload: loginAttemptPayload,
-	})
-
-	if err != nil {
-		return account, err
-	}
-
-	err = unmarshal(resp, account)
+	}, account)
 
 	return account, err
 }
@@ -168,17 +123,11 @@ func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswor
 	passwordResetPayload := make(map[string]string)
 	passwordResetPayload["email"] = username
 
-	resp, err := app.Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method:  POST,
 		URL:     app.Href + "/passwordResetTokens",
 		Payload: passwordResetPayload,
-	})
-
-	if err != nil {
-		return passwordResetToken, err
-	}
-
-	err = unmarshal(resp, passwordResetToken)
+	}, passwordResetToken)
 
 	return passwordResetToken, err
 }
@@ -186,16 +135,10 @@ func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswor
 func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
-	resp, err := app.Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method: GET,
 		URL:    app.Href + "/passwordResetTokens/" + token,
-	})
-
-	if err != nil {
-		return passwordResetToken, err
-	}
-
-	err = unmarshal(resp, passwordResetToken)
+	}, passwordResetToken)
 
 	return passwordResetToken, err
 }
@@ -206,17 +149,11 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	resetPasswordPayload := make(map[string]string)
 	resetPasswordPayload["password"] = newPassword
 
-	resp, err := app.Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method:  POST,
 		URL:     app.Href + "/passwordResetTokens/" + token,
 		Payload: resetPasswordPayload,
-	})
-
-	if err != nil {
-		return account, err
-	}
-
-	err = unmarshal(resp, account)
+	}, account)
 
 	return account, err
 }

@@ -32,6 +32,10 @@ const (
 	NL                     = "\n"
 )
 
+var (
+	Client *StormpathClient
+)
+
 type StormpathClient struct {
 	Credentials *Credentials
 	HttpClient  *http.Client
@@ -45,6 +49,15 @@ func NewStormpathClient(credentials *Credentials) *StormpathClient {
 	httpClient := &http.Client{Transport: tr}
 
 	return &StormpathClient{Credentials: credentials, HttpClient: httpClient}
+}
+
+func (client *StormpathClient) DoWithResult(request *StormpathRequest, result interface{}) error {
+	resp, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+
+	return unmarshal(resp, result)
 }
 
 func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Response, err error) {

@@ -2,27 +2,14 @@ package stormpath_test
 
 import (
 	. "github.com/jarias/stormpath"
-	"github.com/jarias/stormpath/logger"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Tenant", func() {
-	var cred *Credentials
-
-	BeforeEach(func() {
-		var err error
-		cred, err = NewDefaultCredentials()
-		if err != nil {
-			panic(err)
-		}
-
-		logger.InitInTestMode()
-	})
-
 	Describe("CurrentTentant", func() {
 		It("should retrive the current tenant", func() {
-			tenant, err := CurrentTenant(cred)
+			tenant, err := CurrentTenant()
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(tenant.Href).NotTo(BeEmpty())
@@ -35,7 +22,7 @@ var _ = Describe("Tenant", func() {
 
 	Describe("Tenant.GetDirectories", func() {
 		It("should retrive all the tenant directories", func() {
-			tenant, _ := CurrentTenant(cred)
+			tenant, _ := CurrentTenant()
 
 			directories, err := tenant.GetDirectories(NewDefaultPageRequest(), DefaultFilter{})
 
@@ -44,13 +31,10 @@ var _ = Describe("Tenant", func() {
 			Expect(directories.Offset).To(Equal(0))
 			Expect(directories.Limit).To(Equal(25))
 			Expect(directories.Items).NotTo(BeEmpty())
-			for _, d := range directories.Items {
-				Expect(d.Client).NotTo(BeNil())
-			}
 		})
 
 		It("should retrive all the tenant directories by page", func() {
-			tenant, _ := CurrentTenant(cred)
+			tenant, _ := CurrentTenant()
 
 			directories, err := tenant.GetDirectories(NewPageRequest(1, 0), DefaultFilter{})
 
@@ -62,7 +46,7 @@ var _ = Describe("Tenant", func() {
 		})
 
 		It("should retrive all the tenant directories by page and filter", func() {
-			tenant, _ := CurrentTenant(cred)
+			tenant, _ := CurrentTenant()
 
 			f := DefaultFilter{Name: "Stormpath Administrators"}
 
@@ -77,7 +61,7 @@ var _ = Describe("Tenant", func() {
 
 	Describe("Tenant.GetApplications", func() {
 		It("should retrive all the tenant applications", func() {
-			tenant, _ := CurrentTenant(cred)
+			tenant, _ := CurrentTenant()
 
 			apps, err := tenant.GetApplications(NewDefaultPageRequest(), DefaultFilter{})
 
@@ -86,14 +70,10 @@ var _ = Describe("Tenant", func() {
 			Expect(apps.Offset).To(Equal(0))
 			Expect(apps.Limit).To(Equal(25))
 			Expect(apps.Items).NotTo(BeEmpty())
-			for _, a := range apps.Items {
-				Expect(a.Client).NotTo(BeNil())
-			}
-
 		})
 
 		It("should retrive all the tenant applications by page", func() {
-			tenant, _ := CurrentTenant(cred)
+			tenant, _ := CurrentTenant()
 
 			apps, err := tenant.GetApplications(NewPageRequest(1, 0), DefaultFilter{})
 
@@ -105,7 +85,7 @@ var _ = Describe("Tenant", func() {
 		})
 
 		It("should retrive all the tenant applications by page and filter", func() {
-			tenant, _ := CurrentTenant(cred)
+			tenant, _ := CurrentTenant()
 
 			f := DefaultFilter{Name: "stormpath"}
 
