@@ -17,7 +17,7 @@ var _ = Describe("Tenant", func() {
 			panic(err)
 		}
 
-		logger.Init(false)
+		logger.InitInTestMode()
 	})
 
 	Describe("CurrentTentant", func() {

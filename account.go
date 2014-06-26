@@ -18,6 +18,16 @@ type Account struct {
 	EmailVerificationToken *Link  `json:"emailVerificationToken,omitempty"`
 }
 
+type AccountRef struct {
+	Account Link
+}
+
+type AccountPasswordResetToken struct {
+	Href    string
+	Email   string
+	Account Link
+}
+
 func NewAccount(email string, password string, givenName string, surname string) *Account {
 	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
 }

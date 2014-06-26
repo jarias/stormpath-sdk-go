@@ -2,7 +2,7 @@ package stormpath
 
 import (
 	"encoding/base64"
-	"encoding/json"
+
 	"net/url"
 )
 
@@ -64,6 +64,40 @@ func (app *Application) Delete() error {
 	return err
 }
 
+func (app *Application) Purge() error {
+	accountStoreMappings, err := app.GetAccountStoreMappings()
+	if err != nil {
+		return err
+	}
+	for _, m := range accountStoreMappings.Items {
+		app.Client.Do(&StormpathRequest{
+			Method: DELETE,
+			URL:    m.AccountStore.Href,
+		})
+	}
+
+	return app.Delete()
+}
+
+func (app *Application) GetAccountStoreMappings() (*AccountStoreMappings, error) {
+	accountStoreMappings := &AccountStoreMappings{}
+
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method: GET,
+		URL:    app.AccountStoreMappings.Href,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = unmarshal(resp, accountStoreMappings)
+	for _, m := range accountStoreMappings.Items {
+		m.Client = app.Client
+	}
+	return accountStoreMappings, err
+}
+
 func (app *Application) RegisterAccount(account *Account) error {
 	resp, err := app.Client.Do(&StormpathRequest{
 		Method:  POST,
@@ -80,20 +114,77 @@ func (app *Application) RegisterAccount(account *Account) error {
 	return err
 }
 
-func (app *Application) Authorize(username string, password string) (*Account, error) {
-	account := &Account{}
+func (app *Application) AuthenticateAccount(username string, password string) (*AccountRef, error) {
+	account := &AccountRef{}
 
-	login := make(map[string]string)
+	loginAttemptPayload := make(map[string]string)
 
-	login["type"] = "basic"
-	login["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
-
-	jsonLogin, _ := json.Marshal(login)
+	loginAttemptPayload["type"] = "basic"
+	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
 	resp, err := app.Client.Do(&StormpathRequest{
 		Method:  POST,
 		URL:     app.Href + "/loginAttempts",
-		Payload: jsonLogin,
+		Payload: loginAttemptPayload,
+	})
+
+	if err != nil {
+		return account, err
+	}
+
+	err = unmarshal(resp, account)
+
+	return account, err
+}
+
+func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswordResetToken, error) {
+	passwordResetToken := &AccountPasswordResetToken{}
+
+	passwordResetPayload := make(map[string]string)
+	passwordResetPayload["email"] = username
+
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method:  POST,
+		URL:     app.Href + "/passwordResetTokens",
+		Payload: passwordResetPayload,
+	})
+
+	if err != nil {
+		return passwordResetToken, err
+	}
+
+	err = unmarshal(resp, passwordResetToken)
+
+	return passwordResetToken, err
+}
+
+func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
+	passwordResetToken := &AccountPasswordResetToken{}
+
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method: GET,
+		URL:    app.Href + "/passwordResetTokens/" + token,
+	})
+
+	if err != nil {
+		return passwordResetToken, err
+	}
+
+	err = unmarshal(resp, passwordResetToken)
+
+	return passwordResetToken, err
+}
+
+func (app *Application) ResetPassword(token string, newPassword string) (*AccountRef, error) {
+	account := &AccountRef{}
+
+	resetPasswordPayload := make(map[string]string)
+	resetPasswordPayload["password"] = newPassword
+
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method:  POST,
+		URL:     app.Href + "/passwordResetTokens/" + token,
+		Payload: resetPasswordPayload,
 	})
 
 	if err != nil {
