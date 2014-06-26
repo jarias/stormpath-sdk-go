@@ -41,7 +41,7 @@ func (app *Application) Save() error {
 		return err
 	}
 
-	err = Unmarshal(resp, app)
+	err = unmarshal(resp, app)
 
 	return err
 }
@@ -59,7 +59,7 @@ func (app *Application) RegisterAccount(account *Account) error {
 		return err
 	}
 
-	err = Unmarshal(resp, account)
+	err = unmarshal(resp, account)
 
 	return err
 }

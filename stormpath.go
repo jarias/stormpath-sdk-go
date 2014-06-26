@@ -61,10 +61,22 @@ func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Respons
 
 	if request.FollowRedirects {
 		logger.INFO.Printf("Executing request [%s] following redirects", req.URL)
-		return client.HttpClient.Do(req)
+		resp, err := client.HttpClient.Do(req)
+
+		if err != nil {
+			return resp, err
+		}
+
+		return resp, handleStormpathErrors(resp)
 	} else {
 		logger.INFO.Printf("Executing request [%s] without following redirects", req.URL)
-		return client.HttpClient.Transport.RoundTrip(req)
+		resp, err := client.HttpClient.Transport.RoundTrip(req)
+
+		if err != nil {
+			return resp, err
+		}
+
+		return resp, handleStormpathErrors(resp)
 	}
 }
 

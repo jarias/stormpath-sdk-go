@@ -61,8 +61,9 @@ var _ = Describe("Application", func() {
 
 			app.Save()
 			account := NewAccount("test@test.org", "1234567z!A89", "test", "test")
-			app.RegisterAccount(account)
+			err := app.RegisterAccount(account)
 
+			Expect(err).NotTo(HaveOccurred())
 			Expect(account.Href).NotTo(BeEmpty())
 		})
 	})

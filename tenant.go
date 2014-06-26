@@ -31,7 +31,7 @@ func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 		return nil, err
 	}
 
-	err = Unmarshal(resp, tenant)
+	err = unmarshal(resp, tenant)
 
 	return tenant, err
 }
@@ -45,7 +45,7 @@ func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters DefaultFi
 		return nil, err
 	}
 
-	err = Unmarshal(resp, apps)
+	err = unmarshal(resp, apps)
 	for _, app := range apps.Items {
 		app.Client = tenant.Client
 	}
@@ -62,7 +62,7 @@ func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filters DefaultFil
 		return nil, err
 	}
 
-	err = Unmarshal(resp, directories)
+	err = unmarshal(resp, directories)
 	for _, d := range directories.Items {
 		d.Client = tenant.Client
 	}
