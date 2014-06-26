@@ -1,21 +1,29 @@
 package stormpath
 
 type Account struct {
-	Href                   string `json:"href,omitempty"`
-	Username               string `json:"username,omitempty"`
-	Email                  string `json:"email"`
-	Password               string `json:"password"`
-	FullName               string `json:"fullName,omitempty"`
-	GivenName              string `json:"givenName"`
-	MiddleName             string `json:"middleName,omitempty"`
-	Surname                string `json:"surname"`
-	Status                 string `json:"status,omitempty"`
-	CustomData             *Link  `json:"customData,omitempty"`
-	Groups                 *Link  `json:"groups,omitempty"`
-	GroupMemberships       *Link  `json:"groupMemberships,omitempty"`
-	Directory              *Link  `json:"directory,omitempty"`
-	Tenant                 *Link  `json:"tenant,omitempty"`
-	EmailVerificationToken *Link  `json:"emailVerificationToken,omitempty"`
+	Href                   string           `json:"href,omitempty"`
+	Username               string           `json:"username,omitempty"`
+	Email                  string           `json:"email"`
+	Password               string           `json:"password"`
+	FullName               string           `json:"fullName,omitempty"`
+	GivenName              string           `json:"givenName"`
+	MiddleName             string           `json:"middleName,omitempty"`
+	Surname                string           `json:"surname"`
+	Status                 string           `json:"status,omitempty"`
+	CustomData             *Link            `json:"customData,omitempty"`
+	Groups                 *Link            `json:"groups,omitempty"`
+	GroupMemberships       *Link            `json:"groupMemberships,omitempty"`
+	Directory              *Link            `json:"directory,omitempty"`
+	Tenant                 *Link            `json:"tenant,omitempty"`
+	EmailVerificationToken *Link            `json:"emailVerificationToken,omitempty"`
+	Client                 *StormpathClient `json:"-"`
+}
+
+type Accounts struct {
+	Href   string     `json:"href"`
+	Offset int        `json:"offset"`
+	Limit  int        `json:"limit"`
+	Items  []*Account `json:"items"`
 }
 
 type AccountRef struct {

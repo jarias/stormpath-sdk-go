@@ -65,7 +65,7 @@ func (app *Application) Delete() error {
 }
 
 func (app *Application) Purge() error {
-	accountStoreMappings, err := app.GetAccountStoreMappings()
+	accountStoreMappings, err := app.GetAccountStoreMappings(NewDefaultPageRequest(), DefaultFilter{})
 	if err != nil {
 		return err
 	}
@@ -79,23 +79,48 @@ func (app *Application) Purge() error {
 	return app.Delete()
 }
 
-func (app *Application) GetAccountStoreMappings() (*AccountStoreMappings, error) {
+func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter DefaultFilter) (*AccountStoreMappings, error) {
 	accountStoreMappings := &AccountStoreMappings{}
 
 	resp, err := app.Client.Do(&StormpathRequest{
-		Method: GET,
-		URL:    app.AccountStoreMappings.Href,
+		Method:      GET,
+		URL:         app.AccountStoreMappings.Href,
+		PageRequest: &pageRequest,
+		Filter:      &filter,
 	})
 
 	if err != nil {
-		return nil, err
+		return accountStoreMappings, err
 	}
 
 	err = unmarshal(resp, accountStoreMappings)
 	for _, m := range accountStoreMappings.Items {
 		m.Client = app.Client
 	}
+
 	return accountStoreMappings, err
+}
+
+func (app *Application) GetAccounts(pageRequest PageRequest, filter AccountFilter) (*Accounts, error) {
+	accounts := &Accounts{}
+
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method:      GET,
+		URL:         app.Accounts.Href,
+		PageRequest: &pageRequest,
+		Filter:      &filter,
+	})
+
+	if err != nil {
+		return accounts, err
+	}
+
+	err = unmarshal(resp, accounts)
+	for _, a := range accounts.Items {
+		a.Client = app.Client
+	}
+
+	return accounts, err
 }
 
 func (app *Application) RegisterAccount(account *Account) error {
