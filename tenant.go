@@ -46,6 +46,9 @@ func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters DefaultFi
 	}
 
 	err = Unmarshal(resp, apps)
+	for _, app := range apps.Items {
+		app.Client = tenant.Client
+	}
 
 	return apps, err
 }
@@ -60,6 +63,9 @@ func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filters DefaultFil
 	}
 
 	err = Unmarshal(resp, directories)
+	for _, d := range directories.Items {
+		d.Client = tenant.Client
+	}
 
 	return directories, err
 }

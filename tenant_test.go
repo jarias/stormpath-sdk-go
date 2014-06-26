@@ -44,6 +44,9 @@ var _ = Describe("Tenant", func() {
 			Expect(directories.Offset).To(Equal(0))
 			Expect(directories.Limit).To(Equal(25))
 			Expect(directories.Items).NotTo(BeEmpty())
+			for _, d := range directories.Items {
+				Expect(d.Client).NotTo(BeNil())
+			}
 		})
 
 		It("should retrive all the tenant directories by page", func() {
@@ -83,6 +86,10 @@ var _ = Describe("Tenant", func() {
 			Expect(apps.Offset).To(Equal(0))
 			Expect(apps.Limit).To(Equal(25))
 			Expect(apps.Items).NotTo(BeEmpty())
+			for _, a := range apps.Items {
+				Expect(a.Client).NotTo(BeNil())
+			}
+
 		})
 
 		It("should retrive all the tenant applications by page", func() {

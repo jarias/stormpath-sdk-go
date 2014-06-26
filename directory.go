@@ -12,10 +12,10 @@ type Directory struct {
 }
 
 type Directories struct {
-	Href   string      `json:"href"`
-	Offset int         `json:"offset"`
-	Limit  int         `json:"limit"`
-	Items  []Directory `json:"items"`
+	Href   string       `json:"href"`
+	Offset int          `json:"offset"`
+	Limit  int          `json:"limit"`
+	Items  []*Directory `json:"items"`
 }
 
 func NewDirectory(name string) *Directory {
