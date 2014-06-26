@@ -15,3 +15,8 @@ type Directories struct {
 	List
 	Items []Directory `json:"items"`
 }
+
+type Groups struct {
+	List
+	Items []Groups `json:"items"`
+}

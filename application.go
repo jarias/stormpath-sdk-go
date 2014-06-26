@@ -157,3 +157,22 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 
 	return account, err
 }
+
+func (app *Application) CreateApplicationGroup(group *Group) error {
+	return Client.DoWithResult(&StormpathRequest{
+		Method:  POST,
+		URL:     app.Groups.Href,
+		Payload: group,
+	}, group)
+}
+
+func (app *Application) GetApplicationGroups(pageRequest PageRequest, filters Filter) (*Groups, error) {
+	groups := &Groups{}
+
+	err := Client.DoWithResult(&StormpathRequest{
+		Method: GET,
+		URL:    app.Groups.Href,
+	}, groups)
+
+	return groups, err
+}

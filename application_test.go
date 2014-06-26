@@ -51,6 +51,40 @@ var _ = Describe("Application", func() {
 		})
 	})
 
+	Describe("groups", func() {
+		Describe("CreateApplicationGroup", func() {
+			It("should return error is group has no name", func() {
+				err := app.CreateApplicationGroup(&Group{})
+
+				Expect(err).To(HaveOccurred())
+			})
+
+			It("should create a new application group", func() {
+				group := NewGroup("new-test-group")
+				err := app.CreateApplicationGroup(group)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(group.Href).NotTo(BeEmpty())
+				Expect(group.Status).To(Equal("ENABLED"))
+			})
+		})
+
+		Describe("GetApplicationGroups", func() {
+			It("should return the paged list of application groups", func() {
+				group := NewGroup("another-test-group")
+				app.CreateApplicationGroup(group)
+
+				groups, err := app.GetApplicationGroups(NewDefaultPageRequest(), DefaultFilter{})
+
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(groups.Href).NotTo(BeEmpty())
+				Expect(groups.Offset).To(Equal(0))
+				Expect(groups.Limit).To(Equal(25))
+				Expect(groups.Items).NotTo(BeEmpty())
+			})
+		})
+	})
 	Describe("password reset", func() {
 		Describe("SendPasswordResetEmail", func() {
 			It("should create a new password reset token", func() {

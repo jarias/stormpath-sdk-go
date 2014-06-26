@@ -14,6 +14,10 @@ const (
 	Email      = "Email"
 )
 
+type Filter interface {
+	ToUrlQueryValues() url.Values
+}
+
 type DefaultFilter struct {
 	Name        string
 	Description string

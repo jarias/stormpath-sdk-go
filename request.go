@@ -17,10 +17,6 @@ const (
 	LIMIT  = "limit"
 )
 
-type Filter interface {
-	ToUrlQueryValues() url.Values
-}
-
 type PageRequest struct {
 	Limit  int
 	Offset int
