@@ -27,13 +27,13 @@ type PageRequest struct {
 }
 
 type StormpathRequest struct {
-	Method          string
-	URL             string
-	FollowRedirects bool
-	Payload         []byte
-	PageRequest     PageRequest
-	Filter          Filter
-	ExtraParams     url.Values
+	Method              string
+	URL                 string
+	DontFollowRedirects bool
+	Payload             interface{}
+	PageRequest         *PageRequest
+	Filter              Filter
+	ExtraParams         url.Values
 }
 
 func NewPageRequest(limit int, offset int) PageRequest {
@@ -42,24 +42,6 @@ func NewPageRequest(limit int, offset int) PageRequest {
 
 func NewDefaultPageRequest() PageRequest {
 	return PageRequest{Limit: 25, Offset: 0}
-}
-
-func NewStormpathDeleteRequest(url string) *StormpathRequest {
-	return &StormpathRequest{Method: DELETE, URL: url, PageRequest: PageRequest{}, Filter: DefaultFilter{}, FollowRedirects: true}
-}
-
-func NewStormpathPostRequest(url string, payload interface{}, extraParams url.Values) *StormpathRequest {
-	jsonPayload, _ := json.Marshal(payload)
-
-	return &StormpathRequest{Method: POST, URL: url, PageRequest: PageRequest{}, Filter: DefaultFilter{}, Payload: jsonPayload, ExtraParams: extraParams, FollowRedirects: true}
-}
-
-func NewStormpathRequest(method string, url string, pageRequest PageRequest, filter Filter) *StormpathRequest {
-	return &StormpathRequest{Method: method, URL: url, PageRequest: pageRequest, Filter: filter, FollowRedirects: true}
-}
-
-func NewStormpathRequestNoRedirects(method string, url string, pageRequest PageRequest, filter Filter) *StormpathRequest {
-	return &StormpathRequest{Method: method, URL: url, PageRequest: pageRequest, Filter: filter, FollowRedirects: false}
 }
 
 func (pageRequest PageRequest) ToUrlQueryValues() url.Values {
@@ -73,21 +55,39 @@ func (pageRequest PageRequest) ToUrlQueryValues() url.Values {
 	return val
 }
 
+func (request *StormpathRequest) marshalPayload() []byte {
+	jsonPayload, _ := json.Marshal(request.Payload)
+	return jsonPayload
+}
+
 func (request *StormpathRequest) ToHttpRequest() (req *http.Request, err error) {
-	query := request.PageRequest.ToUrlQueryValues()
+	var query = url.Values{}
 
-	filterQuery := request.Filter.ToUrlQueryValues()
+	if request.PageRequest != nil {
+		pageRequestQuery := request.PageRequest.ToUrlQueryValues()
 
-	for k, v := range filterQuery {
-		query[k] = v
+		for k, v := range pageRequestQuery {
+			query[k] = v
+		}
 	}
 
-	for k, v := range request.ExtraParams {
-		query[k] = v
+	if request.Filter != nil {
+		filterQuery := request.Filter.ToUrlQueryValues()
+
+		for k, v := range filterQuery {
+			query[k] = v
+		}
+	}
+
+	if request.ExtraParams != nil {
+		for k, v := range request.ExtraParams {
+			query[k] = v
+		}
 	}
 
 	url := request.URL + "?" + query.Encode()
-	req, err = http.NewRequest(request.Method, url, bytes.NewReader(request.Payload))
+
+	req, err = http.NewRequest(request.Method, url, bytes.NewReader(request.marshalPayload()))
 
 	if err != nil {
 		return nil, err

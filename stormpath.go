@@ -57,9 +57,9 @@ func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Respons
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, request.Payload, time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, request.marshalPayload(), time.Now().In(time.UTC), client.Credentials, nonce)
 
-	if request.FollowRedirects {
+	if !request.DontFollowRedirects {
 		logger.INFO.Printf("Executing request [%s] following redirects", req.URL)
 		resp, err := client.HttpClient.Do(req)
 

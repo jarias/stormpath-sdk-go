@@ -1,6 +1,10 @@
 package stormpath
 
-import "net/url"
+import (
+	"encoding/base64"
+	"encoding/json"
+	"net/url"
+)
 
 const (
 	ApplicationBaseUrl = "https://api.stormpath.com/v1/applications"
@@ -35,7 +39,12 @@ func NewApplication(name string, client *StormpathClient) *Application {
 func (app *Application) Save() error {
 	var extraParams = url.Values{}
 	extraParams.Add("createDirectory", "true")
-	resp, err := app.Client.Do(NewStormpathPostRequest(ApplicationBaseUrl, app, extraParams))
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method:      POST,
+		URL:         ApplicationBaseUrl,
+		Payload:     app,
+		ExtraParams: extraParams,
+	})
 
 	if err != nil {
 		return err
@@ -47,13 +56,20 @@ func (app *Application) Save() error {
 }
 
 func (app *Application) Delete() error {
-	_, err := app.Client.Do(NewStormpathDeleteRequest(app.Href))
+	_, err := app.Client.Do(&StormpathRequest{
+		Method: DELETE,
+		URL:    app.Href,
+	})
 
 	return err
 }
 
 func (app *Application) RegisterAccount(account *Account) error {
-	resp, err := app.Client.Do(NewStormpathPostRequest(app.Accounts.Href, account, url.Values{}))
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method:  POST,
+		URL:     app.Accounts.Href,
+		Payload: account,
+	})
 
 	if err != nil {
 		return err
@@ -62,4 +78,29 @@ func (app *Application) RegisterAccount(account *Account) error {
 	err = unmarshal(resp, account)
 
 	return err
+}
+
+func (app *Application) Authorize(username string, password string) (*Account, error) {
+	account := &Account{}
+
+	login := make(map[string]string)
+
+	login["type"] = "basic"
+	login["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+
+	jsonLogin, _ := json.Marshal(login)
+
+	resp, err := app.Client.Do(&StormpathRequest{
+		Method:  POST,
+		URL:     app.Href + "/loginAttempts",
+		Payload: jsonLogin,
+	})
+
+	if err != nil {
+		return account, err
+	}
+
+	err = unmarshal(resp, account)
+
+	return account, err
 }
