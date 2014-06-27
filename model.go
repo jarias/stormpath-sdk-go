@@ -25,3 +25,8 @@ type AccountStoreMappings struct {
 	List
 	Items []AccountStoreMapping `json:"items"`
 }
+
+type GroupMemberships struct {
+	List
+	Items []GroupMembership `json:"items"`
+}
