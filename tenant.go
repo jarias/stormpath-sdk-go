@@ -6,18 +6,21 @@ const (
 )
 
 type Tenant struct {
-	Href         string           `json:"href"`
-	Name         string           `json:"name"`
-	Key          string           `json:"key"`
-	Applications Link             `json:"applications"`
-	Directories  Link             `json:"directories"`
-	Client       *StormpathClient `json:"-"`
+	Href         string `json:"href"`
+	Name         string `json:"name"`
+	Key          string `json:"key"`
+	Applications Link   `json:"applications"`
+	Directories  Link   `json:"directories"`
 }
 
-func CurrentTenant(credentials *Credentials) (*Tenant, error) {
-	tenant := &Tenant{Client: NewStormpathClient(credentials)}
+func CurrentTenant() (*Tenant, error) {
+	tenant := &Tenant{}
 
-	resp, err := tenant.Client.Do(NewStormpathRequestNoRedirects(GET, TenantBaseUrl+"/current", PageRequest{}, ApplicationFilter{}))
+	resp, err := Client.Do(&StormpathRequest{
+		Method:              GET,
+		URL:                 TenantBaseUrl + "/current",
+		DontFollowRedirects: true,
+	})
 
 	if err != nil {
 		return nil, err
@@ -25,27 +28,36 @@ func CurrentTenant(credentials *Credentials) (*Tenant, error) {
 
 	location := resp.Header.Get(LocationHeader)
 
-	resp, err = tenant.Client.Do(NewStormpathRequest(GET, location, PageRequest{}, ApplicationFilter{}))
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = Unmarshal(resp, tenant)
+	err = Client.DoWithResult(&StormpathRequest{
+		Method: GET,
+		URL:    location,
+	}, tenant)
 
 	return tenant, err
 }
 
-func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters ApplicationFilter) (*Applications, error) {
+func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters DefaultFilter) (*Applications, error) {
 	apps := &Applications{}
 
-	resp, err := tenant.Client.Do(NewStormpathRequest(GET, tenant.Applications.Href, pageRequest, filters))
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = Unmarshal(resp, apps)
+	err := Client.DoWithResult(&StormpathRequest{
+		Method:      GET,
+		URL:         tenant.Applications.Href,
+		PageRequest: &pageRequest,
+		Filter:      filters,
+	}, apps)
 
 	return apps, err
+}
+
+func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filters DefaultFilter) (*Directories, error) {
+	directories := &Directories{}
+
+	err := Client.DoWithResult(&StormpathRequest{
+		Method:      GET,
+		URL:         tenant.Directories.Href,
+		PageRequest: &pageRequest,
+		Filter:      filters,
+	}, directories)
+
+	return directories, err
 }

@@ -6,12 +6,14 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
-	"github.com/nu7hatch/gouuid"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/jarias/stormpath/logger"
+	"github.com/nu7hatch/gouuid"
 )
 
 const (
@@ -30,6 +32,10 @@ const (
 	NL                     = "\n"
 )
 
+var (
+	Client *StormpathClient
+)
+
 type StormpathClient struct {
 	Credentials *Credentials
 	HttpClient  *http.Client
@@ -45,6 +51,15 @@ func NewStormpathClient(credentials *Credentials) *StormpathClient {
 	return &StormpathClient{Credentials: credentials, HttpClient: httpClient}
 }
 
+func (client *StormpathClient) DoWithResult(request *StormpathRequest, result interface{}) error {
+	resp, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+
+	return unmarshal(resp, result)
+}
+
 func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Response, err error) {
 	req, err := request.ToHttpRequest()
 
@@ -55,12 +70,26 @@ func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Respons
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, request.Payload, time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, request.marshalPayload(), time.Now().In(time.UTC), client.Credentials, nonce)
 
-	if request.FollowRedirects {
-		return client.HttpClient.Do(req)
+	if !request.DontFollowRedirects {
+		logger.INFO.Printf("Executing request [%s] following redirects", req.URL)
+		resp, err := client.HttpClient.Do(req)
+
+		if err != nil {
+			return resp, err
+		}
+
+		return resp, handleStormpathErrors(resp)
 	} else {
-		return client.HttpClient.Transport.RoundTrip(req)
+		logger.INFO.Printf("Executing request [%s] without following redirects", req.URL)
+		resp, err := client.HttpClient.Transport.RoundTrip(req)
+
+		if err != nil {
+			return resp, err
+		}
+
+		return resp, handleStormpathErrors(resp)
 	}
 }
 
@@ -145,12 +174,18 @@ func encodeUrl(value string, path bool, canonical bool) string {
 }
 
 func canonicalizeQueryString(req *http.Request) string {
+	var keys []string
 	queryValues := req.URL.Query()
 
 	result := ""
+	for k, _ := range queryValues {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
-	for k, v := range queryValues {
+	for _, k := range keys {
 		key := encodeUrl(k, false, true)
+		v := queryValues[k]
 		for _, vv := range v {
 			value := encodeUrl(vv, false, true)
 
@@ -207,7 +242,7 @@ func signedHeadersString(headers http.Header) string {
 	for k := range headers {
 		keys = append(keys, k)
 	}
-
+	sort.Strings(keys)
 	first := true
 	for _, k := range keys {
 		if !first {
