@@ -66,3 +66,36 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 
 	return groupMembership, err
 }
+
+func (account *Account) RemoveFromGroup(group *Group) error {
+	groupMemberships, err := account.GetGroupMemberships(NewDefaultPageRequest(), DefaultFilter{})
+
+	if err != nil {
+		return err
+	}
+
+	for i := 1; len(groupMemberships.Items) > 0; i++ {
+		for _, gm := range groupMemberships.Items {
+			if gm.Group.Href == group.Href {
+				return gm.Delete()
+			}
+		}
+		groupMemberships, err = account.GetGroupMemberships(NewPageRequest(25, i*25), DefaultFilter{})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (account *Account) GetGroupMemberships(pageRequest PageRequest, filter Filter) (*GroupMemberships, error) {
+	groupMemberships := &GroupMemberships{}
+
+	err := Client.DoWithResult(&StormpathRequest{
+		Method: GET,
+		URL:    account.GroupMemberships.Href,
+	}, groupMemberships)
+
+	return groupMemberships, err
+}
