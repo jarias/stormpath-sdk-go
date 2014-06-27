@@ -59,3 +59,11 @@ func (dir *Directory) GetAccounts(pageRequest PageRequest, filter Filter) (*Acco
 
 	return accounts, err
 }
+
+func (dir *Directory) CreateGroup(group *Group) error {
+	return Client.DoWithResult(&StormpathRequest{
+		Method:  POST,
+		URL:     dir.Groups.Href,
+		Payload: group,
+	}, group)
+}

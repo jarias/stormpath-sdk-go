@@ -73,4 +73,18 @@ var _ = Describe("Directory", func() {
 			directory.Delete()
 		})
 	})
+
+	Describe("CreateGroup", func() {
+		It("should create new group", func() {
+			directory := NewDirectory("new-directory-test")
+			directory.Save()
+
+			group := NewGroup("new-group")
+			err := directory.CreateGroup(group)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(group.Href).NotTo(BeEmpty())
+			directory.Delete()
+		})
+	})
 })
