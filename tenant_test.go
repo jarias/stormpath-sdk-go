@@ -20,7 +20,7 @@ var _ = Describe("Tenant", func() {
 		})
 	})
 
-	Describe("Tenant.GetDirectories", func() {
+	Describe("GetDirectories", func() {
 		It("should retrive all the tenant directories", func() {
 			tenant, _ := CurrentTenant()
 
@@ -59,7 +59,7 @@ var _ = Describe("Tenant", func() {
 
 	})
 
-	Describe("Tenant.GetApplications", func() {
+	Describe("GetApplications", func() {
 		It("should retrive all the tenant applications", func() {
 			tenant, _ := CurrentTenant()
 

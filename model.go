@@ -20,3 +20,8 @@ type Groups struct {
 	List
 	Items []Groups `json:"items"`
 }
+
+type AccountStoreMappings struct {
+	List
+	Items []AccountStoreMapping `json:"items"`
+}

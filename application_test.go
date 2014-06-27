@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Application", func() {
 	Describe("JSON", func() {
-		It("should marshall a minimum JSON with only the name", func() {
+		It("should marshal a minimum JSON with only the name", func() {
 			application := NewApplication("name")
 
 			jsonData, _ := json.Marshal(application)
