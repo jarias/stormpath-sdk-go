@@ -54,3 +54,15 @@ func (account *Account) Delete() error {
 	})
 	return err
 }
+
+func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
+	groupMembership := NewGroupMembership(account.Href, group.Href)
+
+	err := Client.DoWithResult(&StormpathRequest{
+		Method:  POST,
+		URL:     GroupMembershipBaseUrl,
+		Payload: groupMembership,
+	}, groupMembership)
+
+	return groupMembership, err
+}
