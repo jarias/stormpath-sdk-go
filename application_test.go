@@ -1,8 +1,8 @@
 package stormpath_test
 
 import (
+	. "github.com/jarias/stormpath-sdk-go"
 	"regexp"
-	. "github.com/jarias/stormpath"
 
 	"encoding/json"
 	. "github.com/onsi/ginkgo"

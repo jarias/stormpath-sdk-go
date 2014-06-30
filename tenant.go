@@ -16,21 +16,10 @@ type Tenant struct {
 func CurrentTenant() (*Tenant, error) {
 	tenant := &Tenant{}
 
-	resp, err := Client.Do(&StormpathRequest{
+	err := Client.DoWithResult(&StormpathRequest{
 		Method:              GET,
 		URL:                 TenantBaseUrl + "/current",
 		DontFollowRedirects: true,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	location := resp.Header.Get(LocationHeader)
-
-	err = Client.DoWithResult(&StormpathRequest{
-		Method: GET,
-		URL:    location,
 	}, tenant)
 
 	return tenant, err
@@ -42,7 +31,7 @@ func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters DefaultFi
 	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         tenant.Applications.Href,
-		PageRequest: &pageRequest,
+		PageRequest: pageRequest,
 		Filter:      filters,
 	}, apps)
 
@@ -55,7 +44,7 @@ func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filters DefaultFil
 	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         tenant.Directories.Href,
-		PageRequest: &pageRequest,
+		PageRequest: pageRequest,
 		Filter:      filters,
 	}, directories)
 

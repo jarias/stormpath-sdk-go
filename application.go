@@ -41,12 +41,10 @@ func (app *Application) Save() error {
 }
 
 func (app *Application) Delete() error {
-	_, err := Client.Do(&StormpathRequest{
+	return Client.Do(&StormpathRequest{
 		Method: DELETE,
 		URL:    app.Href,
 	})
-
-	return err
 }
 
 func (app *Application) Purge() error {
@@ -70,8 +68,8 @@ func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter 
 	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         app.AccountStoreMappings.Href,
-		PageRequest: &pageRequest,
-		Filter:      &filter,
+		PageRequest: pageRequest,
+		Filter:      filter,
 	}, accountStoreMappings)
 
 	return accountStoreMappings, err
@@ -83,8 +81,8 @@ func (app *Application) GetAccounts(pageRequest PageRequest, filter AccountFilte
 	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         app.Accounts.Href,
-		PageRequest: &pageRequest,
-		Filter:      &filter,
+		PageRequest: pageRequest,
+		Filter:      filter,
 	}, accounts)
 
 	return accounts, err

@@ -27,11 +27,10 @@ func (dir *Directory) Save() error {
 }
 
 func (dir *Directory) Delete() error {
-	_, err := Client.Do(&StormpathRequest{
+	return Client.Do(&StormpathRequest{
 		Method: DELETE,
 		URL:    dir.Href,
 	})
-	return err
 }
 
 func (dir *Directory) GetGroups(pageRequest PageRequest, filter Filter) (*Groups, error) {
@@ -40,7 +39,7 @@ func (dir *Directory) GetGroups(pageRequest PageRequest, filter Filter) (*Groups
 	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         dir.Groups.Href,
-		PageRequest: &pageRequest,
+		PageRequest: pageRequest,
 		Filter:      filter,
 	}, groups)
 
@@ -53,7 +52,7 @@ func (dir *Directory) GetAccounts(pageRequest PageRequest, filter Filter) (*Acco
 	err := Client.DoWithResult(&StormpathRequest{
 		Method:      GET,
 		URL:         dir.Accounts.Href,
-		PageRequest: &pageRequest,
+		PageRequest: pageRequest,
 		Filter:      filter,
 	}, accounts)
 

@@ -2,7 +2,7 @@ package stormpath_test
 
 import (
 	"encoding/json"
-	. "github.com/jarias/stormpath"
+	. "github.com/jarias/stormpath-sdk-go"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

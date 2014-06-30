@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jarias/stormpath/logger"
+	"github.com/jarias/stormpath-sdk-go/logger"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -39,58 +39,103 @@ var (
 type StormpathClient struct {
 	Credentials *Credentials
 	HttpClient  *http.Client
+	Cache       Cache
 }
 
-func NewStormpathClient(credentials *Credentials) *StormpathClient {
+type doWithResult func(request *StormpathRequest, result interface{}, key string) ([]byte, error)
+
+func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient {
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{},
 		DisableCompression: true,
 	}
 	httpClient := &http.Client{Transport: tr}
 
-	return &StormpathClient{Credentials: credentials, HttpClient: httpClient}
+	return &StormpathClient{credentials, httpClient, cache}
 }
 
 func (client *StormpathClient) DoWithResult(request *StormpathRequest, result interface{}) error {
-	resp, err := client.Do(request)
+	var responseData []byte
+	var err error
+	req, err := request.ToHttpRequest()
+	key := req.URL.String()
+
+	if client.Cache == nil {
+		//Do without cache
+		responseData, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
+	} else {
+		//Do with cache
+		if request.Method == GET {
+			if client.Cache.Exists(key) {
+				responseData, err = client.Cache.Get(key)
+			} else {
+				responseData, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
+			}
+		} else {
+			responseData, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
+		}
+	}
 	if err != nil {
 		return err
 	}
 
-	return unmarshal(resp, result)
+	if client.Cache != nil {
+		switch request.Method {
+		//Refresh the cache
+		case GET:
+			client.Cache.Set(key, responseData)
+			break
+		//Evict the key in the cache
+		case POST, DELETE, PUT:
+			client.Cache.Del(key)
+		}
+	}
+	return unmarshal(responseData, result)
 }
 
-func (client *StormpathClient) Do(request *StormpathRequest) (resp *http.Response, err error) {
+//Do executes a StormpathRequest without returning the response data
+func (client *StormpathClient) Do(request *StormpathRequest) error {
 	req, err := request.ToHttpRequest()
-
 	if err != nil {
-		return nil, err
+		return err
 	}
+	_, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
+	return err
+}
+
+func (client *StormpathClient) execRequest(req *http.Request, payload []byte, dontfollowRedirects bool) ([]byte, error) {
+	var resp *http.Response
+	var err error
 
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, request.marshalPayload(), time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, payload, time.Now().In(time.UTC), client.Credentials, nonce)
 
-	if !request.DontFollowRedirects {
-		logger.INFO.Printf("Executing request [%s] following redirects", req.URL)
-		resp, err := client.HttpClient.Do(req)
-
-		if err != nil {
-			return resp, err
-		}
-
-		return resp, handleStormpathErrors(resp)
-	} else {
+	if dontfollowRedirects {
 		logger.INFO.Printf("Executing request [%s] without following redirects", req.URL)
-		resp, err := client.HttpClient.Transport.RoundTrip(req)
-
+		resp, err = client.HttpClient.Transport.RoundTrip(req)
 		if err != nil {
-			return resp, err
+			return []byte{}, err
 		}
-
-		return resp, handleStormpathErrors(resp)
+		//Get the redirect location from the response headers
+		location := resp.Header.Get(LocationHeader)
+		req, _ := http.NewRequest(GET, location, bytes.NewReader(payload))
+		Authenticate(req, payload, time.Now().In(time.UTC), client.Credentials, nonce)
+		resp, err = client.HttpClient.Do(req)
+	} else {
+		logger.INFO.Printf("Executing request [%s] following redirects", req.URL)
+		resp, err = client.HttpClient.Do(req)
 	}
+
+	if err != nil {
+		return []byte{}, err
+	}
+	err = handleStormpathErrors(resp)
+	if err != nil {
+		return []byte{}, err
+	}
+	return extractResponseData(resp)
 }
 
 func Authenticate(req *http.Request, payload []byte, date time.Time, credentials *Credentials, nonce string) {
