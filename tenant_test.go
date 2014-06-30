@@ -20,6 +20,26 @@ var _ = Describe("Tenant", func() {
 		})
 	})
 
+	Describe("CreateApplication", func() {
+		It("should create a new application", func() {
+			application := NewApplication("create-app")
+			err := tenant.CreateApplication(application)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(application.Href).NotTo(BeEmpty())
+		})
+	})
+
+	Describe("CreateDirectory", func() {
+		It("should create a new directory", func() {
+			dir := NewDirectory("create-dir")
+			err := tenant.CreateDirectory(dir)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(dir.Href).NotTo(BeEmpty())
+		})
+	})
+
 	Describe("GetDirectories", func() {
 		It("should retrive all the tenant directories", func() {
 			tenant, _ := CurrentTenant()
