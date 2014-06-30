@@ -20,7 +20,16 @@ var _ = Describe("AccountStoreMapping", func() {
 	})
 
 	Describe("Save", func() {
-		PIt("should create a new account store mapping", func() {
+		It("should create a new account store mapping", func() {
+			dir := NewDirectory("test-dir")
+
+			tenant.CreateDirectory(dir)
+
+			asm := NewAccountStoreMapping(app.Href, dir.Href)
+			err := asm.Save()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(asm.Href).NotTo(BeEmpty())
 		})
 	})
 })

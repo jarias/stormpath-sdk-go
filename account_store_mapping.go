@@ -18,9 +18,13 @@ func NewAccountStoreMapping(applicationHref string, accountStoreHref string) *Ac
 }
 
 func (mapping *AccountStoreMapping) Save() error {
+	url := AccountStoreMappingBaseUrl
+	if mapping.Href != "" {
+		url = mapping.Href
+	}
 	return Client.DoWithResult(&StormpathRequest{
 		Method:  POST,
-		URL:     AccountStoreMappingBaseUrl,
+		URL:     url,
 		Payload: mapping,
 	}, mapping)
 }
