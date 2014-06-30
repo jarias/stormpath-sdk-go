@@ -14,6 +14,7 @@ var (
 	app     *Application
 	cred    *Credentials
 	account *Account
+	tenant  *Tenant
 )
 
 func TestStormpath(t *testing.T) {
@@ -34,9 +35,10 @@ var _ = BeforeSuite(func() {
 	}
 	Client = NewStormpathClient(cred, RedisCache{redisConn})
 
+	tenant, _ = CurrentTenant()
 	app = NewApplication("test-app")
 
-	err = app.Save()
+	err = tenant.CreateApplication(app)
 	if err != nil {
 		panic(err)
 	}

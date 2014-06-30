@@ -19,23 +19,11 @@ var _ = Describe("Directory", func() {
 		})
 	})
 
-	Describe("Save", func() {
-		It("should create a new directory", func() {
-			directory := NewDirectory("new-directory-test")
-
-			err := directory.Save()
-			directory.Delete()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(directory.Href).NotTo(BeEmpty())
-			Expect(directory.Status).To(Equal("ENABLED"))
-		})
-	})
-
 	Describe("Delete", func() {
 		It("should delete an existing directory", func() {
 			directory := NewDirectory("new-directory-test")
-			directory.Save()
+
+			tenant.CreateDirectory(directory)
 			err := directory.Delete()
 
 			Expect(err).NotTo(HaveOccurred())
@@ -45,7 +33,7 @@ var _ = Describe("Directory", func() {
 	Describe("GetGroups", func() {
 		It("should retrive all directory groups", func() {
 			directory := NewDirectory("new-directory-test")
-			directory.Save()
+			tenant.CreateDirectory(directory)
 
 			groups, err := directory.GetGroups(NewDefaultPageRequest(), DefaultFilter{})
 
@@ -61,7 +49,7 @@ var _ = Describe("Directory", func() {
 	Describe("GetAccounts", func() {
 		It("should retrieve all directory accounts", func() {
 			directory := NewDirectory("new-directory-test")
-			directory.Save()
+			tenant.CreateDirectory(directory)
 
 			accounts, err := directory.GetAccounts(NewDefaultPageRequest(), DefaultFilter{})
 
@@ -77,7 +65,7 @@ var _ = Describe("Directory", func() {
 	Describe("CreateGroup", func() {
 		It("should create new group", func() {
 			directory := NewDirectory("new-directory-test")
-			directory.Save()
+			tenant.CreateDirectory(directory)
 
 			group := NewGroup("new-group")
 			err := directory.CreateGroup(group)

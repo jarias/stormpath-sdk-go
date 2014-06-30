@@ -2,8 +2,6 @@ package stormpath
 
 import (
 	"encoding/base64"
-
-	"net/url"
 )
 
 const (
@@ -29,14 +27,10 @@ func NewApplication(name string) *Application {
 }
 
 func (app *Application) Save() error {
-	var extraParams = url.Values{}
-	extraParams.Add("createDirectory", "true")
-
 	return Client.DoWithResult(&StormpathRequest{
-		Method:      POST,
-		URL:         ApplicationBaseUrl,
-		Payload:     app,
-		ExtraParams: extraParams,
+		Method:  POST,
+		URL:     app.Href,
+		Payload: app,
 	}, app)
 }
 

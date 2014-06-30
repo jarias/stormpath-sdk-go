@@ -1,5 +1,9 @@
 package stormpath
 
+import (
+	"net/url"
+)
+
 const (
 	TenantBaseUrl  = "https://api.stormpath.com/v1/tenants"
 	LocationHeader = "Location"
@@ -23,6 +27,26 @@ func CurrentTenant() (*Tenant, error) {
 	}, tenant)
 
 	return tenant, err
+}
+
+func (tenant *Tenant) CreateApplication(app *Application) error {
+	var extraParams = url.Values{}
+	extraParams.Add("createDirectory", "true")
+
+	return Client.DoWithResult(&StormpathRequest{
+		Method:      POST,
+		URL:         ApplicationBaseUrl,
+		Payload:     app,
+		ExtraParams: extraParams,
+	}, app)
+}
+
+func (tenant *Tenant) CreateDirectory(dir *Directory) error {
+	return Client.DoWithResult(&StormpathRequest{
+		Method:  POST,
+		URL:     DirectoryBaseUrl,
+		Payload: dir,
+	}, dir)
 }
 
 func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters DefaultFilter) (*Applications, error) {

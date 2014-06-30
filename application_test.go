@@ -21,15 +21,11 @@ var _ = Describe("Application", func() {
 	})
 
 	Describe("Save", func() {
-		It("should create a new application", func() {
-			application := NewApplication("create-test")
-
-			err := application.Save()
-			application.Purge()
+		It("should update an existing application", func() {
+			app.Name = "new-name"
+			err := app.Save()
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(application.Href).NotTo(BeEmpty())
-			Expect(application.Status).To(Equal("ENABLED"))
 		})
 	})
 

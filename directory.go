@@ -21,7 +21,7 @@ func NewDirectory(name string) *Directory {
 func (dir *Directory) Save() error {
 	return Client.DoWithResult(&StormpathRequest{
 		Method:  POST,
-		URL:     DirectoryBaseUrl,
+		URL:     dir.Href,
 		Payload: dir,
 	}, dir)
 }
