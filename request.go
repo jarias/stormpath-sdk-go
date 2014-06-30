@@ -27,7 +27,7 @@ type StormpathRequest struct {
 	URL                 string
 	DontFollowRedirects bool
 	Payload             interface{}
-	PageRequest         *PageRequest
+	PageRequest         PageRequest
 	Filter              Filter
 	ExtraParams         url.Values
 }
@@ -59,12 +59,10 @@ func (request *StormpathRequest) marshalPayload() []byte {
 func (request *StormpathRequest) ToHttpRequest() (req *http.Request, err error) {
 	var query = url.Values{}
 
-	if request.PageRequest != nil {
-		pageRequestQuery := request.PageRequest.ToUrlQueryValues()
+	pageRequestQuery := request.PageRequest.ToUrlQueryValues()
 
-		for k, v := range pageRequestQuery {
-			query[k] = v
-		}
+	for k, v := range pageRequestQuery {
+		query[k] = v
 	}
 
 	if request.Filter != nil {

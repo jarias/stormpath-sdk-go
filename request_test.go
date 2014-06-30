@@ -1,7 +1,7 @@
 package stormpath_test
 
 import (
-	. "github.com/jarias/stormpath"
+	. "github.com/jarias/stormpath-sdk-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -31,7 +31,7 @@ var _ = Describe("Request", func() {
 	Context("HTTP request", func() {
 		Describe("Converting to an HTTP request", func() {
 			It("should convert a stormpath request to a http.Request", func() {
-				r := StormpathRequest{Method: "GET", URL: "http://test/test", PageRequest: &PageRequest{}, Filter: DefaultFilter{}, Payload: []byte("")}
+				r := StormpathRequest{Method: "GET", URL: "http://test/test", PageRequest: PageRequest{}, Filter: DefaultFilter{}, Payload: []byte("")}
 				req, err := r.ToHttpRequest()
 
 				Expect(err).NotTo(HaveOccurred())

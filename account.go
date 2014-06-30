@@ -48,11 +48,10 @@ func (account *Account) Save() error {
 }
 
 func (account *Account) Delete() error {
-	_, err := Client.Do(&StormpathRequest{
+	return Client.Do(&StormpathRequest{
 		Method: DELETE,
 		URL:    account.Href,
 	})
-	return err
 }
 
 func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {

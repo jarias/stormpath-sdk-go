@@ -1,2 +1,3 @@
 github.com/nu7hatch/gouuid 179d4d0c4d8d407a32af483c2354df1d2c91e6c3
 github.com/dmotylev/goproperties 03c369aaf5615d405c2dd116ce138b170d5246a3
+github.com/garyburd/redigo/redis 1c7841955920910958c71b1cc1a03f628267d468

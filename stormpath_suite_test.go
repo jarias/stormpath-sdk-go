@@ -1,8 +1,9 @@
 package stormpath_test
 
 import (
-	. "github.com/jarias/stormpath"
-	"github.com/jarias/stormpath/logger"
+	"github.com/garyburd/redigo/redis"
+	. "github.com/jarias/stormpath-sdk-go"
+	"github.com/jarias/stormpath-sdk-go/logger"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -27,7 +28,11 @@ var _ = BeforeSuite(func() {
 	if err != nil {
 		panic(err)
 	}
-	Client = NewStormpathClient(cred)
+	redisConn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		panic(err)
+	}
+	Client = NewStormpathClient(cred, RedisCache{redisConn})
 
 	app = NewApplication("test-app")
 
