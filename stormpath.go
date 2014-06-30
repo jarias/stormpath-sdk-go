@@ -58,37 +58,11 @@ func (client *StormpathClient) DoWithResult(request *StormpathRequest, result in
 	var responseData []byte
 	var err error
 	req, err := request.ToHttpRequest()
-	key := req.URL.String()
 
-	if client.Cache == nil {
-		//Do without cache
-		responseData, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
-	} else {
-		//Do with cache
-		if request.Method == GET {
-			if client.Cache.Exists(key) {
-				responseData, err = client.Cache.Get(key)
-			} else {
-				responseData, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
-			}
-		} else {
-			responseData, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
-		}
-	}
+	responseData, err = client.execRequestWithCache(req, request.marshalPayload(), request.DontFollowRedirects)
+
 	if err != nil {
 		return err
-	}
-
-	if client.Cache != nil {
-		switch request.Method {
-		//Refresh the cache
-		case GET:
-			client.Cache.Set(key, responseData)
-			break
-		//Evict the key in the cache
-		case POST, DELETE, PUT:
-			client.Cache.Del(key)
-		}
 	}
 	return unmarshal(responseData, result)
 }
@@ -101,6 +75,31 @@ func (client *StormpathClient) Do(request *StormpathRequest) error {
 	}
 	_, err = client.execRequest(req, request.marshalPayload(), request.DontFollowRedirects)
 	return err
+}
+
+func (client *StormpathClient) execRequestWithCache(req *http.Request, payload []byte, dontfollowRedirects bool) ([]byte, error) {
+	var responseData []byte
+	var err error
+
+	key := req.URL.String()
+
+	if client.Cache != nil && req.Method == GET && client.Cache.Exists(key) {
+		responseData, err = client.Cache.Get(key)
+	} else {
+		responseData, err = client.execRequest(req, payload, dontfollowRedirects)
+	}
+
+	if client.Cache != nil {
+		switch req.Method {
+		case POST, DELETE, PUT:
+			client.Cache.Del(key)
+			break
+		case GET:
+			client.Cache.Set(key, responseData)
+		}
+	}
+
+	return responseData, err
 }
 
 func (client *StormpathClient) execRequest(req *http.Request, payload []byte, dontfollowRedirects bool) ([]byte, error) {

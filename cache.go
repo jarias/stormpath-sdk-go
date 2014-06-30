@@ -31,6 +31,7 @@ func (r RedisCache) Exists(key string) bool {
 
 //Set stores data in the the cache for the given key
 func (r RedisCache) Set(key string, data []byte) {
+	logger.CACHE.Printf("Setting data from cache for key [%s]", key)
 	_, err := r.Conn.Do("SETEX", key, 30, string(data))
 	if err != nil {
 		logger.ERROR.Println(err)
@@ -39,6 +40,7 @@ func (r RedisCache) Set(key string, data []byte) {
 
 //Get returns the data store under key it should return an error if any occur
 func (r RedisCache) Get(key string) ([]byte, error) {
+	logger.CACHE.Printf("Geting data from cache for key [%s]", key)
 	cacheData, err := r.Conn.Do("GET", key)
 	if err != nil {
 		//Log the error and return an empty slice along with the error
@@ -50,6 +52,7 @@ func (r RedisCache) Get(key string) ([]byte, error) {
 
 //Del deletes a key from the cache
 func (r RedisCache) Del(key string) {
+	logger.CACHE.Printf("Deleting data from cache for key [%s]", key)
 	_, err := r.Conn.Do("DEL", key)
 	if err != nil {
 		logger.ERROR.Println(err)
