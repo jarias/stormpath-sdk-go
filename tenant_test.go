@@ -24,6 +24,7 @@ var _ = Describe("Tenant", func() {
 		It("should create a new application", func() {
 			application := NewApplication("create-app")
 			err := tenant.CreateApplication(application)
+			application.Purge()
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(application.Href).NotTo(BeEmpty())
@@ -34,6 +35,7 @@ var _ = Describe("Tenant", func() {
 		It("should create a new directory", func() {
 			dir := NewDirectory("create-dir")
 			err := tenant.CreateDirectory(dir)
+			dir.Delete()
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(dir.Href).NotTo(BeEmpty())
