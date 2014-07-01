@@ -26,6 +26,12 @@ func NewCredentialsFromFile(file string) (*Credentials, error) {
 }
 
 func NewDefaultCredentials() (*Credentials, error) {
-	defaultFilePath := os.Getenv("HOME") + "/.config/stormpath/apiKey.properties"
-	return NewCredentialsFromFile(defaultFilePath)
+	apiKeyId := os.Getenv("STORMPATH_API_KEY_ID")
+	apiKeySecret := os.Getenv("STORMPATH_API_KEY_SECRET")
+	if apiKeyId != "" && apiKeySecret != "" {
+		return &Credentials{apiKeyId, apiKeySecret}, nil
+	} else {
+		defaultFilePath := os.Getenv("HOME") + "/.config/stormpath/apiKey.properties"
+		return NewCredentialsFromFile(defaultFilePath)
+	}
 }
