@@ -41,7 +41,10 @@ var _ = Describe("Application", func() {
 
 	Describe("AuthenticateAccount", func() {
 		It("should authenticate and return the account if the credentials are valid", func() {
-			a, err := app.AuthenticateAccount("test@test.org", "1234567z!A89")
+			account := NewAccount("auth@test.org", "1234567z!A89", "test", "test")
+			app.RegisterAccount(account)
+
+			a, err := app.AuthenticateAccount("auth@test.org", "1234567z!A89")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(a.Account.Href).To(Equal(account.Href))
 		})
