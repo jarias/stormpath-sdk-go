@@ -1,5 +1,7 @@
 Go SDK for the [Stormpath](http://stormpath.com/) API
 
+[![Build Status](https://drone.io/github.com/jarias/stormpath-sdk-go/status.png)](https://drone.io/github.com/jarias/stormpath-sdk-go/latest) [![Coverage Status](https://coveralls.io/repos/jarias/stormpath-sdk-go/badge.png?branch=develop)](https://coveralls.io/r/jarias/stormpath-sdk-go?branch=develop)
+
 #License
 
 Copyright 2014 Julio Arias
