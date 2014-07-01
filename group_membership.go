@@ -7,7 +7,7 @@ const (
 type GroupMembership struct {
 	Href    string `json:"href,omitempty"`
 	Account Link   `json:"account"`
-	Group   Link   `json:group`
+	Group   Link   `json:"group"`
 }
 
 func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
