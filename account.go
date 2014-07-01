@@ -67,7 +67,7 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 }
 
 func (account *Account) RemoveFromGroup(group *Group) error {
-	groupMemberships, err := account.GetGroupMemberships(NewDefaultPageRequest(), DefaultFilter{})
+	groupMemberships, err := account.GetGroupMemberships(NewDefaultPageRequest())
 
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 				return gm.Delete()
 			}
 		}
-		groupMemberships, err = account.GetGroupMemberships(NewPageRequest(25, i*25), DefaultFilter{})
+		groupMemberships, err = account.GetGroupMemberships(NewPageRequest(25, i*25))
 		if err != nil {
 			return err
 		}
@@ -88,13 +88,33 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 	return nil
 }
 
-func (account *Account) GetGroupMemberships(pageRequest PageRequest, filter Filter) (*GroupMemberships, error) {
+func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method: GET,
-		URL:    account.GroupMemberships.Href,
+		Method:      GET,
+		URL:         account.GroupMemberships.Href,
+		PageRequest: pageRequest,
 	}, groupMemberships)
 
 	return groupMemberships, err
+}
+
+func (account *Account) GetCustomData() (map[string]string, error) {
+	customData := make(map[string]string)
+
+	err := Client.DoWithResult(&StormpathRequest{
+		Method: GET,
+		URL:    account.CustomData.Href,
+	}, customData)
+
+	return customData, err
+}
+
+func (account *Account) SetCustomData(data map[string]string) error {
+	return Client.DoWithResult(&StormpathRequest{
+		Method:  POST,
+		URL:     account.CustomData.Href,
+		Payload: data,
+	}, data)
 }
