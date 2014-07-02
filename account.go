@@ -1,5 +1,8 @@
 package stormpath
 
+//Account represents an Stormpath account object
+//
+//See: http://docs.stormpath.com/rest/product-guide/#accounts
 type Account struct {
 	Href                   string `json:"href,omitempty"`
 	Username               string `json:"username,omitempty"`
@@ -18,27 +21,41 @@ type Account struct {
 	EmailVerificationToken *Link  `json:"emailVerificationToken,omitempty"`
 }
 
+//Accounts represents a paged result of Account objects
+//
+//See: http://docs.stormpath.com/rest/product-guide/#accounts-list
 type Accounts struct {
-	Href   string     `json:"href"`
-	Offset int        `json:"offset"`
-	Limit  int        `json:"limit"`
-	Items  []*Account `json:"items"`
+	Href   string    `json:"href"`
+	Offset int       `json:"offset"`
+	Limit  int       `json:"limit"`
+	Items  []Account `json:"items"`
 }
 
+//AccountRef represent a link to an account, this type of resource is return when expand is not especify,
+//use only in account authentication
+//
+//See: http://docs.stormpath.com/rest/product-guide/#application-accounts (Log In (Authenticate) an Account)
 type AccountRef struct {
 	Account Link
 }
 
+//AccountPasswordResetToken represents an password reset token for a given account
+//
+//See: http://docs.stormpath.com/rest/product-guide/#application-accounts (Reset An Account’s Password)
 type AccountPasswordResetToken struct {
 	Href    string
 	Email   string
 	Account Link
 }
 
+//NewAccount is a conviniece constructor for an Account, it accepts all the required fields according to
+//the Stormpath API, it returns a pointer to an Account
 func NewAccount(email string, password string, givenName string, surname string) *Account {
 	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
 }
 
+//Save updates the given account, by doing a POST to the account Href, if the account is a new account
+//it should be created via Application.RegisterAccount
 func (account *Account) Save() error {
 	return Client.DoWithResult(&StormpathRequest{
 		Method:  Post,
@@ -47,6 +64,7 @@ func (account *Account) Save() error {
 	}, account)
 }
 
+//Delete deletes the given account, it wont modify the calling account
 func (account *Account) Delete() error {
 	return Client.Do(&StormpathRequest{
 		Method: Delete,
@@ -54,6 +72,7 @@ func (account *Account) Delete() error {
 	})
 }
 
+//AddToGroup adds the given account to a given group and returns the respective GroupMembership
 func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 	groupMembership := NewGroupMembership(account.Href, group.Href)
 
@@ -66,6 +85,8 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 	return groupMembership, err
 }
 
+//RemoveFromGroup removes the given account from the given group by searching the account groupmemberships,
+//and deleting the corresponding one
 func (account *Account) RemoveFromGroup(group *Group) error {
 	groupMemberships, err := account.GetGroupMemberships(NewDefaultPageRequest())
 
@@ -88,6 +109,7 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 	return nil
 }
 
+//GetGroupMemberships returns a paged result of the group memeberships of the given account
 func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
@@ -100,6 +122,7 @@ func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemb
 	return groupMemberships, err
 }
 
+//GetCustomData returns the given account custom data as a map
 func (account *Account) GetCustomData() (map[string]string, error) {
 	customData := make(map[string]string)
 
@@ -111,6 +134,7 @@ func (account *Account) GetCustomData() (map[string]string, error) {
 	return customData, err
 }
 
+//SetCustomData sets or updates the given account custom data
 func (account *Account) SetCustomData(data map[string]string) error {
 	return Client.DoWithResult(&StormpathRequest{
 		Method:  Post,
