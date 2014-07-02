@@ -6,43 +6,33 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
+	"github.com/nu7hatch/gouuid"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/jarias/stormpath-sdk-go/logger"
-	"github.com/nu7hatch/gouuid"
 )
 
-const (
-	VERSION                = "0.0.1"
-	DEFAULT_ALGORITHM      = "SHA256"
-	HOST_HEADER            = "Host"
-	AUTHORIZATION_HEADER   = "Authorization"
-	STORMPATH_DATE_HEADER  = "X-Stormpath-Date"
-	ID_TERMINATOR          = "sauthc1_request"
-	ALGORITHM              = "HMAC-SHA-256"
-	AUTHENTICATION_SCHEME  = "SAuthc1"
-	SAUTHC1_ID             = "sauthc1Id"
-	SAUTHC1_SIGNED_HEADERS = "sauthc1SignedHeaders"
-	SAUTHC1_SIGNATURE      = "sauthc1Signature"
-	DATE_FORMAT            = "20060102"
-	TIMESTAMP_FORMAT       = "20060102T150405Z0700"
-	NL                     = "\n"
-)
+//Version is the current SDK Version
+const Version = "0.0.1"
 
-var (
-	Client *StormpathClient
-)
+//Client is default global client variable to execute any Stormpath request
+var Client *StormpathClient
 
+//StormpathClient is low level REST client for any Stormpath request,
+//it holds the credentials, an the actual http client, and the cache.
+//The Cache can be initialize in nil and the client would simply ignore it
+//and don't cache any response.
 type StormpathClient struct {
 	Credentials *Credentials
-	HttpClient  *http.Client
+	HTTPClient  *http.Client
 	Cache       Cache
 }
 
+//NewStormpathClient is a convience constructor for the StormpathClient struct,
+//it recieves a pointer to a credentials object a cache implementation and
+//returns a pointer to a StormpathClient object, the cache implementation can be nil
 func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient {
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{},
@@ -53,6 +43,8 @@ func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient 
 	return &StormpathClient{credentials, httpClient, cache}
 }
 
+//DoWithResult executes the given StormpathRequest and serialize the response body into the given expected result,
+//it returns an error if any occurred while executing the request or serializing the response
 func (client *StormpathClient) DoWithResult(request *StormpathRequest, result interface{}) error {
 	var responseData []byte
 	var err error
@@ -66,7 +58,8 @@ func (client *StormpathClient) DoWithResult(request *StormpathRequest, result in
 	return unmarshal(responseData, result)
 }
 
-//Do executes a StormpathRequest without returning the response data
+//Do executes the StormpathRequest without expecting a response body as a result,
+//it returns an error if any occurred while executing the request
 func (client *StormpathClient) Do(request *StormpathRequest) error {
 	req, err := request.ToHttpRequest()
 	if err != nil {
@@ -76,6 +69,8 @@ func (client *StormpathClient) Do(request *StormpathRequest) error {
 	return err
 }
 
+//execRequestWithCache executes a request and caches its response if Method == GET and there is a valid cache implementation,
+//it would return a byte slice with the raw resoponse data and an error if any occurred
 func (client *StormpathClient) execRequestWithCache(req *http.Request, payload []byte, dontfollowRedirects bool) ([]byte, error) {
 	var responseData []byte
 	var err error
@@ -101,6 +96,7 @@ func (client *StormpathClient) execRequestWithCache(req *http.Request, payload [
 	return responseData, err
 }
 
+//execRequest executes a request, it would return a byte slice with the raw resoponse data and an error if any occurred
 func (client *StormpathClient) execRequest(req *http.Request, payload []byte, dontfollowRedirects bool) ([]byte, error) {
 	var resp *http.Response
 	var err error
@@ -111,19 +107,15 @@ func (client *StormpathClient) execRequest(req *http.Request, payload []byte, do
 	Authenticate(req, payload, time.Now().In(time.UTC), client.Credentials, nonce)
 
 	if dontfollowRedirects {
-		logger.INFO.Printf("Executing request [%s] without following redirects", req.URL)
-		resp, err = client.HttpClient.Transport.RoundTrip(req)
+		resp, err = client.HTTPClient.Transport.RoundTrip(req)
 		if err != nil {
 			return []byte{}, err
 		}
 		//Get the redirect location from the response headers
-		location := resp.Header.Get(LocationHeader)
-		req, _ := http.NewRequest(GET, location, bytes.NewReader(payload))
-		Authenticate(req, payload, time.Now().In(time.UTC), client.Credentials, nonce)
-		resp, err = client.HttpClient.Do(req)
+		req, _ := http.NewRequest(GET, resp.Header.Get(LocationHeader), bytes.NewReader(payload))
+		return client.execRequest(req, payload, !dontfollowRedirects)
 	} else {
-		logger.INFO.Printf("Executing request [%s] following redirects", req.URL)
-		resp, err = client.HttpClient.Do(req)
+		resp, err = client.HTTPClient.Do(req)
 	}
 
 	if err != nil {
@@ -136,11 +128,19 @@ func (client *StormpathClient) execRequest(req *http.Request, payload []byte, do
 	return extractResponseData(resp)
 }
 
+//Constants use for the SAuthc1 authentication algorithm
+const (
+	IDTerminator         = "sauthc1_request"
+	AuthenticationScheme = "SAuthc1"
+	NL                   = "\n"
+)
+
+//Authenticate generates the proper authentication header for the SAuthc1 algorithm use by Stormpath
 func Authenticate(req *http.Request, payload []byte, date time.Time, credentials *Credentials, nonce string) {
-	timestamp := date.Format(TIMESTAMP_FORMAT)
-	dateStamp := date.Format(DATE_FORMAT)
-	req.Header.Set(HOST_HEADER, req.URL.Host)
-	req.Header.Set(STORMPATH_DATE_HEADER, timestamp)
+	timestamp := date.Format("20060102T150405Z0700")
+	dateStamp := date.Format("20060102")
+	req.Header.Set("Host", req.URL.Host)
+	req.Header.Set("X-Stormpath-Date", timestamp)
 
 	canonicalResourcePath := canonicalizeResourcePath(req.URL.Path)
 	canonicalQueryString := canonicalizeQueryString(req)
@@ -162,12 +162,12 @@ func Authenticate(req *http.Request, payload []byte, date time.Time, credentials
 			NL +
 			requestPayloadHashHex
 
-	id := credentials.Id + "/" + dateStamp + "/" + nonce + "/" + ID_TERMINATOR
+	id := credentials.Id + "/" + dateStamp + "/" + nonce + "/" + IDTerminator
 
 	canonicalRequestHashHex := hex.EncodeToString(hash([]byte(canonicalRequest)))
 
 	stringToSign :=
-		ALGORITHM +
+		"HMAC-SHA-256" +
 			NL +
 			timestamp +
 			NL +
@@ -175,28 +175,28 @@ func Authenticate(req *http.Request, payload []byte, date time.Time, credentials
 			NL +
 			canonicalRequestHashHex
 
-	kSecret := []byte(AUTHENTICATION_SCHEME + credentials.Secret)
-	kDate := sing(dateStamp, kSecret)
-	kNonce := sing(nonce, kDate)
-	kSigning := sing(ID_TERMINATOR, kNonce)
+	secret := []byte(AuthenticationScheme + credentials.Secret)
+	singDate := sing(dateStamp, secret)
+	singNonce := sing(nonce, singDate)
+	signing := sing(IDTerminator, singNonce)
 
-	signature := sing(stringToSign, kSigning)
+	signature := sing(stringToSign, signing)
 	signatureHex := hex.EncodeToString(signature)
 
 	authorizationHeader :=
-		AUTHENTICATION_SCHEME + " " +
-			createNameValuePair(SAUTHC1_ID, id) + ", " +
-			createNameValuePair(SAUTHC1_SIGNED_HEADERS, signedHeadersString) + ", " +
-			createNameValuePair(SAUTHC1_SIGNATURE, signatureHex)
+		AuthenticationScheme + " " +
+			createNameValuePair("sauthc1Id", id) + ", " +
+			createNameValuePair("sauthc1SignedHeaders", signedHeadersString) + ", " +
+			createNameValuePair("sauthc1Signature", signatureHex)
 
-	req.Header.Set(AUTHORIZATION_HEADER, authorizationHeader)
+	req.Header.Set("Authorization", authorizationHeader)
 }
 
 func createNameValuePair(name string, value string) string {
 	return name + "=" + value
 }
 
-func encodeUrl(value string, path bool, canonical bool) string {
+func encodeURL(value string, path bool, canonical bool) string {
 	if value == "" {
 		return ""
 	}
@@ -221,16 +221,16 @@ func canonicalizeQueryString(req *http.Request) string {
 	queryValues := req.URL.Query()
 
 	result := ""
-	for k, _ := range queryValues {
+	for k := range queryValues {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		key := encodeUrl(k, false, true)
+		key := encodeURL(k, false, true)
 		v := queryValues[k]
 		for _, vv := range v {
-			value := encodeUrl(vv, false, true)
+			value := encodeURL(vv, false, true)
 
 			if len(result) > 0 {
 				result = result + "&"
@@ -246,9 +246,8 @@ func canonicalizeQueryString(req *http.Request) string {
 func canonicalizeResourcePath(path string) string {
 	if len(path) == 0 {
 		return "/"
-	} else {
-		return encodeUrl(path, true, true)
 	}
+	return encodeURL(path, true, true)
 }
 
 func canonicalizeHeadersString(headers http.Header) string {

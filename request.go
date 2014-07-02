@@ -87,7 +87,7 @@ func (request *StormpathRequest) ToHttpRequest() (req *http.Request, err error) 
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+VERSION)
+	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+Version)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 
