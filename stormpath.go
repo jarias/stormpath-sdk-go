@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	VERSION                = "0.0.1"
 	DEFAULT_ALGORITHM      = "SHA256"
 	HOST_HEADER            = "Host"
 	AUTHORIZATION_HEADER   = "Authorization"

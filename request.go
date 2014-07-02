@@ -87,9 +87,9 @@ func (request *StormpathRequest) ToHttpRequest() (req *http.Request, err error) 
 		return nil, err
 	}
 
-	if request.Method == POST || request.Method == PUT {
-		req.Header.Add("Content-Type", "application/json")
-	}
+	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+VERSION)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 
 	return
 }
