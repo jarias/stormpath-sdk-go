@@ -16,7 +16,7 @@ func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
 
 func (groupmembership *GroupMembership) Delete() error {
 	return Client.Do(&StormpathRequest{
-		Method: DELETE,
+		Method: Delete,
 		URL:    groupmembership.Href,
 	})
 }
@@ -25,7 +25,7 @@ func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
 	account := &Account{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method: GET,
+		Method: Get,
 		URL:    groupmembership.Account.Href,
 	}, account)
 
@@ -36,7 +36,7 @@ func (groupmembership *GroupMembership) GetGroup() (*Group, error) {
 	group := &Group{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method: GET,
+		Method: Get,
 		URL:    groupmembership.Group.Href,
 	}, group)
 

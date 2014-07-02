@@ -28,7 +28,7 @@ func NewApplication(name string) *Application {
 
 func (app *Application) Save() error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     app.Href,
 		Payload: app,
 	}, app)
@@ -36,7 +36,7 @@ func (app *Application) Save() error {
 
 func (app *Application) Delete() error {
 	return Client.Do(&StormpathRequest{
-		Method: DELETE,
+		Method: Delete,
 		URL:    app.Href,
 	})
 }
@@ -48,7 +48,7 @@ func (app *Application) Purge() error {
 	}
 	for _, m := range accountStoreMappings.Items {
 		Client.Do(&StormpathRequest{
-			Method: DELETE,
+			Method: Delete,
 			URL:    m.AccountStore.Href,
 		})
 	}
@@ -60,7 +60,7 @@ func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter 
 	accountStoreMappings := &AccountStoreMappings{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         app.AccountStoreMappings.Href,
 		PageRequest: pageRequest,
 		Filter:      filter,
@@ -73,7 +73,7 @@ func (app *Application) GetAccounts(pageRequest PageRequest, filter AccountFilte
 	accounts := &Accounts{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         app.Accounts.Href,
 		PageRequest: pageRequest,
 		Filter:      filter,
@@ -84,7 +84,7 @@ func (app *Application) GetAccounts(pageRequest PageRequest, filter AccountFilte
 
 func (app *Application) RegisterAccount(account *Account) error {
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     app.Accounts.Href,
 		Payload: account,
 	}, account)
@@ -101,7 +101,7 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     app.Href + "/loginAttempts",
 		Payload: loginAttemptPayload,
 	}, account)
@@ -116,7 +116,7 @@ func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswor
 	passwordResetPayload["email"] = username
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     app.Href + "/passwordResetTokens",
 		Payload: passwordResetPayload,
 	}, passwordResetToken)
@@ -128,7 +128,7 @@ func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswo
 	passwordResetToken := &AccountPasswordResetToken{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method: GET,
+		Method: Get,
 		URL:    app.Href + "/passwordResetTokens/" + token,
 	}, passwordResetToken)
 
@@ -142,7 +142,7 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	resetPasswordPayload["password"] = newPassword
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     app.Href + "/passwordResetTokens/" + token,
 		Payload: resetPasswordPayload,
 	}, account)
@@ -152,7 +152,7 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 
 func (app *Application) CreateApplicationGroup(group *Group) error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     app.Groups.Href,
 		Payload: group,
 	}, group)
@@ -162,7 +162,7 @@ func (app *Application) GetApplicationGroups(pageRequest PageRequest, filters Fi
 	groups := &Groups{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method: GET,
+		Method: Get,
 		URL:    app.Groups.Href,
 	}, groups)
 

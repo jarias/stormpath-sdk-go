@@ -17,19 +17,26 @@ func unmarshal(data []byte, v interface{}) error {
 	return json.Unmarshal(data, v)
 }
 
-func handleStormpathErrors(resp *http.Response) error {
+func handleResponseError(resp *http.Response, err error) ([]byte, error) {
+	//Error from the request execution
+	if err != nil {
+		logger.ERROR.Printf("%s [%s]", err, resp.Request.URL.String())
+		return []byte{}, err
+	}
+	//Check for Stormpath specific errors
 	if resp.StatusCode != 200 && resp.StatusCode != 204 && resp.StatusCode != 201 && resp.StatusCode != 302 {
 		stormpathError := &StormpathError{}
 
 		data, err := extractResponseData(resp)
 		if err != nil {
-			return err
+			return []byte{}, err
 		}
 
 		unmarshal(data, stormpathError)
 
-		logger.ERROR.Println(stormpathError.Message)
-		return errors.New(stormpathError.Message)
+		logger.ERROR.Printf("%s [%s]", stormpathError.Message, resp.Request.URL.String())
+		return []byte{}, errors.New(stormpathError.Message)
 	}
-	return nil
+	//No errors from the request execution
+	return extractResponseData(resp)
 }

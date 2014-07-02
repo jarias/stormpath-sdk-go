@@ -35,13 +35,18 @@ var _ = BeforeSuite(func() {
 	}
 	Client = NewStormpathClient(cred, RedisCache{redisConn})
 
-	tenant, _ = CurrentTenant()
+	tenant, err = CurrentTenant()
+	if err != nil {
+		panic(err)
+	}
+
 	app = NewApplication("test-app")
 
 	err = tenant.CreateApplication(app)
 	if err != nil {
 		panic(err)
 	}
+
 	account = NewAccount("test@test.org", "1234567z!A89", "test", "test")
 	app.RegisterAccount(account)
 })

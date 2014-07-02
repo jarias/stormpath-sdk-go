@@ -17,7 +17,7 @@ func NewGroup(name string) *Group {
 
 func (group *Group) Save() error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     group.Href,
 		Payload: group,
 	}, group)
@@ -25,7 +25,7 @@ func (group *Group) Save() error {
 
 func (group *Group) Delete() error {
 	return Client.Do(&StormpathRequest{
-		Method: DELETE,
+		Method: Delete,
 		URL:    group.Href,
 	})
 }
@@ -34,7 +34,7 @@ func (group *Group) GetAccounts(pageRequest PageRequest, filter Filter) (*Accoun
 	accounts := &Accounts{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         group.Accounts.Href,
 		PageRequest: pageRequest,
 		Filter:      filter,
@@ -47,7 +47,7 @@ func (group *Group) GetGroupMemberships(pageRequest PageRequest, filter Filter) 
 	groupMemberships := &GroupMemberships{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         group.Href + "/accountMemberships",
 		PageRequest: pageRequest,
 		Filter:      filter,

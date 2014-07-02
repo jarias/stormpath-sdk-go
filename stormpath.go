@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
+	"github.com/jarias/stormpath-sdk-go/logger"
 	"github.com/nu7hatch/gouuid"
 	"net/http"
 	"net/url"
@@ -48,7 +49,7 @@ func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient 
 func (client *StormpathClient) DoWithResult(request *StormpathRequest, result interface{}) error {
 	var responseData []byte
 	var err error
-	req, err := request.ToHttpRequest()
+	req, err := request.ToHTTPRequest()
 
 	responseData, err = client.execRequestWithCache(req, request.marshalPayload(), request.DontFollowRedirects)
 
@@ -61,7 +62,7 @@ func (client *StormpathClient) DoWithResult(request *StormpathRequest, result in
 //Do executes the StormpathRequest without expecting a response body as a result,
 //it returns an error if any occurred while executing the request
 func (client *StormpathClient) Do(request *StormpathRequest) error {
-	req, err := request.ToHttpRequest()
+	req, err := request.ToHTTPRequest()
 	if err != nil {
 		return err
 	}
@@ -77,18 +78,18 @@ func (client *StormpathClient) execRequestWithCache(req *http.Request, payload [
 
 	key := req.URL.String()
 
-	if client.Cache != nil && req.Method == GET && client.Cache.Exists(key) {
+	if client.Cache != nil && req.Method == Get && client.Cache.Exists(key) {
 		responseData, err = client.Cache.Get(key)
 	} else {
 		responseData, err = client.execRequest(req, payload, dontfollowRedirects)
 	}
 
-	if client.Cache != nil {
+	if client.Cache != nil && err == nil {
 		switch req.Method {
-		case POST, DELETE, PUT:
+		case Post, Delete, Put:
 			client.Cache.Del(key)
 			break
-		case GET:
+		case Get:
 			client.Cache.Set(key, responseData)
 		}
 	}
@@ -108,66 +109,62 @@ func (client *StormpathClient) execRequest(req *http.Request, payload []byte, do
 
 	if dontfollowRedirects {
 		resp, err = client.HTTPClient.Transport.RoundTrip(req)
+		_, err = handleResponseError(resp, err)
 		if err != nil {
+			logger.ERROR.Printf("%s [%s]", err, resp.Request.URL.String())
 			return []byte{}, err
 		}
 		//Get the redirect location from the response headers
-		req, _ := http.NewRequest(GET, resp.Header.Get(LocationHeader), bytes.NewReader(payload))
+		req, _ := http.NewRequest(Get, resp.Header.Get(LocationHeader), bytes.NewReader(payload))
 		return client.execRequest(req, payload, !dontfollowRedirects)
-	} else {
-		resp, err = client.HTTPClient.Do(req)
 	}
-
-	if err != nil {
-		return []byte{}, err
-	}
-	err = handleStormpathErrors(resp)
-	if err != nil {
-		return []byte{}, err
-	}
-	return extractResponseData(resp)
+	return handleResponseError(client.HTTPClient.Do(req))
 }
 
-//Constants use for the SAuthc1 authentication algorithm
+//Constants use for the SAUTHC1 authentication algorithm
 const (
 	IDTerminator         = "sauthc1_request"
 	AuthenticationScheme = "SAuthc1"
 	NL                   = "\n"
+	HostHeader           = "Host"
+	AuthorizationHeader  = "Authorization"
+	StormpathDateHeader  = "X-Stormpath-Date"
+	Algorithm            = "HMAC-SHA-256"
+	SAUTHC1Id            = "sauthc1Id"
+	SAUTHC1SignedHeaders = "sauthc1SignedHeaders"
+	SAUTHC1Signature     = "sauthc1Signature"
+	DateFormat           = "20060102"
+	TimestampFormat      = "20060102T150405Z0700"
 )
 
 //Authenticate generates the proper authentication header for the SAuthc1 algorithm use by Stormpath
 func Authenticate(req *http.Request, payload []byte, date time.Time, credentials *Credentials, nonce string) {
-	timestamp := date.Format("20060102T150405Z0700")
-	dateStamp := date.Format("20060102")
-	req.Header.Set("Host", req.URL.Host)
-	req.Header.Set("X-Stormpath-Date", timestamp)
+	timestamp := date.Format(TimestampFormat)
+	dateStamp := date.Format(DateFormat)
+	req.Header.Set(HostHeader, req.URL.Host)
+	req.Header.Set(StormpathDateHeader, timestamp)
 
-	canonicalResourcePath := canonicalizeResourcePath(req.URL.Path)
-	canonicalQueryString := canonicalizeQueryString(req)
-	canonicalHeadersString := canonicalizeHeadersString(req.Header)
 	signedHeadersString := signedHeadersString(req.Header)
-
-	requestPayloadHashHex := hex.EncodeToString(hash(payload))
 
 	canonicalRequest :=
 		req.Method +
 			NL +
-			canonicalResourcePath +
+			canonicalizeResourcePath(req.URL.Path) +
 			NL +
-			canonicalQueryString +
+			canonicalizeQueryString(req) +
 			NL +
-			canonicalHeadersString +
+			canonicalizeHeadersString(req.Header) +
 			NL +
 			signedHeadersString +
 			NL +
-			requestPayloadHashHex
+			hex.EncodeToString(hash(payload))
 
 	id := credentials.Id + "/" + dateStamp + "/" + nonce + "/" + IDTerminator
 
 	canonicalRequestHashHex := hex.EncodeToString(hash([]byte(canonicalRequest)))
 
 	stringToSign :=
-		"HMAC-SHA-256" +
+		Algorithm +
 			NL +
 			timestamp +
 			NL +
@@ -185,11 +182,11 @@ func Authenticate(req *http.Request, payload []byte, date time.Time, credentials
 
 	authorizationHeader :=
 		AuthenticationScheme + " " +
-			createNameValuePair("sauthc1Id", id) + ", " +
-			createNameValuePair("sauthc1SignedHeaders", signedHeadersString) + ", " +
-			createNameValuePair("sauthc1Signature", signatureHex)
+			createNameValuePair(SAUTHC1Id, id) + ", " +
+			createNameValuePair(SAUTHC1SignedHeaders, signedHeadersString) + ", " +
+			createNameValuePair(SAUTHC1Signature, signatureHex)
 
-	req.Header.Set("Authorization", authorizationHeader)
+	req.Header.Set(AuthorizationHeader, authorizationHeader)
 }
 
 func createNameValuePair(name string, value string) string {
@@ -218,7 +215,6 @@ func encodeURL(value string, path bool, canonical bool) string {
 
 func canonicalizeQueryString(req *http.Request) string {
 	stringBuffer := bytes.NewBufferString("")
-
 	queryValues := req.URL.Query()
 
 	keys := sortedMapKeys(queryValues)
@@ -243,8 +239,9 @@ func canonicalizeQueryString(req *http.Request) string {
 func canonicalizeResourcePath(path string) string {
 	if len(path) == 0 {
 		return "/"
+	} else {
+		return encodeURL(path, true, true)
 	}
-	return encodeURL(path, true, true)
 }
 
 func canonicalizeHeadersString(headers http.Header) string {
@@ -276,13 +273,11 @@ func signedHeadersString(headers http.Header) string {
 
 	keys := sortedMapKeys(headers)
 
-	first := true
 	for _, k := range keys {
-		if !first {
+		if stringBuffer.Len() > 0 {
 			stringBuffer.WriteString(";")
 		}
 		stringBuffer.WriteString(strings.ToLower(k))
-		first = false
 	}
 
 	return stringBuffer.String()

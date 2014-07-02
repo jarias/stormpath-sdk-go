@@ -41,7 +41,7 @@ func NewAccount(email string, password string, givenName string, surname string)
 
 func (account *Account) Save() error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     account.Href,
 		Payload: account,
 	}, account)
@@ -49,7 +49,7 @@ func (account *Account) Save() error {
 
 func (account *Account) Delete() error {
 	return Client.Do(&StormpathRequest{
-		Method: DELETE,
+		Method: Delete,
 		URL:    account.Href,
 	})
 }
@@ -58,7 +58,7 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 	groupMembership := NewGroupMembership(account.Href, group.Href)
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     GroupMembershipBaseUrl,
 		Payload: groupMembership,
 	}, groupMembership)
@@ -92,7 +92,7 @@ func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemb
 	groupMemberships := &GroupMemberships{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         account.GroupMemberships.Href,
 		PageRequest: pageRequest,
 	}, groupMemberships)
@@ -104,7 +104,7 @@ func (account *Account) GetCustomData() (map[string]string, error) {
 	customData := make(map[string]string)
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method: GET,
+		Method: Get,
 		URL:    account.CustomData.Href,
 	}, &customData)
 
@@ -113,7 +113,7 @@ func (account *Account) GetCustomData() (map[string]string, error) {
 
 func (account *Account) SetCustomData(data map[string]string) error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     account.CustomData.Href,
 		Payload: data,
 	}, &data)

@@ -21,7 +21,7 @@ func CurrentTenant() (*Tenant, error) {
 	tenant := &Tenant{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:              GET,
+		Method:              Get,
 		URL:                 TenantBaseUrl + "/current",
 		DontFollowRedirects: true,
 	}, tenant)
@@ -34,7 +34,7 @@ func (tenant *Tenant) CreateApplication(app *Application) error {
 	extraParams.Add("createDirectory", "true")
 
 	return Client.DoWithResult(&StormpathRequest{
-		Method:      POST,
+		Method:      Post,
 		URL:         ApplicationBaseUrl,
 		Payload:     app,
 		ExtraParams: extraParams,
@@ -43,7 +43,7 @@ func (tenant *Tenant) CreateApplication(app *Application) error {
 
 func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     DirectoryBaseUrl,
 		Payload: dir,
 	}, dir)
@@ -53,7 +53,7 @@ func (tenant *Tenant) GetApplications(pageRequest PageRequest, filters DefaultFi
 	apps := &Applications{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         tenant.Applications.Href,
 		PageRequest: pageRequest,
 		Filter:      filters,
@@ -66,7 +66,7 @@ func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filters DefaultFil
 	directories := &Directories{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         tenant.Directories.Href,
 		PageRequest: pageRequest,
 		Filter:      filters,

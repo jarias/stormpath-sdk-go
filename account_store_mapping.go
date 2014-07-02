@@ -23,7 +23,7 @@ func (mapping *AccountStoreMapping) Save() error {
 		url = mapping.Href
 	}
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     url,
 		Payload: mapping,
 	}, mapping)

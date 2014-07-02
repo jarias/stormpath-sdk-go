@@ -15,7 +15,7 @@ const (
 )
 
 type Filter interface {
-	ToUrlQueryValues() url.Values
+	toURLQueryValues() url.Values
 }
 
 type DefaultFilter struct {
@@ -32,7 +32,7 @@ type AccountFilter struct {
 	Email      string
 }
 
-func (filter AccountFilter) ToUrlQueryValues() url.Values {
+func (filter AccountFilter) toURLQueryValues() url.Values {
 	values := url.Values{}
 
 	if len(filter.GivenName) > 0 {
@@ -54,7 +54,7 @@ func (filter AccountFilter) ToUrlQueryValues() url.Values {
 	return values
 }
 
-func (filter DefaultFilter) ToUrlQueryValues() url.Values {
+func (filter DefaultFilter) toURLQueryValues() url.Values {
 	values := url.Values{}
 
 	if len(filter.Name) > 0 {

@@ -8,20 +8,30 @@ import (
 	"strconv"
 )
 
-const (
-	GET    = "GET"
-	POST   = "POST"
-	PUT    = "PUT"
-	DELETE = "DELETE"
-	OFFSET = "offset"
-	LIMIT  = "limit"
-)
-
+//PageRequest contains the limit and offset values for any paginated Stormpath request
 type PageRequest struct {
 	Limit  int
 	Offset int
 }
 
+//Request method constants
+const (
+	Get    = "GET"
+	Post   = "POST"
+	Delete = "DELETE"
+	Put    = "PUT"
+)
+
+//StormpathRequest is an abstraction of an the actual HTTP request for a Stormpath operation
+//
+//Fields:
+//	Method 				(GET,POST,PUT,DELETE,etc.)
+//	URL 				the request URL
+//	DontFollowRedirects this bool flag is only use for getting the current tenant, the value is always false unless set
+//	Payload 			the request payload for PUT and POST requests
+//	PageRequest 		if set defines the request pagination
+//	Filter 				if set defines the query filter for list based requests
+//	ExtraParams 		any aditional optional params needed for a specific request
 type StormpathRequest struct {
 	Method              string
 	URL                 string
@@ -32,20 +42,22 @@ type StormpathRequest struct {
 	ExtraParams         url.Values
 }
 
+//NewPageRequest is a conviniece constructor for a PageRequest
 func NewPageRequest(limit int, offset int) PageRequest {
 	return PageRequest{Limit: limit, Offset: offset}
 }
 
+//NewDefaultPageRequest is a conviniece constructor for the default PageRequest values limit = 25 offset = 0
 func NewDefaultPageRequest() PageRequest {
 	return PageRequest{Limit: 25, Offset: 0}
 }
 
-func (pageRequest PageRequest) ToUrlQueryValues() url.Values {
+func (pageRequest PageRequest) toURLQueryValues() url.Values {
 	val := url.Values{}
 
 	if pageRequest.Offset >= 0 && pageRequest.Limit > 0 {
-		val.Add(OFFSET, strconv.Itoa(pageRequest.Offset))
-		val.Add(LIMIT, strconv.Itoa(pageRequest.Limit))
+		val.Add("offset", strconv.Itoa(pageRequest.Offset))
+		val.Add("limit", strconv.Itoa(pageRequest.Limit))
 	}
 
 	return val
@@ -56,17 +68,17 @@ func (request *StormpathRequest) marshalPayload() []byte {
 	return jsonPayload
 }
 
-func (request *StormpathRequest) ToHttpRequest() (req *http.Request, err error) {
+func (request *StormpathRequest) ToHTTPRequest() (*http.Request, error) {
 	var query = url.Values{}
 
-	pageRequestQuery := request.PageRequest.ToUrlQueryValues()
+	pageRequestQuery := request.PageRequest.toURLQueryValues()
 
 	for k, v := range pageRequestQuery {
 		query[k] = v
 	}
 
 	if request.Filter != nil {
-		filterQuery := request.Filter.ToUrlQueryValues()
+		filterQuery := request.Filter.toURLQueryValues()
 
 		for k, v := range filterQuery {
 			query[k] = v
@@ -79,17 +91,11 @@ func (request *StormpathRequest) ToHttpRequest() (req *http.Request, err error) 
 		}
 	}
 
-	url := request.URL + "?" + query.Encode()
-
-	req, err = http.NewRequest(request.Method, url, bytes.NewReader(request.marshalPayload()))
-
-	if err != nil {
-		return nil, err
-	}
+	req, err := http.NewRequest(request.Method, request.URL+"?"+query.Encode(), bytes.NewReader(request.marshalPayload()))
 
 	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+Version)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 
-	return
+	return req, err
 }

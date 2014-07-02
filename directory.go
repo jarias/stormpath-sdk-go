@@ -20,7 +20,7 @@ func NewDirectory(name string) *Directory {
 
 func (dir *Directory) Save() error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     dir.Href,
 		Payload: dir,
 	}, dir)
@@ -28,7 +28,7 @@ func (dir *Directory) Save() error {
 
 func (dir *Directory) Delete() error {
 	return Client.Do(&StormpathRequest{
-		Method: DELETE,
+		Method: Delete,
 		URL:    dir.Href,
 	})
 }
@@ -37,7 +37,7 @@ func (dir *Directory) GetGroups(pageRequest PageRequest, filter Filter) (*Groups
 	groups := &Groups{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         dir.Groups.Href,
 		PageRequest: pageRequest,
 		Filter:      filter,
@@ -50,7 +50,7 @@ func (dir *Directory) GetAccounts(pageRequest PageRequest, filter Filter) (*Acco
 	accounts := &Accounts{}
 
 	err := Client.DoWithResult(&StormpathRequest{
-		Method:      GET,
+		Method:      Get,
 		URL:         dir.Accounts.Href,
 		PageRequest: pageRequest,
 		Filter:      filter,
@@ -61,7 +61,7 @@ func (dir *Directory) GetAccounts(pageRequest PageRequest, filter Filter) (*Acco
 
 func (dir *Directory) CreateGroup(group *Group) error {
 	return Client.DoWithResult(&StormpathRequest{
-		Method:  POST,
+		Method:  Post,
 		URL:     dir.Groups.Href,
 		Payload: group,
 	}, group)
