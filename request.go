@@ -77,25 +77,13 @@ func (request *StormpathRequest) marshalPayload() []byte {
 func (request *StormpathRequest) ToHTTPRequest() (*http.Request, error) {
 	var query = url.Values{}
 
-	pageRequestQuery := request.PageRequest.toURLQueryValues()
-
-	for k, v := range pageRequestQuery {
-		query[k] = v
-	}
-
 	if request.Filter != nil {
-		filterQuery := request.Filter.toURLQueryValues()
-
-		for k, v := range filterQuery {
-			query[k] = v
-		}
+		copyURLValues(request.Filter.toURLQueryValues(), query)
 	}
 
-	if request.ExtraParams != nil {
-		for k, v := range request.ExtraParams {
-			query[k] = v
-		}
-	}
+	copyURLValues(request.PageRequest.toURLQueryValues(), query)
+
+	copyURLValues(request.ExtraParams, query)
 
 	req, err := http.NewRequest(request.Method, request.URL+"?"+query.Encode(), bytes.NewReader(request.marshalPayload()))
 
@@ -104,4 +92,10 @@ func (request *StormpathRequest) ToHTTPRequest() (*http.Request, error) {
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, err
+}
+
+func copyURLValues(from url.Values, to url.Values) {
+	for k, v := range from {
+		to[k] = v
+	}
 }

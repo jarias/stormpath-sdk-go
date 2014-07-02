@@ -2,11 +2,15 @@ package stormpath
 
 import "net/url"
 
+//Common filter fields used in paged resutls
 const (
 	Name        = "name"
 	Description = "description"
 	Status      = "status"
+)
 
+//Account specific filter fields used in paged resutls
+const (
 	GivenName  = "GivenName"
 	MiddleName = "MiddleName"
 	Surname    = "Surname"
@@ -14,16 +18,19 @@ const (
 	Email      = "Email"
 )
 
+//Filter defines the interface for any filter type that can be converted to url.Values
 type Filter interface {
 	toURLQueryValues() url.Values
 }
 
+//DefaultFilter is the common filter among Stormpath model objects
 type DefaultFilter struct {
 	Name        string
 	Description string
 	Status      string
 }
 
+//AccountFilter is the specific filter use for Accounts
 type AccountFilter struct {
 	GivenName  string
 	MiddleName string
@@ -35,21 +42,11 @@ type AccountFilter struct {
 func (filter AccountFilter) toURLQueryValues() url.Values {
 	values := url.Values{}
 
-	if len(filter.GivenName) > 0 {
-		values.Set(GivenName, filter.GivenName)
-	}
-	if len(filter.MiddleName) > 0 {
-		values.Set(MiddleName, filter.MiddleName)
-	}
-	if len(filter.Surname) > 0 {
-		values.Set(Surname, filter.Surname)
-	}
-	if len(filter.Username) > 0 {
-		values.Set(Username, filter.Username)
-	}
-	if len(filter.Email) > 0 {
-		values.Set(Email, filter.Email)
-	}
+	copyFieldFilter(filter.GivenName, GivenName, values)
+	copyFieldFilter(filter.MiddleName, MiddleName, values)
+	copyFieldFilter(filter.Surname, Surname, values)
+	copyFieldFilter(filter.Username, Username, values)
+	copyFieldFilter(filter.Email, Email, values)
 
 	return values
 }
@@ -57,15 +54,15 @@ func (filter AccountFilter) toURLQueryValues() url.Values {
 func (filter DefaultFilter) toURLQueryValues() url.Values {
 	values := url.Values{}
 
-	if len(filter.Name) > 0 {
-		values.Set(Name, filter.Name)
-	}
-	if len(filter.Description) > 0 {
-		values.Set(Description, filter.Description)
-	}
-	if len(filter.Status) > 0 {
-		values.Set(Status, filter.Status)
-	}
+	copyFieldFilter(filter.Name, Name, values)
+	copyFieldFilter(filter.Description, Description, values)
+	copyFieldFilter(filter.Status, Status, values)
 
 	return values
+}
+
+func copyFieldFilter(fieldValue string, fieldName string, to url.Values) {
+	if len(fieldValue) > 0 {
+		to.Set(fieldName, fieldValue)
+	}
 }
