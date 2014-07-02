@@ -217,14 +217,11 @@ func encodeURL(value string, path bool, canonical bool) string {
 }
 
 func canonicalizeQueryString(req *http.Request) string {
-	var keys []string
+	stringBuffer := bytes.NewBufferString("")
+
 	queryValues := req.URL.Query()
 
-	result := ""
-	for k := range queryValues {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := sortedMapKeys(queryValues)
 
 	for _, k := range keys {
 		key := encodeURL(k, false, true)
@@ -232,15 +229,15 @@ func canonicalizeQueryString(req *http.Request) string {
 		for _, vv := range v {
 			value := encodeURL(vv, false, true)
 
-			if len(result) > 0 {
-				result = result + "&"
+			if stringBuffer.Len() > 0 {
+				stringBuffer.WriteString("&")
 			}
 
-			result = result + key + "=" + value
+			stringBuffer.WriteString(key + "=" + value)
 		}
 	}
 
-	return result
+	return stringBuffer.String()
 }
 
 func canonicalizeResourcePath(path string) string {
@@ -251,50 +248,53 @@ func canonicalizeResourcePath(path string) string {
 }
 
 func canonicalizeHeadersString(headers http.Header) string {
-	var keys []string
 	stringBuffer := bytes.NewBufferString("")
 
-	for k := range headers {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := sortedMapKeys(headers)
+
 	for _, k := range keys {
-		stringBuffer.Write([]byte(strings.ToLower(k)))
-		stringBuffer.Write([]byte(":"))
+		stringBuffer.WriteString(strings.ToLower(k))
+		stringBuffer.WriteString(":")
 
 		first := true
 
 		for _, v := range headers[k] {
 			if !first {
-				stringBuffer.Write([]byte(","))
+				stringBuffer.WriteString(",")
 			}
-			stringBuffer.Write([]byte(v))
+			stringBuffer.WriteString(v)
 			first = false
 		}
-		stringBuffer.Write([]byte(NL))
+		stringBuffer.WriteString(NL)
 	}
 
 	return stringBuffer.String()
 }
 
 func signedHeadersString(headers http.Header) string {
-	var keys []string
 	stringBuffer := bytes.NewBufferString("")
 
-	for k := range headers {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := sortedMapKeys(headers)
+
 	first := true
 	for _, k := range keys {
 		if !first {
-			stringBuffer.Write([]byte(";"))
+			stringBuffer.WriteString(";")
 		}
-		stringBuffer.Write([]byte(strings.ToLower(k)))
+		stringBuffer.WriteString(strings.ToLower(k))
 		first = false
 	}
 
 	return stringBuffer.String()
+}
+
+func sortedMapKeys(m map[string][]string) []string {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func hash(data []byte) []byte {
