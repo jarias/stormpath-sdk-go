@@ -43,8 +43,6 @@ type StormpathClient struct {
 	Cache       Cache
 }
 
-type doWithResult func(request *StormpathRequest, result interface{}, key string) ([]byte, error)
-
 func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient {
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{},
