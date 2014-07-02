@@ -68,6 +68,12 @@ func (request *StormpathRequest) marshalPayload() []byte {
 	return jsonPayload
 }
 
+//ToHTTPRequest coverts a StormathRequest to an http.Request, returns an error if any
+//
+//Headers:
+//	User-Agent:   jarias/stormpath-sdk-go/ + Current SDK version
+//	Accept: 	  application/json
+//	Content-Type: application/json
 func (request *StormpathRequest) ToHTTPRequest() (*http.Request, error) {
 	var query = url.Values{}
 
