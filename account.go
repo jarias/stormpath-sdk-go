@@ -106,7 +106,7 @@ func (account *Account) GetCustomData() (map[string]string, error) {
 	err := Client.DoWithResult(&StormpathRequest{
 		Method: GET,
 		URL:    account.CustomData.Href,
-	}, customData)
+	}, &customData)
 
 	return customData, err
 }
@@ -116,5 +116,5 @@ func (account *Account) SetCustomData(data map[string]string) error {
 		Method:  POST,
 		URL:     account.CustomData.Href,
 		Payload: data,
-	}, data)
+	}, &data)
 }

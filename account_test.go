@@ -74,4 +74,33 @@ var _ = Describe("Account", func() {
 			group.Delete()
 		})
 	})
+
+	Describe("GetCustomData", func() {
+		It("should retrieve an account custom data", func() {
+			customData, err := account.GetCustomData()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(customData).NotTo(BeEmpty())
+		})
+	})
+
+	Describe("SetCustomData", func() {
+		It("should set an account custom data", func() {
+			err := account.SetCustomData(map[string]string{"custom": "data"})
+
+			customData, _ := account.GetCustomData()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(customData["custom"]).To(Equal("data"))
+		})
+
+		It("should update an account custom data", func() {
+			account.SetCustomData(map[string]string{"custom": "data"})
+			err := account.SetCustomData(map[string]string{"custom": "nodata"})
+			customData, _ := account.GetCustomData()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(customData["custom"]).To(Equal("nodata"))
+		})
+	})
 })
