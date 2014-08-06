@@ -2,10 +2,7 @@ package stormpath
 
 import (
 	"encoding/base64"
-)
-
-const (
-	ApplicationBaseUrl = "https://api.stormpath.com/v1/applications"
+	"net/url"
 )
 
 type Application struct {
@@ -13,13 +10,18 @@ type Application struct {
 	Name                       string `json:"name"`
 	Description                string `json:"description,omitempty"`
 	Status                     string `json:"status,omitempty"`
-	Accounts                   *Link  `json:"accounts,omitempty"`
-	Groups                     *Link  `json:"groups,omitempty"`
-	Tenant                     *Link  `json:"tenant,omitempty"`
-	PasswordResetTokens        *Link  `json:"passwordResetTokens,omitempty"`
-	AccountStoreMappings       *Link  `json:"accountStoreMappings,omitempty"`
-	DefaultAccountStoreMapping *Link  `json:"defaultAccountStoreMapping,omitempty"`
-	DefaultGroupStoreMapping   *Link  `json:"defaultGroupStoreMapping,omitempty"`
+	Accounts                   *link  `json:"accounts,omitempty"`
+	Groups                     *link  `json:"groups,omitempty"`
+	Tenant                     *link  `json:"tenant,omitempty"`
+	PasswordResetTokens        *link  `json:"passwordResetTokens,omitempty"`
+	AccountStoreMappings       *link  `json:"accountStoreMappings,omitempty"`
+	DefaultAccountStoreMapping *link  `json:"defaultAccountStoreMapping,omitempty"`
+	DefaultGroupStoreMapping   *link  `json:"defaultGroupStoreMapping,omitempty"`
+}
+
+type Applications struct {
+	list
+	Items []Application `json:"items"`
 }
 
 func NewApplication(name string) *Application {
@@ -27,18 +29,19 @@ func NewApplication(name string) *Application {
 }
 
 func (app *Application) Save() error {
-	return Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     app.Href,
-		Payload: app,
-	}, app)
+	return Client.doWithResult(Client.newRequest(
+		"POST",
+		app.Href,
+		newPayloadReader(app),
+	), app)
 }
 
 func (app *Application) Delete() error {
-	return Client.Do(&StormpathRequest{
-		Method: Delete,
-		URL:    app.Href,
-	})
+	return Client.do(Client.newRequest(
+		"DELETE",
+		app.Href,
+		nil,
+	))
 }
 
 func (app *Application) Purge() error {
@@ -47,47 +50,46 @@ func (app *Application) Purge() error {
 		return err
 	}
 	for _, m := range accountStoreMappings.Items {
-		Client.Do(&StormpathRequest{
-			Method: Delete,
-			URL:    m.AccountStore.Href,
-		})
+		Client.do(Client.newRequest(
+			"DELETE",
+			m.AccountStore.Href,
+			nil,
+		))
 	}
 
 	return app.Delete()
 }
 
-func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter DefaultFilter) (*AccountStoreMappings, error) {
+func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter Filter) (*AccountStoreMappings, error) {
 	accountStoreMappings := &AccountStoreMappings{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:      Get,
-		URL:         app.AccountStoreMappings.Href,
-		PageRequest: pageRequest,
-		Filter:      filter,
-	}, accountStoreMappings)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		app.AccountStoreMappings.Href+requestParams(&pageRequest, filter, url.Values{}),
+		nil,
+	), accountStoreMappings)
 
 	return accountStoreMappings, err
 }
 
-func (app *Application) GetAccounts(pageRequest PageRequest, filter AccountFilter) (*Accounts, error) {
+func (app *Application) GetAccounts(pageRequest PageRequest, filter Filter) (*Accounts, error) {
 	accounts := &Accounts{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:      Get,
-		URL:         app.Accounts.Href,
-		PageRequest: pageRequest,
-		Filter:      filter,
-	}, accounts)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		app.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
+		nil,
+	), accounts)
 
 	return accounts, err
 }
 
 func (app *Application) RegisterAccount(account *Account) error {
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     app.Accounts.Href,
-		Payload: account,
-	}, account)
+	err := Client.doWithResult(Client.newRequest(
+		"POST",
+		app.Accounts.Href,
+		newPayloadReader(account),
+	), account)
 
 	return err
 }
@@ -100,11 +102,11 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	loginAttemptPayload["type"] = "basic"
 	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     app.Href + "/loginAttempts",
-		Payload: loginAttemptPayload,
-	}, account)
+	err := Client.doWithResult(Client.newRequest(
+		"POST",
+		app.Href+"/loginAttempts",
+		newPayloadReader(loginAttemptPayload),
+	), account)
 
 	return account, err
 }
@@ -115,11 +117,11 @@ func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswor
 	passwordResetPayload := make(map[string]string)
 	passwordResetPayload["email"] = username
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     app.Href + "/passwordResetTokens",
-		Payload: passwordResetPayload,
-	}, passwordResetToken)
+	err := Client.doWithResult(Client.newRequest(
+		"POST",
+		app.Href+"/passwordResetTokens",
+		newPayloadReader(passwordResetPayload),
+	), passwordResetToken)
 
 	return passwordResetToken, err
 }
@@ -127,10 +129,11 @@ func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswor
 func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method: Get,
-		URL:    app.Href + "/passwordResetTokens/" + token,
-	}, passwordResetToken)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		app.Href+"/passwordResetTokens/"+token,
+		nil,
+	), passwordResetToken)
 
 	return passwordResetToken, err
 }
@@ -141,30 +144,31 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	resetPasswordPayload := make(map[string]string)
 	resetPasswordPayload["password"] = newPassword
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     app.Href + "/passwordResetTokens/" + token,
-		Payload: resetPasswordPayload,
-	}, account)
+	err := Client.doWithResult(Client.newRequest(
+		"POST",
+		app.Href+"/passwordResetTokens/"+token,
+		newPayloadReader(resetPasswordPayload),
+	), account)
 
 	return account, err
 }
 
 func (app *Application) CreateApplicationGroup(group *Group) error {
-	return Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     app.Groups.Href,
-		Payload: group,
-	}, group)
+	return Client.doWithResult(Client.newRequest(
+		"POST",
+		app.Groups.Href,
+		newPayloadReader(group),
+	), group)
 }
 
-func (app *Application) GetApplicationGroups(pageRequest PageRequest, filters Filter) (*Groups, error) {
+func (app *Application) GetApplicationGroups(pageRequest PageRequest, filter Filter) (*Groups, error) {
 	groups := &Groups{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method: Get,
-		URL:    app.Groups.Href,
-	}, groups)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		app.Groups.Href+requestParams(&pageRequest, filter, url.Values{}),
+		nil,
+	), groups)
 
 	return groups, err
 }

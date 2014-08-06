@@ -1,5 +1,7 @@
 package stormpath
 
+import "net/url"
+
 //Account represents an Stormpath account object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accounts
@@ -13,22 +15,20 @@ type Account struct {
 	MiddleName             string `json:"middleName,omitempty"`
 	Surname                string `json:"surname"`
 	Status                 string `json:"status,omitempty"`
-	CustomData             *Link  `json:"customData,omitempty"`
-	Groups                 *Link  `json:"groups,omitempty"`
-	GroupMemberships       *Link  `json:"groupMemberships,omitempty"`
-	Directory              *Link  `json:"directory,omitempty"`
-	Tenant                 *Link  `json:"tenant,omitempty"`
-	EmailVerificationToken *Link  `json:"emailVerificationToken,omitempty"`
+	CustomData             *link  `json:"customData,omitempty"`
+	Groups                 *link  `json:"groups,omitempty"`
+	GroupMemberships       *link  `json:"groupMemberships,omitempty"`
+	Directory              *link  `json:"directory,omitempty"`
+	Tenant                 *link  `json:"tenant,omitempty"`
+	EmailVerificationToken *link  `json:"emailVerificationToken,omitempty"`
 }
 
 //Accounts represents a paged result of Account objects
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accounts-list
 type Accounts struct {
-	Href   string    `json:"href"`
-	Offset int       `json:"offset"`
-	Limit  int       `json:"limit"`
-	Items  []Account `json:"items"`
+	list
+	Items []Account `json:"items"`
 }
 
 //AccountRef represent a link to an account, this type of resource is return when expand is not especify,
@@ -36,7 +36,7 @@ type Accounts struct {
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-accounts (Log In (Authenticate) an Account)
 type AccountRef struct {
-	Account Link
+	Account link
 }
 
 //AccountPasswordResetToken represents an password reset token for a given account
@@ -45,7 +45,7 @@ type AccountRef struct {
 type AccountPasswordResetToken struct {
 	Href    string
 	Email   string
-	Account Link
+	Account link
 }
 
 //NewAccount is a conviniece constructor for an Account, it accepts all the required fields according to
@@ -57,30 +57,31 @@ func NewAccount(email string, password string, givenName string, surname string)
 //Save updates the given account, by doing a POST to the account Href, if the account is a new account
 //it should be created via Application.RegisterAccount
 func (account *Account) Save() error {
-	return Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     account.Href,
-		Payload: account,
-	}, account)
+	return Client.doWithResult(Client.newRequest(
+		"GET",
+		account.Href,
+		newPayloadReader(account),
+	), account)
 }
 
 //Delete deletes the given account, it wont modify the calling account
 func (account *Account) Delete() error {
-	return Client.Do(&StormpathRequest{
-		Method: Delete,
-		URL:    account.Href,
-	})
+	return Client.do(Client.newRequest(
+		"DELETE",
+		account.Href,
+		nil,
+	))
 }
 
 //AddToGroup adds the given account to a given group and returns the respective GroupMembership
 func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 	groupMembership := NewGroupMembership(account.Href, group.Href)
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     GroupMembershipBaseUrl,
-		Payload: groupMembership,
-	}, groupMembership)
+	err := Client.doWithResult(Client.newRequest(
+		"POST",
+		buildURL("groupMemberships"),
+		newPayloadReader(groupMembership),
+	), groupMembership)
 
 	return groupMembership, err
 }
@@ -113,11 +114,11 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:      Get,
-		URL:         account.GroupMemberships.Href,
-		PageRequest: pageRequest,
-	}, groupMemberships)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		account.GroupMemberships.Href+requestParams(&pageRequest, nil, url.Values{}),
+		nil,
+	), groupMemberships)
 
 	return groupMemberships, err
 }
@@ -126,19 +127,18 @@ func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemb
 func (account *Account) GetCustomData() (map[string]string, error) {
 	customData := make(map[string]string)
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method: Get,
-		URL:    account.CustomData.Href,
-	}, &customData)
+	err := Client.doWithResult(Client.newRequest("GET",
+		account.CustomData.Href,
+		nil,
+	), &customData)
 
 	return customData, err
 }
 
 //SetCustomData sets or updates the given account custom data
 func (account *Account) SetCustomData(data map[string]string) error {
-	return Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     account.CustomData.Href,
-		Payload: data,
-	}, &data)
+	return Client.doWithResult(Client.newRequest("POST",
+		account.CustomData.Href,
+		newPayloadReader(data),
+	), &data)
 }
