@@ -19,7 +19,7 @@ func CurrentTenant() (*Tenant, error) {
 		Client.newRequestWithoutRedirects(
 			"GET",
 			buildURL("tenants", "current"),
-			nil,
+			emptyPayload(),
 		), tenant)
 
 	return tenant, err
@@ -33,7 +33,7 @@ func (tenant *Tenant) CreateApplication(app *Application) error {
 		Client.newRequest(
 			"POST",
 			buildURL("applications", requestParams(nil, nil, extraParams)),
-			newPayloadReader(app),
+			app,
 		), app)
 }
 
@@ -42,7 +42,7 @@ func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 		Client.newRequest(
 			"POST",
 			buildURL("directories"),
-			newPayloadReader(dir),
+			dir,
 		), dir)
 }
 
@@ -52,7 +52,7 @@ func (tenant *Tenant) GetApplications(pageRequest PageRequest, filter Filter) (*
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		tenant.Applications.Href+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), apps)
 
 	return apps, err
@@ -64,7 +64,7 @@ func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filter Filter) (*D
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		tenant.Directories.Href+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), directories)
 
 	return directories, err

@@ -60,22 +60,25 @@ func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient 
 func buildURL(parts ...string) string {
 	buffer := bytes.NewBufferString(baseUrl)
 
-	for _, part := range parts {
+	for i, part := range parts {
 		buffer.WriteString(part)
-		buffer.WriteString("/")
+		if i+1 < len(parts) {
+			buffer.WriteString("/")
+		}
 	}
 
 	return buffer.String()
 }
 
-func (client *StormpathClient) newRequestWithoutRedirects(method string, urlStr string, body *bytes.Reader) *http.Request {
+func (client *StormpathClient) newRequestWithoutRedirects(method string, urlStr string, body interface{}) *http.Request {
 	req := client.newRequest(method, urlStr, body)
 	req.Header.Add(followRedirectsHeader, "false")
 	return req
 }
 
-func (client *StormpathClient) newRequest(method string, urlStr string, body *bytes.Reader) *http.Request {
-	req, _ := http.NewRequest(method, urlStr, body)
+func (client *StormpathClient) newRequest(method string, urlStr string, body interface{}) *http.Request {
+	jsonBody, _ := json.Marshal(body)
+	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(jsonBody))
 	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+version)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -83,7 +86,7 @@ func (client *StormpathClient) newRequest(method string, urlStr string, body *by
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, body, time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, jsonBody, time.Now().In(time.UTC), client.Credentials, nonce)
 	return req
 }
 
@@ -133,9 +136,8 @@ func handleResponseError(resp *http.Response, err error) error {
 	return nil
 }
 
-func newPayloadReader(payload interface{}) *bytes.Reader {
-	jsonBody, _ := json.Marshal(payload)
-	return bytes.NewReader(jsonBody)
+func emptyPayload() []byte {
+	return []byte{}
 }
 
 //doWithResult executes the given StormpathRequest and serialize the response body into the given expected result,
@@ -180,7 +182,6 @@ func (client *StormpathClient) do(request *http.Request) error {
 func (client *StormpathClient) execRequest(req *http.Request) (*http.Response, error) {
 	if req.Header.Get(followRedirectsHeader) == "false" {
 		req.Header.Del(followRedirectsHeader)
-
 		resp, err := client.HTTPClient.Transport.RoundTrip(req)
 		err = handleResponseError(resp, err)
 		if err != nil {
@@ -188,7 +189,7 @@ func (client *StormpathClient) execRequest(req *http.Request) (*http.Response, e
 			return nil, err
 		}
 		//Get the redirect location from the response headers
-		newReq := client.newRequest("GET", resp.Header.Get(locationHeader), nil)
+		newReq := client.newRequest("GET", resp.Header.Get(locationHeader), emptyPayload())
 		return client.execRequest(newReq)
 	}
 

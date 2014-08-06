@@ -58,9 +58,9 @@ func NewAccount(email string, password string, givenName string, surname string)
 //it should be created via Application.RegisterAccount
 func (account *Account) Save() error {
 	return Client.doWithResult(Client.newRequest(
-		"GET",
+		"POST",
 		account.Href,
-		newPayloadReader(account),
+		account,
 	), account)
 }
 
@@ -69,7 +69,7 @@ func (account *Account) Delete() error {
 	return Client.do(Client.newRequest(
 		"DELETE",
 		account.Href,
-		nil,
+		emptyPayload(),
 	))
 }
 
@@ -80,7 +80,7 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
 		buildURL("groupMemberships"),
-		newPayloadReader(groupMembership),
+		groupMembership,
 	), groupMembership)
 
 	return groupMembership, err
@@ -117,7 +117,7 @@ func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemb
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		account.GroupMemberships.Href+requestParams(&pageRequest, nil, url.Values{}),
-		nil,
+		emptyPayload(),
 	), groupMemberships)
 
 	return groupMemberships, err
@@ -129,7 +129,7 @@ func (account *Account) GetCustomData() (map[string]string, error) {
 
 	err := Client.doWithResult(Client.newRequest("GET",
 		account.CustomData.Href,
-		nil,
+		emptyPayload(),
 	), &customData)
 
 	return customData, err
@@ -139,6 +139,6 @@ func (account *Account) GetCustomData() (map[string]string, error) {
 func (account *Account) SetCustomData(data map[string]string) error {
 	return Client.doWithResult(Client.newRequest("POST",
 		account.CustomData.Href,
-		newPayloadReader(data),
+		data,
 	), &data)
 }

@@ -32,7 +32,7 @@ func (app *Application) Save() error {
 	return Client.doWithResult(Client.newRequest(
 		"POST",
 		app.Href,
-		newPayloadReader(app),
+		app,
 	), app)
 }
 
@@ -40,7 +40,7 @@ func (app *Application) Delete() error {
 	return Client.do(Client.newRequest(
 		"DELETE",
 		app.Href,
-		nil,
+		emptyPayload(),
 	))
 }
 
@@ -53,7 +53,7 @@ func (app *Application) Purge() error {
 		Client.do(Client.newRequest(
 			"DELETE",
 			m.AccountStore.Href,
-			nil,
+			emptyPayload(),
 		))
 	}
 
@@ -78,7 +78,7 @@ func (app *Application) GetAccounts(pageRequest PageRequest, filter Filter) (*Ac
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		app.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), accounts)
 
 	return accounts, err
@@ -88,7 +88,7 @@ func (app *Application) RegisterAccount(account *Account) error {
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
 		app.Accounts.Href,
-		newPayloadReader(account),
+		account,
 	), account)
 
 	return err
@@ -105,7 +105,7 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
 		app.Href+"/loginAttempts",
-		newPayloadReader(loginAttemptPayload),
+		loginAttemptPayload,
 	), account)
 
 	return account, err
@@ -120,7 +120,7 @@ func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswor
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
 		app.Href+"/passwordResetTokens",
-		newPayloadReader(passwordResetPayload),
+		passwordResetPayload,
 	), passwordResetToken)
 
 	return passwordResetToken, err
@@ -132,7 +132,7 @@ func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswo
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		app.Href+"/passwordResetTokens/"+token,
-		nil,
+		emptyPayload(),
 	), passwordResetToken)
 
 	return passwordResetToken, err
@@ -147,7 +147,7 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
 		app.Href+"/passwordResetTokens/"+token,
-		newPayloadReader(resetPasswordPayload),
+		resetPasswordPayload,
 	), account)
 
 	return account, err
@@ -157,7 +157,7 @@ func (app *Application) CreateApplicationGroup(group *Group) error {
 	return Client.doWithResult(Client.newRequest(
 		"POST",
 		app.Groups.Href,
-		newPayloadReader(group),
+		group,
 	), group)
 }
 
@@ -167,7 +167,7 @@ func (app *Application) GetApplicationGroups(pageRequest PageRequest, filter Fil
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		app.Groups.Href+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), groups)
 
 	return groups, err

@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -13,57 +12,71 @@ import (
 	"time"
 )
 
-const nl = "\n"
+const (
+	IDTerminator         = "sauthc1_request"
+	AuthenticationScheme = "SAuthc1"
+	NL                   = "\n"
+	HostHeader           = "Host"
+	AuthorizationHeader  = "Authorization"
+	StormpathDateHeader  = "X-Stormpath-Date"
+	Algorithm            = "HMAC-SHA-256"
+	SAUTHC1Id            = "sauthc1Id"
+	SAUTHC1SignedHeaders = "sauthc1SignedHeaders"
+	SAUTHC1Signature     = "sauthc1Signature"
+	DateFormat           = "20060102"
+	TimestampFormat      = "20060102T150405Z0700"
+)
 
 //Authenticate generates the proper authentication header for the SAuthc1 algorithm use by Stormpath
-func Authenticate(req *http.Request, payload *bytes.Reader, date time.Time, credentials *Credentials, nonce string) {
-	timestamp := date.Format("20060102T150405Z0700")
-	dateStamp := date.Format("20060102")
-	req.Header.Set("Host", req.URL.Host)
-	req.Header.Set("X-Stormpath-Date", timestamp)
+func Authenticate(req *http.Request, payload []byte, date time.Time, credentials *Credentials, nonce string) {
+	timestamp := date.Format(TimestampFormat)
+	dateStamp := date.Format(DateFormat)
+	req.Header.Set(HostHeader, req.URL.Host)
+	req.Header.Set(StormpathDateHeader, timestamp)
 
 	signedHeadersString := signedHeadersString(req.Header)
 
 	canonicalRequest :=
 		req.Method +
-			nl +
+			NL +
 			canonicalizeResourcePath(req.URL.Path) +
-			nl +
+			NL +
 			canonicalizeQueryString(req) +
-			nl +
+			NL +
 			canonicalizeHeadersString(req.Header) +
-			nl +
+			NL +
 			signedHeadersString +
-			nl +
+			NL +
 			hex.EncodeToString(hash(payload))
 
-	id := credentials.Id + "/" + dateStamp + "/" + nonce + "/" + "sauthc1_request"
+	id := credentials.Id + "/" + dateStamp + "/" + nonce + "/" + IDTerminator
 
-	canonicalRequestHashHex := hex.EncodeToString(hash(bytes.NewReader([]byte(canonicalRequest))))
+	canonicalRequestHashHex := hex.EncodeToString(hash([]byte(canonicalRequest)))
 
 	stringToSign :=
-		"HMAC-SHA-256" +
-			nl +
+		Algorithm +
+			NL +
 			timestamp +
-			nl +
+			NL +
 			id +
-			nl +
+			NL +
 			canonicalRequestHashHex
 
-	secret := []byte("SAuthc1" + credentials.Secret)
+	secret := []byte(AuthenticationScheme + credentials.Secret)
 	singDate := sing(dateStamp, secret)
 	singNonce := sing(nonce, singDate)
-	signing := sing("sauthc1_request", singNonce)
+	signing := sing(IDTerminator, singNonce)
 
 	signature := sing(stringToSign, signing)
 	signatureHex := hex.EncodeToString(signature)
 
 	authorizationHeader :=
-		createNameValuePair("sauthc1Id", id) + ", " +
-			createNameValuePair("sauthc1SignedHeaders", signedHeadersString) + ", " +
-			createNameValuePair("sauthc1Signature", signatureHex)
+		AuthenticationScheme + " " +
+			createNameValuePair(SAUTHC1Id, id) + ", " +
+			createNameValuePair(SAUTHC1SignedHeaders, signedHeadersString) + ", " +
+			createNameValuePair(SAUTHC1Signature, signatureHex)
 
-	req.Header.Set("Authorization", authorizationHeader)
+	req.Header.Set(AuthorizationHeader, authorizationHeader)
 }
 
 func createNameValuePair(name string, value string) string {
@@ -139,7 +152,7 @@ func canonicalizeHeadersString(headers http.Header) string {
 			stringBuffer.WriteString(v)
 			first = false
 		}
-		stringBuffer.WriteString(nl)
+		stringBuffer.WriteString(NL)
 	}
 
 	return stringBuffer.String()
@@ -169,10 +182,9 @@ func sortedMapKeys(m map[string][]string) []string {
 	return keys
 }
 
-func hash(data *bytes.Reader) []byte {
+func hash(data []byte) []byte {
 	hash := sha256.New()
-	io.Copy(hash, data)
-	data.Seek(0, 0)
+	hash.Write(data)
 	return hash.Sum(nil)
 }
 

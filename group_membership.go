@@ -23,7 +23,7 @@ func (groupmembership *GroupMembership) Delete() error {
 	return Client.do(Client.newRequest(
 		"DELETE",
 		groupmembership.Href,
-		nil,
+		emptyPayload(),
 	))
 }
 
@@ -33,7 +33,7 @@ func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		groupmembership.Account.Href,
-		nil,
+		emptyPayload(),
 	), account)
 
 	return account, err
@@ -45,7 +45,7 @@ func (groupmembership *GroupMembership) GetGroup() (*Group, error) {
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		groupmembership.Group.Href,
-		nil,
+		emptyPayload(),
 	), group)
 
 	return group, err

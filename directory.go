@@ -25,7 +25,7 @@ func (dir *Directory) Save() error {
 	return Client.doWithResult(Client.newRequest(
 		"POST",
 		dir.Href,
-		newPayloadReader(dir),
+		dir,
 	), dir)
 }
 
@@ -33,7 +33,7 @@ func (dir *Directory) Delete() error {
 	return Client.do(Client.newRequest(
 		"DELETE",
 		dir.Href,
-		nil,
+		emptyPayload(),
 	))
 }
 
@@ -43,7 +43,7 @@ func (dir *Directory) GetGroups(pageRequest PageRequest, filter Filter) (*Groups
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		dir.Groups.Href+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), groups)
 
 	return groups, err
@@ -55,7 +55,7 @@ func (dir *Directory) GetAccounts(pageRequest PageRequest, filter Filter) (*Acco
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		dir.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), accounts)
 
 	return accounts, err
@@ -65,6 +65,6 @@ func (dir *Directory) CreateGroup(group *Group) error {
 	return Client.doWithResult(Client.newRequest(
 		"POST",
 		dir.Groups.Href,
-		newPayloadReader(group),
+		group,
 	), group)
 }

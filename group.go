@@ -26,7 +26,7 @@ func (group *Group) Save() error {
 	return Client.doWithResult(Client.newRequest(
 		"POST",
 		group.Href,
-		newPayloadReader(group),
+		group,
 	), group)
 }
 
@@ -34,7 +34,7 @@ func (group *Group) Delete() error {
 	return Client.do(Client.newRequest(
 		"DELETE",
 		group.Href,
-		nil,
+		emptyPayload(),
 	))
 }
 
@@ -44,7 +44,7 @@ func (group *Group) GetAccounts(pageRequest PageRequest, filter Filter) (*Accoun
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		group.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), accounts)
 
 	return accounts, err
@@ -56,7 +56,7 @@ func (group *Group) GetGroupMemberships(pageRequest PageRequest, filter Filter) 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
 		group.Href+"/accountMemberships"+requestParams(&pageRequest, filter, url.Values{}),
-		nil,
+		emptyPayload(),
 	), groupMemberships)
 
 	return groupMemberships, err

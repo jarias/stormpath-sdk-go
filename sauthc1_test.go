@@ -1,7 +1,6 @@
 package stormpath_test
 
 import (
-	"bytes"
 	"net/http"
 	"time"
 
@@ -16,7 +15,7 @@ var _ = Describe("Stormpath SAuthc1", func() {
 
 		cred := &Credentials{Id: "MyId", Secret: "Shush!"}
 
-		Authenticate(req, bytes.NewReader([]byte{}), time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC), cred, "a43a9d25-ab06-421e-8605-33fd1e760825")
+		Authenticate(req, []byte{}, time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC), cred, "a43a9d25-ab06-421e-8605-33fd1e760825")
 
 		Expect(req.Header.Get("Authorization")).To(Equal("SAuthc1 sauthc1Id=MyId/20130701/a43a9d25-ab06-421e-8605-33fd1e760825/sauthc1_request, " +
 			"sauthc1SignedHeaders=host;x-stormpath-date, " +
@@ -28,7 +27,7 @@ var _ = Describe("Stormpath SAuthc1", func() {
 
 		cred := &Credentials{Id: "MyId", Secret: "Shush!"}
 
-		Authenticate(req, bytes.NewReader([]byte{}), time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC), cred, "a43a9d25-ab06-421e-8605-33fd1e760825")
+		Authenticate(req, []byte{}, time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC), cred, "a43a9d25-ab06-421e-8605-33fd1e760825")
 
 		Expect(req.Header.Get("Authorization")).To(Equal("SAuthc1 sauthc1Id=MyId/20130701/a43a9d25-ab06-421e-8605-33fd1e760825/sauthc1_request, " +
 			"sauthc1SignedHeaders=host;x-stormpath-date, " +

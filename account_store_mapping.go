@@ -27,6 +27,6 @@ func (mapping *AccountStoreMapping) Save() error {
 	return Client.doWithResult(Client.newRequest(
 		"POST",
 		url,
-		newPayloadReader(mapping),
+		mapping,
 	), mapping)
 }
