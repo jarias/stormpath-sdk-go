@@ -22,7 +22,7 @@ var _ = Describe("Tenant", func() {
 
 	Describe("CreateApplication", func() {
 		It("should create a new application", func() {
-			application := NewApplication("create-app")
+			application := NewApplication("createAPP")
 			err := tenant.CreateApplication(application)
 			application.Purge()
 

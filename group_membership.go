@@ -6,28 +6,35 @@ const (
 
 type GroupMembership struct {
 	Href    string `json:"href,omitempty"`
-	Account Link   `json:"account"`
-	Group   Link   `json:"group"`
+	Account link   `json:"account"`
+	Group   link   `json:"group"`
+}
+
+type GroupMemberships struct {
+	list
+	Items []GroupMembership `json:"items"`
 }
 
 func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
-	return &GroupMembership{Account: Link{accountHref}, Group: Link{groupHref}}
+	return &GroupMembership{Account: link{accountHref}, Group: link{groupHref}}
 }
 
 func (groupmembership *GroupMembership) Delete() error {
-	return Client.Do(&StormpathRequest{
-		Method: Delete,
-		URL:    groupmembership.Href,
-	})
+	return Client.do(Client.newRequest(
+		"DELETE",
+		groupmembership.Href,
+		emptyPayload(),
+	))
 }
 
 func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
 	account := &Account{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method: Get,
-		URL:    groupmembership.Account.Href,
-	}, account)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		groupmembership.Account.Href,
+		emptyPayload(),
+	), account)
 
 	return account, err
 }
@@ -35,10 +42,11 @@ func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
 func (groupmembership *GroupMembership) GetGroup() (*Group, error) {
 	group := &Group{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method: Get,
-		URL:    groupmembership.Group.Href,
-	}, group)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		groupmembership.Group.Href,
+		emptyPayload(),
+	), group)
 
 	return group, err
 }

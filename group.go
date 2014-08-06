@@ -1,14 +1,21 @@
 package stormpath
 
+import "net/url"
+
 type Group struct {
 	Href        string `json:"href,omitempty"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	Status      string `json:"status,omitempty"`
-	CustomData  *Link  `json:"customData,omitempty"`
-	Accounts    *Link  `json:"accounts,omitempty"`
-	Tenant      *Link  `json:"tenant,omitempty"`
-	Directory   *Link  `json:"directory,omitempty"`
+	CustomData  *link  `json:"customData,omitempty"`
+	Accounts    *link  `json:"accounts,omitempty"`
+	Tenant      *link  `json:"tenant,omitempty"`
+	Directory   *link  `json:"directory,omitempty"`
+}
+
+type Groups struct {
+	list
+	Items []Groups `json:"items"`
 }
 
 func NewGroup(name string) *Group {
@@ -16,29 +23,29 @@ func NewGroup(name string) *Group {
 }
 
 func (group *Group) Save() error {
-	return Client.DoWithResult(&StormpathRequest{
-		Method:  Post,
-		URL:     group.Href,
-		Payload: group,
-	}, group)
+	return Client.doWithResult(Client.newRequest(
+		"POST",
+		group.Href,
+		group,
+	), group)
 }
 
 func (group *Group) Delete() error {
-	return Client.Do(&StormpathRequest{
-		Method: Delete,
-		URL:    group.Href,
-	})
+	return Client.do(Client.newRequest(
+		"DELETE",
+		group.Href,
+		emptyPayload(),
+	))
 }
 
 func (group *Group) GetAccounts(pageRequest PageRequest, filter Filter) (*Accounts, error) {
 	accounts := &Accounts{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:      Get,
-		URL:         group.Accounts.Href,
-		PageRequest: pageRequest,
-		Filter:      filter,
-	}, accounts)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		group.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
+		emptyPayload(),
+	), accounts)
 
 	return accounts, err
 }
@@ -46,12 +53,11 @@ func (group *Group) GetAccounts(pageRequest PageRequest, filter Filter) (*Accoun
 func (group *Group) GetGroupMemberships(pageRequest PageRequest, filter Filter) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
-	err := Client.DoWithResult(&StormpathRequest{
-		Method:      Get,
-		URL:         group.Href + "/accountMemberships",
-		PageRequest: pageRequest,
-		Filter:      filter,
-	}, groupMemberships)
+	err := Client.doWithResult(Client.newRequest(
+		"GET",
+		group.Href+"/accountMemberships"+requestParams(&pageRequest, filter, url.Values{}),
+		emptyPayload(),
+	), groupMemberships)
 
 	return groupMemberships, err
 }
