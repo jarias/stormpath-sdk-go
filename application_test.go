@@ -1,10 +1,12 @@
 package stormpath_test
 
 import (
-	. "github.com/jarias/stormpath-sdk-go"
 	"regexp"
 
+	. "github.com/jarias/stormpath-sdk-go"
+
 	"encoding/json"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -73,7 +75,7 @@ var _ = Describe("Application", func() {
 				group := NewGroup("another-test-group")
 				app.CreateApplicationGroup(group)
 
-				groups, err := app.GetApplicationGroups(NewDefaultPageRequest(), DefaultFilter{})
+				groups, err := app.GetApplicationGroups(NewDefaultPageRequest(), NewEmptyFilter())
 
 				Expect(err).NotTo(HaveOccurred())
 

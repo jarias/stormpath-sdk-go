@@ -18,7 +18,7 @@ func CurrentTenant() (*Tenant, error) {
 	err := Client.doWithResult(
 		Client.newRequestWithoutRedirects(
 			"GET",
-			buildURL("tenants", "current"),
+			buildRelativeURL("tenants", "current"),
 			emptyPayload(),
 		), tenant)
 
@@ -32,7 +32,7 @@ func (tenant *Tenant) CreateApplication(app *Application) error {
 	return Client.doWithResult(
 		Client.newRequest(
 			"POST",
-			buildURL("applications", requestParams(nil, nil, extraParams)),
+			buildRelativeURL("applications", requestParams(nil, nil, extraParams)),
 			app,
 		), app)
 }
@@ -41,29 +41,29 @@ func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 	return Client.doWithResult(
 		Client.newRequest(
 			"POST",
-			buildURL("directories"),
+			buildRelativeURL("directories"),
 			dir,
 		), dir)
 }
 
-func (tenant *Tenant) GetApplications(pageRequest PageRequest, filter Filter) (*Applications, error) {
+func (tenant *Tenant) GetApplications(pageRequest url.Values, filter url.Values) (*Applications, error) {
 	apps := &Applications{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		tenant.Applications.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(tenant.Applications.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), apps)
 
 	return apps, err
 }
 
-func (tenant *Tenant) GetDirectories(pageRequest PageRequest, filter Filter) (*Directories, error) {
+func (tenant *Tenant) GetDirectories(pageRequest url.Values, filter url.Values) (*Directories, error) {
 	directories := &Directories{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		tenant.Directories.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(tenant.Directories.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), directories)
 

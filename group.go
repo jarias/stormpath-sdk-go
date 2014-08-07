@@ -38,24 +38,24 @@ func (group *Group) Delete() error {
 	))
 }
 
-func (group *Group) GetAccounts(pageRequest PageRequest, filter Filter) (*Accounts, error) {
+func (group *Group) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
 	accounts := &Accounts{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		group.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(group.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), accounts)
 
 	return accounts, err
 }
 
-func (group *Group) GetGroupMemberships(pageRequest PageRequest, filter Filter) (*GroupMemberships, error) {
+func (group *Group) GetGroupMemberships(pageRequest url.Values, filter url.Values) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		group.Href+"/accountMemberships"+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(group.Href, "accountMemberships", requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), groupMemberships)
 

@@ -1,8 +1,9 @@
 package stormpath
 
 import (
-	"net/url"
 	"strconv"
+
+	"net/url"
 )
 
 //PageRequest contains the limit and offset values for any paginated Stormpath request
@@ -12,22 +13,14 @@ type PageRequest struct {
 }
 
 //NewPageRequest is a conviniece constructor for a PageRequest
-func NewPageRequest(limit int, offset int) PageRequest {
-	return PageRequest{Limit: limit, Offset: offset}
+func NewPageRequest(limit int, offset int) url.Values {
+	params := url.Values{}
+	params.Add("offset", strconv.Itoa(offset))
+	params.Add("limit", strconv.Itoa(limit))
+	return params
 }
 
 //NewDefaultPageRequest is a conviniece constructor for the default PageRequest values limit = 25 offset = 0
-func NewDefaultPageRequest() PageRequest {
-	return PageRequest{Limit: 25, Offset: 0}
-}
-
-func (pageRequest PageRequest) toURLQueryValues() url.Values {
-	val := url.Values{}
-
-	if pageRequest.Offset >= 0 && pageRequest.Limit > 0 {
-		val.Add("offset", strconv.Itoa(pageRequest.Offset))
-		val.Add("limit", strconv.Itoa(pageRequest.Limit))
-	}
-
-	return val
+func NewDefaultPageRequest() url.Values {
+	return NewPageRequest(25, 0)
 }

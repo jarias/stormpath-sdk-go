@@ -79,7 +79,7 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
-		buildURL("groupMemberships"),
+		buildRelativeURL("groupMemberships"),
 		groupMembership,
 	), groupMembership)
 
@@ -111,12 +111,12 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 }
 
 //GetGroupMemberships returns a paged result of the group memeberships of the given account
-func (account *Account) GetGroupMemberships(pageRequest PageRequest) (*GroupMemberships, error) {
+func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		account.GroupMemberships.Href+requestParams(&pageRequest, nil, url.Values{}),
+		buildAbsoluteURL(account.GroupMemberships.Href, requestParams(pageRequest, NewEmptyFilter(), url.Values{})),
 		emptyPayload(),
 	), groupMemberships)
 
