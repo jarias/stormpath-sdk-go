@@ -30,7 +30,7 @@ app := apps.Items[0]
 accountRef, _ := app.AuthenticateAccount("username", "password")
 
 //Print the account information
-account, _ := accountRef.Account()
+account, _ := accountRef.GetAccount()
 fmt.Println(account)
 ```
 

@@ -54,13 +54,15 @@ func NewAccount(email string, password string, givenName string, surname string)
 	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
 }
 
-func (accountRef *AccountRef) Account() (*Account, error) {
+func (accountRef *AccountRef) GetAccount() (*Account, error) {
 	account := Account{}
-	return Client.doWithResult(Client.newRequest(
+	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		accountRef.Href,
+		accountRef.Account.Href,
 		emptyPayload(),
 	), &account)
+
+	return &account, err
 }
 
 //Save updates the given account, by doing a POST to the account Href, if the account is a new account
