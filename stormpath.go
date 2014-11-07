@@ -14,7 +14,7 @@ import (
 )
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.1"
+const version = "0.1.0-beta.2"
 const baseUrl = "https://api.stormpath.com/v1/"
 const followRedirectsHeader = "Stormpath-Go-FollowRedirects"
 const locationHeader = "Location"
