@@ -2,6 +2,7 @@ package stormpath_test
 
 import (
 	"encoding/json"
+
 	. "github.com/jarias/stormpath-sdk-go"
 
 	. "github.com/onsi/ginkgo"
@@ -35,7 +36,7 @@ var _ = Describe("Directory", func() {
 			directory := NewDirectory("new-directory-test")
 			tenant.CreateDirectory(directory)
 
-			groups, err := directory.GetGroups(NewDefaultPageRequest(), DefaultFilter{})
+			groups, err := directory.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(groups.Href).NotTo(BeEmpty())
@@ -51,7 +52,7 @@ var _ = Describe("Directory", func() {
 			directory := NewDirectory("new-directory-test")
 			tenant.CreateDirectory(directory)
 
-			accounts, err := directory.GetAccounts(NewDefaultPageRequest(), DefaultFilter{})
+			accounts, err := directory.GetAccounts(NewDefaultPageRequest(), NewEmptyFilter())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accounts.Href).NotTo(BeEmpty())

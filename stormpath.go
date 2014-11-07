@@ -14,7 +14,7 @@ import (
 )
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.1"
+const version = "0.1.0-beta.2"
 const baseUrl = "https://api.stormpath.com/v1/"
 const followRedirectsHeader = "Stormpath-Go-FollowRedirects"
 const locationHeader = "Location"
@@ -44,6 +44,14 @@ type link struct {
 	Href string `json:"href"`
 }
 
+type stormpathError struct {
+	Status           int
+	Code             int
+	Message          string
+	DeveloperMessage string
+	MoreInfo         string
+}
+
 //NewStormpathClient is a convience constructor for the StormpathClient struct,
 //it recieves a pointer to a credentials object a cache implementation and
 //returns a pointer to a StormpathClient object, the cache implementation can be nil
@@ -57,8 +65,21 @@ func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient 
 	return &StormpathClient{credentials, httpClient, cache}
 }
 
-func buildURL(parts ...string) string {
+func buildRelativeURL(parts ...string) string {
 	buffer := bytes.NewBufferString(baseUrl)
+
+	for i, part := range parts {
+		buffer.WriteString(part)
+		if i+1 < len(parts) {
+			buffer.WriteString("/")
+		}
+	}
+
+	return buffer.String()
+}
+
+func buildAbsoluteURL(parts ...string) string {
+	buffer := bytes.NewBufferString("")
 
 	for i, part := range parts {
 		buffer.WriteString(part)
@@ -90,28 +111,25 @@ func (client *StormpathClient) newRequest(method string, urlStr string, body int
 	return req
 }
 
-func encodeExtraParams(extraParams url.Values) string {
-	encodedParams := extraParams.Encode()
+func requestParams(pageRequest url.Values, filter url.Values, extraParams url.Values) string {
+	params := url.Values{}
+
+	params = appendParams(params, pageRequest)
+	params = appendParams(params, filter)
+	params = appendParams(params, extraParams)
+
+	encodedParams := params.Encode()
 	if encodedParams != "" {
 		return "?" + encodedParams
 	}
 	return ""
 }
 
-func requestParams(pageRequest *PageRequest, filter Filter, extraParams url.Values) string {
-	if pageRequest != nil {
-		copyURLValues(pageRequest.toURLQueryValues(), extraParams)
+func appendParams(params url.Values, toAppend url.Values) url.Values {
+	for k, v := range toAppend {
+		params[k] = v
 	}
-	if filter != nil {
-		copyURLValues(filter.toURLQueryValues(), extraParams)
-	}
-	return encodeExtraParams(extraParams)
-}
-
-func copyURLValues(from url.Values, to url.Values) {
-	for k, v := range from {
-		to[k] = v
-	}
+	return params
 }
 
 func handleResponseError(resp *http.Response, err error) error {
@@ -122,15 +140,15 @@ func handleResponseError(resp *http.Response, err error) error {
 	}
 	//Check for Stormpath specific errors
 	if resp.StatusCode != 200 && resp.StatusCode != 204 && resp.StatusCode != 201 && resp.StatusCode != 302 {
-		stormpathError := &StormpathError{}
+		spError := &stormpathError{}
 
-		err := json.NewDecoder(resp.Body).Decode(stormpathError)
+		err := json.NewDecoder(resp.Body).Decode(spError)
 		if err != nil {
 			return err
 		}
 
-		ERROR.Printf("%s [%s]", stormpathError.Message, resp.Request.URL.String())
-		return errors.New(stormpathError.Message)
+		ERROR.Printf("%s [%s]", spError.Message, resp.Request.URL.String())
+		return errors.New(spError.Message)
 	}
 	//No errors from the request execution
 	return nil

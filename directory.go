@@ -37,24 +37,24 @@ func (dir *Directory) Delete() error {
 	))
 }
 
-func (dir *Directory) GetGroups(pageRequest PageRequest, filter Filter) (*Groups, error) {
+func (dir *Directory) GetGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
 	groups := &Groups{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		dir.Groups.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(dir.Groups.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), groups)
 
 	return groups, err
 }
 
-func (dir *Directory) GetAccounts(pageRequest PageRequest, filter Filter) (*Accounts, error) {
+func (dir *Directory) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
 	accounts := &Accounts{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		dir.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(dir.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), accounts)
 

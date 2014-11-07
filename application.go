@@ -45,7 +45,7 @@ func (app *Application) Delete() error {
 }
 
 func (app *Application) Purge() error {
-	accountStoreMappings, err := app.GetAccountStoreMappings(NewDefaultPageRequest(), DefaultFilter{})
+	accountStoreMappings, err := app.GetAccountStoreMappings(NewDefaultPageRequest(), NewEmptyFilter())
 	if err != nil {
 		return err
 	}
@@ -60,24 +60,24 @@ func (app *Application) Purge() error {
 	return app.Delete()
 }
 
-func (app *Application) GetAccountStoreMappings(pageRequest PageRequest, filter Filter) (*AccountStoreMappings, error) {
+func (app *Application) GetAccountStoreMappings(pageRequest url.Values, filter url.Values) (*AccountStoreMappings, error) {
 	accountStoreMappings := &AccountStoreMappings{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		app.AccountStoreMappings.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(app.AccountStoreMappings.Href, requestParams(pageRequest, filter, url.Values{})),
 		nil,
 	), accountStoreMappings)
 
 	return accountStoreMappings, err
 }
 
-func (app *Application) GetAccounts(pageRequest PageRequest, filter Filter) (*Accounts, error) {
+func (app *Application) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
 	accounts := &Accounts{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		app.Accounts.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(app.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), accounts)
 
@@ -104,7 +104,7 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
-		app.Href+"/loginAttempts",
+		buildAbsoluteURL(app.Href, "loginAttempts"),
 		loginAttemptPayload,
 	), account)
 
@@ -119,7 +119,7 @@ func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswor
 
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
-		app.Href+"/passwordResetTokens",
+		buildAbsoluteURL(app.Href, "passwordResetTokens"),
 		passwordResetPayload,
 	), passwordResetToken)
 
@@ -131,7 +131,7 @@ func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswo
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		app.Href+"/passwordResetTokens/"+token,
+		buildAbsoluteURL(app.Href, "passwordResetTokens", token),
 		emptyPayload(),
 	), passwordResetToken)
 
@@ -146,7 +146,7 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 
 	err := Client.doWithResult(Client.newRequest(
 		"POST",
-		app.Href+"/passwordResetTokens/"+token,
+		buildAbsoluteURL(app.Href, "passwordResetTokens", token),
 		resetPasswordPayload,
 	), account)
 
@@ -161,12 +161,12 @@ func (app *Application) CreateApplicationGroup(group *Group) error {
 	), group)
 }
 
-func (app *Application) GetApplicationGroups(pageRequest PageRequest, filter Filter) (*Groups, error) {
+func (app *Application) GetApplicationGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
 	groups := &Groups{}
 
 	err := Client.doWithResult(Client.newRequest(
 		"GET",
-		app.Groups.Href+requestParams(&pageRequest, filter, url.Values{}),
+		buildAbsoluteURL(app.Groups.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
 	), groups)
 

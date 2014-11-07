@@ -2,67 +2,44 @@ package stormpath
 
 import "net/url"
 
-//Common filter fields used in paged resutls
-const (
-	Name        = "name"
-	Description = "description"
-	Status      = "status"
-)
+func NewDefaultFilter(name string, description string, status string) url.Values {
+	filter := url.Values{}
 
-//Account specific filter fields used in paged resutls
-const (
-	GivenName  = "GivenName"
-	MiddleName = "MiddleName"
-	Surname    = "Surname"
-	Username   = "Username"
-	Email      = "Email"
-)
-
-//Filter defines the interface for any filter type that can be converted to url.Values
-type Filter interface {
-	toURLQueryValues() url.Values
-}
-
-//DefaultFilter is the common filter among Stormpath model objects
-type DefaultFilter struct {
-	Name        string
-	Description string
-	Status      string
-}
-
-//AccountFilter is the specific filter use for Accounts
-type AccountFilter struct {
-	GivenName  string
-	MiddleName string
-	Surname    string
-	Username   string
-	Email      string
-}
-
-func (filter AccountFilter) toURLQueryValues() url.Values {
-	values := url.Values{}
-
-	copyFieldFilter(filter.GivenName, GivenName, values)
-	copyFieldFilter(filter.MiddleName, MiddleName, values)
-	copyFieldFilter(filter.Surname, Surname, values)
-	copyFieldFilter(filter.Username, Username, values)
-	copyFieldFilter(filter.Email, Email, values)
-
-	return values
-}
-
-func (filter DefaultFilter) toURLQueryValues() url.Values {
-	values := url.Values{}
-
-	copyFieldFilter(filter.Name, Name, values)
-	copyFieldFilter(filter.Description, Description, values)
-	copyFieldFilter(filter.Status, Status, values)
-
-	return values
-}
-
-func copyFieldFilter(fieldValue string, fieldName string, to url.Values) {
-	if len(fieldValue) > 0 {
-		to.Set(fieldName, fieldValue)
+	if len(name) > 0 {
+		filter.Add("name", name)
 	}
+	if len(description) > 0 {
+		filter.Add("description", description)
+	}
+	if len(description) > 0 {
+		filter.Add("status", status)
+	}
+
+	return filter
+}
+
+func NewAccountFilter(givenName string, middleName string, surname string, username string, email string) url.Values {
+	filter := url.Values{}
+
+	if len(givenName) > 0 {
+		filter.Add("givenName", givenName)
+	}
+	if len(middleName) > 0 {
+		filter.Add("middleName", middleName)
+	}
+	if len(surname) > 0 {
+		filter.Add("surname", surname)
+	}
+	if len(username) > 0 {
+		filter.Add("username", username)
+	}
+	if len(email) > 0 {
+		filter.Add("email", email)
+	}
+
+	return filter
+}
+
+func NewEmptyFilter() url.Values {
+	return url.Values{}
 }

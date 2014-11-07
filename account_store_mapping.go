@@ -19,7 +19,7 @@ func NewAccountStoreMapping(applicationHref string, accountStoreHref string) *Ac
 }
 
 func (mapping *AccountStoreMapping) Save() error {
-	url := buildURL("accountStoreMappings")
+	url := buildRelativeURL("accountStoreMappings")
 	if mapping.Href != "" {
 		url = mapping.Href
 	}
