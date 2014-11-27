@@ -2,6 +2,9 @@ package stormpath
 
 import "net/url"
 
+//Group represents a Stormpath Group
+//
+//See: http://docs.stormpath.com/rest/product-guide/#groups
 type Group struct {
 	Href        string `json:"href,omitempty"`
 	Name        string `json:"name"`
@@ -13,39 +16,33 @@ type Group struct {
 	Directory   *link  `json:"directory,omitempty"`
 }
 
+//Groups represent a paged result of groups
 type Groups struct {
 	list
 	Items []Groups `json:"items"`
 }
 
+//NewGroup creates a new Group with the given name
 func NewGroup(name string) *Group {
 	return &Group{Name: name}
 }
 
 func (group *Group) Save() error {
-	return Client.doWithResult(Client.newRequest(
-		"POST",
-		group.Href,
-		group,
-	), group)
+	return client.post(group.Href, group, group)
 }
 
 func (group *Group) Delete() error {
-	return Client.do(Client.newRequest(
-		"DELETE",
-		group.Href,
-		emptyPayload(),
-	))
+	return client.delete(group.Href, emptyPayload())
 }
 
 func (group *Group) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
 	accounts := &Accounts{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(group.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
-	), accounts)
+		accounts,
+	)
 
 	return accounts, err
 }
@@ -53,11 +50,11 @@ func (group *Group) GetAccounts(pageRequest url.Values, filter url.Values) (*Acc
 func (group *Group) GetGroupMemberships(pageRequest url.Values, filter url.Values) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(group.Href, "accountMemberships", requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
-	), groupMemberships)
+		groupMemberships,
+	)
 
 	return groupMemberships, err
 }

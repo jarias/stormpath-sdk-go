@@ -2,6 +2,9 @@ package stormpath
 
 import "net/url"
 
+//Directory represents a Stormpath directory object
+//
+//See: http://docs.stormpath.com/rest/product-guide/#directories
 type Directory struct {
 	Href        string `json:"href,omitempty"`
 	Name        string `json:"name"`
@@ -12,59 +15,54 @@ type Directory struct {
 	Tenant      *link  `json:"tenant,omitempty"`
 }
 
+//Directories represnets a paged result of directories
 type Directories struct {
 	list
 	Items []Directory `json:"items"`
 }
 
+//NewDirectory creates a new directory with the given name
 func NewDirectory(name string) *Directory {
 	return &Directory{Name: name}
 }
 
+//Save saves the directory in Stormpath
 func (dir *Directory) Save() error {
-	return Client.doWithResult(Client.newRequest(
-		"POST",
-		dir.Href,
-		dir,
-	), dir)
+	return client.post(dir.Href, dir, dir)
 }
 
+//Delete deletes the directory
 func (dir *Directory) Delete() error {
-	return Client.do(Client.newRequest(
-		"DELETE",
-		dir.Href,
-		emptyPayload(),
-	))
+	return client.delete(dir.Href, emptyPayload())
 }
 
+//GetGroups returns all the groups from a directory
 func (dir *Directory) GetGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
 	groups := &Groups{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(dir.Groups.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
-	), groups)
+		groups,
+	)
 
 	return groups, err
 }
 
+//GetAccounts returns all the accounts from the directory
 func (dir *Directory) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
 	accounts := &Accounts{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(dir.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
-	), accounts)
+		accounts,
+	)
 
 	return accounts, err
 }
 
+//CreateGroup creates a new group in the directory
 func (dir *Directory) CreateGroup(group *Group) error {
-	return Client.doWithResult(Client.newRequest(
-		"POST",
-		dir.Groups.Href,
-		group,
-	), group)
+	return client.post(dir.Groups.Href, group, group)
 }

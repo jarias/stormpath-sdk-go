@@ -13,7 +13,7 @@ import (
 
 var (
 	app     *Application
-	cred    *Credentials
+	cred    Credentials
 	account *Account
 	tenant  *Tenant
 )
@@ -35,7 +35,8 @@ var _ = BeforeSuite(func() {
 	if err != nil {
 		panic(err)
 	}
-	Client = NewStormpathClient(cred, RedisCache{redisConn})
+
+	Init(cred, RedisCache{redisConn})
 
 	tenant, err = CurrentTenant()
 	if err != nil {

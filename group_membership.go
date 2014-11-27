@@ -1,9 +1,5 @@
 package stormpath
 
-const (
-	GroupMembershipBaseUrl = "https://api.stormpath.com/v1/groupMemberships"
-)
-
 type GroupMembership struct {
 	Href    string `json:"href,omitempty"`
 	Account link   `json:"account"`
@@ -20,21 +16,13 @@ func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
 }
 
 func (groupmembership *GroupMembership) Delete() error {
-	return Client.do(Client.newRequest(
-		"DELETE",
-		groupmembership.Href,
-		emptyPayload(),
-	))
+	return client.delete(groupmembership.Href, emptyPayload())
 }
 
 func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
 	account := &Account{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
-		groupmembership.Account.Href,
-		emptyPayload(),
-	), account)
+	err := client.get(groupmembership.Account.Href, emptyPayload(), account)
 
 	return account, err
 }
@@ -42,11 +30,7 @@ func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
 func (groupmembership *GroupMembership) GetGroup() (*Group, error) {
 	group := &Group{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
-		groupmembership.Group.Href,
-		emptyPayload(),
-	), group)
+	err := client.get(groupmembership.Group.Href, emptyPayload(), group)
 
 	return group, err
 }

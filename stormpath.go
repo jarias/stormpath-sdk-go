@@ -14,20 +14,19 @@ import (
 )
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.2"
-const baseUrl = "https://api.stormpath.com/v1/"
+const version = "0.1.0-beta.3"
+const baseURL = "https://api.stormpath.com/v1/"
 const followRedirectsHeader = "Stormpath-Go-FollowRedirects"
 const locationHeader = "Location"
 
-//Client is default global client variable to execute any Stormpath request
-var Client *StormpathClient
+var client *Client
 
-//StormpathClient is low level REST client for any Stormpath request,
+//Client is low level REST client for any Stormpath request,
 //it holds the credentials, an the actual http client, and the cache.
 //The Cache can be initialize in nil and the client would simply ignore it
 //and don't cache any response.
-type StormpathClient struct {
-	Credentials *Credentials
+type Client struct {
+	Credentials Credentials
 	HTTPClient  *http.Client
 	Cache       Cache
 }
@@ -52,21 +51,40 @@ type stormpathError struct {
 	MoreInfo         string
 }
 
-//NewStormpathClient is a convience constructor for the StormpathClient struct,
-//it recieves a pointer to a credentials object a cache implementation and
-//returns a pointer to a StormpathClient object, the cache implementation can be nil
-func NewStormpathClient(credentials *Credentials, cache Cache) *StormpathClient {
+//Init initializes the underlying client that communicates with Stormpath
+func Init(credentials Credentials, cache Cache) {
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{},
 		DisableCompression: true,
 	}
 	httpClient := &http.Client{Transport: tr}
 
-	return &StormpathClient{credentials, httpClient, cache}
+	client = &Client{credentials, httpClient, cache}
+}
+
+//InitWithCustomHTTPClient initializes the underlying client that communicates with Stormpath with a custom http.Client
+func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *http.Client) {
+	client = &Client{credentials, httpClient, cache}
+}
+
+func (client *Client) post(urlStr string, body interface{}, result interface{}) error {
+	return client.execute("POST", urlStr, body, result)
+}
+
+func (client *Client) get(urlStr string, body interface{}, result interface{}) error {
+	return client.execute("GET", urlStr, body, result)
+}
+
+func (client *Client) delete(urlStr string, body interface{}) error {
+	return client.do(client.newRequest("DELETE", urlStr, body))
+}
+
+func (client *Client) execute(method string, urlStr string, body interface{}, result interface{}) error {
+	return client.doWithResult(client.newRequest(method, urlStr, body), result)
 }
 
 func buildRelativeURL(parts ...string) string {
-	buffer := bytes.NewBufferString(baseUrl)
+	buffer := bytes.NewBufferString(baseURL)
 
 	for i, part := range parts {
 		buffer.WriteString(part)
@@ -91,13 +109,13 @@ func buildAbsoluteURL(parts ...string) string {
 	return buffer.String()
 }
 
-func (client *StormpathClient) newRequestWithoutRedirects(method string, urlStr string, body interface{}) *http.Request {
+func (client *Client) newRequestWithoutRedirects(method string, urlStr string, body interface{}) *http.Request {
 	req := client.newRequest(method, urlStr, body)
 	req.Header.Add(followRedirectsHeader, "false")
 	return req
 }
 
-func (client *StormpathClient) newRequest(method string, urlStr string, body interface{}) *http.Request {
+func (client *Client) newRequest(method string, urlStr string, body interface{}) *http.Request {
 	jsonBody, _ := json.Marshal(body)
 	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(jsonBody))
 	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+version)
@@ -160,7 +178,7 @@ func emptyPayload() []byte {
 
 //doWithResult executes the given StormpathRequest and serialize the response body into the given expected result,
 //it returns an error if any occurred while executing the request or serializing the response
-func (client *StormpathClient) doWithResult(request *http.Request, result interface{}) error {
+func (client *Client) doWithResult(request *http.Request, result interface{}) error {
 	var err error
 	var response *http.Response
 
@@ -191,13 +209,13 @@ func (client *StormpathClient) doWithResult(request *http.Request, result interf
 
 //do executes the StormpathRequest without expecting a response body as a result,
 //it returns an error if any occurred while executing the request
-func (client *StormpathClient) do(request *http.Request) error {
+func (client *Client) do(request *http.Request) error {
 	_, err := client.execRequest(request)
 	return err
 }
 
 //execRequest executes a request, it would return a byte slice with the raw resoponse data and an error if any occurred
-func (client *StormpathClient) execRequest(req *http.Request) (*http.Response, error) {
+func (client *Client) execRequest(req *http.Request) (*http.Response, error) {
 	if req.Header.Get(followRedirectsHeader) == "false" {
 		req.Header.Del(followRedirectsHeader)
 		resp, err := client.HTTPClient.Transport.RoundTrip(req)

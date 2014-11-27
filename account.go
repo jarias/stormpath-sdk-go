@@ -54,45 +54,31 @@ func NewAccount(email string, password string, givenName string, surname string)
 	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
 }
 
+//GetAccount returns the Account from an AccountRef
 func (accountRef *AccountRef) GetAccount() (*Account, error) {
-	account := Account{}
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
-		accountRef.Account.Href,
-		emptyPayload(),
-	), &account)
+	account := &Account{}
 
-	return &account, err
+	err := client.get(accountRef.Account.Href, emptyPayload(), account)
+
+	return account, err
 }
 
 //Save updates the given account, by doing a POST to the account Href, if the account is a new account
 //it should be created via Application.RegisterAccount
 func (account *Account) Save() error {
-	return Client.doWithResult(Client.newRequest(
-		"POST",
-		account.Href,
-		account,
-	), account)
+	return client.post(account.Href, account, account)
 }
 
 //Delete deletes the given account, it wont modify the calling account
 func (account *Account) Delete() error {
-	return Client.do(Client.newRequest(
-		"DELETE",
-		account.Href,
-		emptyPayload(),
-	))
+	return client.delete(account.Href, emptyPayload())
 }
 
 //AddToGroup adds the given account to a given group and returns the respective GroupMembership
 func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 	groupMembership := NewGroupMembership(account.Href, group.Href)
 
-	err := Client.doWithResult(Client.newRequest(
-		"POST",
-		buildRelativeURL("groupMemberships"),
-		groupMembership,
-	), groupMembership)
+	err := client.post(buildRelativeURL("groupMemberships"), groupMembership, groupMembership)
 
 	return groupMembership, err
 }
@@ -125,11 +111,11 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(account.GroupMemberships.Href, requestParams(pageRequest, NewEmptyFilter(), url.Values{})),
 		emptyPayload(),
-	), groupMemberships)
+		groupMemberships,
+	)
 
 	return groupMemberships, err
 }
@@ -138,18 +124,12 @@ func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMembe
 func (account *Account) GetCustomData() (map[string]string, error) {
 	customData := make(map[string]string)
 
-	err := Client.doWithResult(Client.newRequest("GET",
-		account.CustomData.Href,
-		emptyPayload(),
-	), &customData)
+	err := client.get(account.CustomData.Href, emptyPayload(), &customData)
 
 	return customData, err
 }
 
 //SetCustomData sets or updates the given account custom data
 func (account *Account) SetCustomData(data map[string]string) error {
-	return Client.doWithResult(Client.newRequest("POST",
-		account.CustomData.Href,
-		data,
-	), &data)
+	return client.post(account.CustomData.Href, data, &data)
 }

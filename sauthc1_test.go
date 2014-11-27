@@ -13,7 +13,7 @@ var _ = Describe("Stormpath SAuthc1", func() {
 	It("should authenticate a request without query params", func() {
 		req, _ := http.NewRequest("GET", "https://api.stormpath.com/v1/", nil)
 
-		cred := &Credentials{Id: "MyId", Secret: "Shush!"}
+		cred := Credentials{ID: "MyId", Secret: "Shush!"}
 
 		Authenticate(req, []byte{}, time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC), cred, "a43a9d25-ab06-421e-8605-33fd1e760825")
 
@@ -25,7 +25,7 @@ var _ = Describe("Stormpath SAuthc1", func() {
 	It("should authenticate a request with query params", func() {
 		req, _ := http.NewRequest("GET", "https://api.stormpath.com/v1/directories?orderBy=name+asc", nil)
 
-		cred := &Credentials{Id: "MyId", Secret: "Shush!"}
+		cred := Credentials{ID: "MyId", Secret: "Shush!"}
 
 		Authenticate(req, []byte{}, time.Date(2013, 7, 1, 0, 0, 0, 0, time.UTC), cred, "a43a9d25-ab06-421e-8605-33fd1e760825")
 

@@ -2,6 +2,7 @@ package stormpath
 
 import "net/url"
 
+//NewDefaultFilter creates a new filter set of url.Values, default includes name, description and status
 func NewDefaultFilter(name string, description string, status string) url.Values {
 	filter := url.Values{}
 
@@ -18,6 +19,7 @@ func NewDefaultFilter(name string, description string, status string) url.Values
 	return filter
 }
 
+//NewAccountFilter creates the url.Values for an account filter if any of the values is 0 len they won't be added to the values
 func NewAccountFilter(givenName string, middleName string, surname string, username string, email string) url.Values {
 	filter := url.Values{}
 
@@ -40,6 +42,7 @@ func NewAccountFilter(givenName string, middleName string, surname string, usern
 	return filter
 }
 
+//NewEmptyFilter returns an empty url.Values{}
 func NewEmptyFilter() url.Values {
 	return url.Values{}
 }
