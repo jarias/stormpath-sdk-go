@@ -1,6 +1,8 @@
 package stormpath_test
 
 import (
+	"crypto/tls"
+	"net/http"
 	"os"
 
 	"github.com/garyburd/redigo/redis"
@@ -13,7 +15,7 @@ import (
 
 var (
 	app     *Application
-	cred    *Credentials
+	cred    Credentials
 	account *Account
 	tenant  *Tenant
 )
@@ -35,7 +37,13 @@ var _ = BeforeSuite(func() {
 	if err != nil {
 		panic(err)
 	}
-	Client = NewStormpathClient(cred, RedisCache{redisConn})
+	tr := &http.Transport{
+		TLSClientConfig:    &tls.Config{},
+		DisableCompression: true,
+	}
+	httpClient := &http.Client{Transport: tr}
+
+	Init(cred, RedisCache{redisConn}, httpClient)
 
 	tenant, err = CurrentTenant()
 	if err != nil {

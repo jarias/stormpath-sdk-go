@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+//SAuthc1 algorithm constants
 const (
 	IDTerminator         = "sauthc1_request"
 	AuthenticationScheme = "SAuthc1"
@@ -28,7 +29,7 @@ const (
 )
 
 //Authenticate generates the proper authentication header for the SAuthc1 algorithm use by Stormpath
-func Authenticate(req *http.Request, payload []byte, date time.Time, credentials *Credentials, nonce string) {
+func Authenticate(req *http.Request, payload []byte, date time.Time, credentials Credentials, nonce string) {
 	timestamp := date.Format(TimestampFormat)
 	dateStamp := date.Format(DateFormat)
 	req.Header.Set(HostHeader, req.URL.Host)
@@ -49,7 +50,7 @@ func Authenticate(req *http.Request, payload []byte, date time.Time, credentials
 			NL +
 			hex.EncodeToString(hash(payload))
 
-	id := credentials.Id + "/" + dateStamp + "/" + nonce + "/" + IDTerminator
+	id := credentials.ID + "/" + dateStamp + "/" + nonce + "/" + IDTerminator
 
 	canonicalRequestHashHex := hex.EncodeToString(hash([]byte(canonicalRequest)))
 
@@ -129,9 +130,8 @@ func canonicalizeQueryString(req *http.Request) string {
 func canonicalizeResourcePath(path string) string {
 	if len(path) == 0 {
 		return "/"
-	} else {
-		return encodeURL(path, true, true)
 	}
+	return encodeURL(path, true, true)
 }
 
 func canonicalizeHeadersString(headers http.Header) string {

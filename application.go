@@ -5,6 +5,9 @@ import (
 	"net/url"
 )
 
+//Application represents a Stormpath application object
+//
+//See: http://docs.stormpath.com/rest/product-guide/#applications
 type Application struct {
 	Href                       string `json:"href,omitempty"`
 	Name                       string `json:"name"`
@@ -19,81 +22,86 @@ type Application struct {
 	DefaultGroupStoreMapping   *link  `json:"defaultGroupStoreMapping,omitempty"`
 }
 
+//Applications represents a paged result or applications
 type Applications struct {
 	list
 	Items []Application `json:"items"`
 }
 
+//NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
 }
 
+//Save saves the given application
+//
+//See: http://docs.stormpath.com/rest/product-guide/#create-an-application-aka-register-an-application-with-stormpath
 func (app *Application) Save() error {
-	return Client.doWithResult(Client.newRequest(
-		"POST",
-		app.Href,
-		app,
-	), app)
+	return client.post(app.Href, app, app)
 }
 
+//Delete deletes the given applicaiton
+//
+//See: http://docs.stormpath.com/rest/product-guide/#delete-an-application
 func (app *Application) Delete() error {
-	return Client.do(Client.newRequest(
-		"DELETE",
-		app.Href,
-		emptyPayload(),
-	))
+	return client.delete(app.Href, emptyPayload())
 }
 
+//Purge deletes all the account stores before deleting the application
+//
+//See: http://docs.stormpath.com/rest/product-guide/#delete-an-application
 func (app *Application) Purge() error {
 	accountStoreMappings, err := app.GetAccountStoreMappings(NewDefaultPageRequest(), NewEmptyFilter())
 	if err != nil {
 		return err
 	}
 	for _, m := range accountStoreMappings.Items {
-		Client.do(Client.newRequest(
-			"DELETE",
-			m.AccountStore.Href,
-			emptyPayload(),
-		))
+		client.delete(m.AccountStore.Href, emptyPayload())
 	}
 
 	return app.Delete()
 }
 
+//GetAccountStoreMappings returns all the applications account store mappings
+//
+//See: http://docs.stormpath.com/rest/product-guide/#application-account-store-mappings
 func (app *Application) GetAccountStoreMappings(pageRequest url.Values, filter url.Values) (*AccountStoreMappings, error) {
 	accountStoreMappings := &AccountStoreMappings{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(app.AccountStoreMappings.Href, requestParams(pageRequest, filter, url.Values{})),
-		nil,
-	), accountStoreMappings)
+		emptyPayload(),
+		accountStoreMappings,
+	)
 
 	return accountStoreMappings, err
 }
 
+//GetAccounts returns all the accounts of the application
+//
+//See: http://docs.stormpath.com/rest/product-guide/#application-accounts
 func (app *Application) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
 	accounts := &Accounts{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(app.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
-	), accounts)
+		accounts,
+	)
 
 	return accounts, err
 }
 
+//RegisterAccount registers a new account into the application
+//
+//See: http://docs.stormpath.com/rest/product-guide/#create-an-application-aka-register-an-application-with-stormpath
 func (app *Application) RegisterAccount(account *Account) error {
-	err := Client.doWithResult(Client.newRequest(
-		"POST",
-		app.Accounts.Href,
-		account,
-	), account)
-
-	return err
+	return client.post(app.Accounts.Href, account, account)
 }
 
+//AuthenticateAccount authenticates an account against the application
+//
+//See: http://docs.stormpath.com/rest/product-guide/#authenticate-an-account
 func (app *Application) AuthenticateAccount(username string, password string) (*AccountRef, error) {
 	account := &AccountRef{}
 
@@ -102,73 +110,68 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	loginAttemptPayload["type"] = "basic"
 	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
-	err := Client.doWithResult(Client.newRequest(
-		"POST",
-		buildAbsoluteURL(app.Href, "loginAttempts"),
-		loginAttemptPayload,
-	), account)
+	err := client.post(buildAbsoluteURL(app.Href, "loginAttempts"), loginAttemptPayload, account)
 
 	return account, err
 }
 
+//SendPasswordResetEmail sends a password reset email to the given user
+//
+//See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
 func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
 	passwordResetPayload := make(map[string]string)
 	passwordResetPayload["email"] = username
 
-	err := Client.doWithResult(Client.newRequest(
-		"POST",
-		buildAbsoluteURL(app.Href, "passwordResetTokens"),
-		passwordResetPayload,
-	), passwordResetToken)
+	err := client.post(buildAbsoluteURL(app.Href, "passwordResetTokens"), passwordResetPayload, passwordResetToken)
 
 	return passwordResetToken, err
 }
 
+//ValidatePasswordResetToken validates a password reset token
+//
+//See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
 func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
-		buildAbsoluteURL(app.Href, "passwordResetTokens", token),
-		emptyPayload(),
-	), passwordResetToken)
+	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), emptyPayload(), passwordResetToken)
 
 	return passwordResetToken, err
 }
 
+//ResetPassword resets a user password based on the reset token
+//
+//See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
 func (app *Application) ResetPassword(token string, newPassword string) (*AccountRef, error) {
 	account := &AccountRef{}
 
 	resetPasswordPayload := make(map[string]string)
 	resetPasswordPayload["password"] = newPassword
 
-	err := Client.doWithResult(Client.newRequest(
-		"POST",
-		buildAbsoluteURL(app.Href, "passwordResetTokens", token),
-		resetPasswordPayload,
-	), account)
+	err := client.post(buildAbsoluteURL(app.Href, "passwordResetTokens", token), resetPasswordPayload, account)
 
 	return account, err
 }
 
+//CreateApplicationGroup creates a new group in the application
+//
+//See: http://docs.stormpath.com/rest/product-guide/#application-groups
 func (app *Application) CreateApplicationGroup(group *Group) error {
-	return Client.doWithResult(Client.newRequest(
-		"POST",
-		app.Groups.Href,
-		group,
-	), group)
+	return client.post(app.Groups.Href, group, group)
 }
 
+//GetApplicationGroups returns all the application groups
+//
+//See: http://docs.stormpath.com/rest/product-guide/#application-groups
 func (app *Application) GetApplicationGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
 	groups := &Groups{}
 
-	err := Client.doWithResult(Client.newRequest(
-		"GET",
+	err := client.get(
 		buildAbsoluteURL(app.Groups.Href, requestParams(pageRequest, filter, url.Values{})),
 		emptyPayload(),
-	), groups)
+		groups,
+	)
 
 	return groups, err
 }
