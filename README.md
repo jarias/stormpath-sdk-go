@@ -14,8 +14,8 @@ import "fmt"
 //then it would look for os.Getenv("HOME") + "/.config/stormpath/apiKey.properties" for the credentials
 credentials := stormpath.NewDefaultCredentials()
 
-//Whithout cache
-stormpath.Client = stormpath.NewStormpathClient(credentials, nil)
+//Init Whithout cache
+stormpath.Init(credentials, nil)
 
 //Get the current tenant
 tenant := stormpath.CurrentTenant()

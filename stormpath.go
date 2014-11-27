@@ -2,6 +2,7 @@ package stormpath
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -51,7 +52,18 @@ type stormpathError struct {
 }
 
 //Init initializes the underlying client that communicates with Stormpath
-func Init(credentials Credentials, cache Cache, httpClient *http.Client) {
+func Init(credentials Credentials, cache Cache) {
+	tr := &http.Transport{
+		TLSClientConfig:    &tls.Config{},
+		DisableCompression: true,
+	}
+	httpClient := &http.Client{Transport: tr}
+
+	client = &Client{credentials, httpClient, cache}
+}
+
+//InitWithCustomHTTPClient initializes the underlying client that communicates with Stormpath with a custom http.Client
+func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *http.Client) {
 	client = &Client{credentials, httpClient, cache}
 }
 
