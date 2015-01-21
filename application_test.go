@@ -55,14 +55,14 @@ var _ = Describe("Application", func() {
 	Describe("groups", func() {
 		Describe("CreateApplicationGroup", func() {
 			It("should return error is group has no name", func() {
-				err := app.CreateApplicationGroup(&Group{})
+				err := app.CreateGroup(&Group{})
 
 				Expect(err).To(HaveOccurred())
 			})
 
 			It("should create a new application group", func() {
 				group := NewGroup("new-test-group")
-				err := app.CreateApplicationGroup(group)
+				err := app.CreateGroup(group)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(group.Href).NotTo(BeEmpty())
@@ -73,9 +73,9 @@ var _ = Describe("Application", func() {
 		Describe("GetApplicationGroups", func() {
 			It("should return the paged list of application groups", func() {
 				group := NewGroup("another-test-group")
-				app.CreateApplicationGroup(group)
+				app.CreateGroup(group)
 
-				groups, err := app.GetApplicationGroups(NewDefaultPageRequest(), NewEmptyFilter())
+				groups, err := app.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
 
 				Expect(err).NotTo(HaveOccurred())
 
