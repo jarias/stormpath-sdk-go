@@ -2,6 +2,7 @@ package stormpath_test
 
 import (
 	"encoding/json"
+
 	. "github.com/jarias/stormpath-sdk-go"
 
 	. "github.com/onsi/ginkgo"
@@ -46,7 +47,7 @@ var _ = Describe("Account", func() {
 	Describe("AddToGroup", func() {
 		It("should add an account to an existing group", func() {
 			group := NewGroup("test-group-for-account")
-			app.CreateApplicationGroup(group)
+			app.CreateGroup(group)
 
 			_, err := account.AddToGroup(group)
 			gm, _ := account.GetGroupMemberships(NewDefaultPageRequest())
@@ -61,7 +62,7 @@ var _ = Describe("Account", func() {
 		It("should remove an account from an existing group", func() {
 			var groupCountBefore int
 			group := NewGroup("test-group-for-account-remove")
-			app.CreateApplicationGroup(group)
+			app.CreateGroup(group)
 
 			account.AddToGroup(group)
 			gm, _ := account.GetGroupMemberships(NewDefaultPageRequest())

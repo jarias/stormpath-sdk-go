@@ -154,14 +154,14 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	return account, err
 }
 
-//CreateApplicationGroup creates a new group in the application
+//CreateGroup creates a new group in the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-groups
 func (app *Application) CreateGroup(group *Group) error {
 	return client.post(app.Groups.Href, group, group)
 }
 
-//GetApplicationGroups returns all the application groups
+//GetGroups returns all the application groups
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-groups
 func (app *Application) GetGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {

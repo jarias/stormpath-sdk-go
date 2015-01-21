@@ -53,7 +53,7 @@ var _ = Describe("Application", func() {
 	})
 
 	Describe("groups", func() {
-		Describe("CreateApplicationGroup", func() {
+		Describe("CreateGroup", func() {
 			It("should return error is group has no name", func() {
 				err := app.CreateGroup(&Group{})
 
