@@ -9,6 +9,7 @@ type Tenant struct {
 	Href         string `json:"href"`
 	Name         string `json:"name"`
 	Key          string `json:"key"`
+	CustomData   link   `json:"customData"`
 	Applications link   `json:"applications"`
 	Directories  link   `json:"directories"`
 }
@@ -64,4 +65,33 @@ func (tenant *Tenant) GetDirectories(pageRequest url.Values, filter url.Values) 
 	err := client.get(buildAbsoluteURL(tenant.Directories.Href, requestParams(pageRequest, filter, url.Values{})), emptyPayload(), directories)
 
 	return directories, err
+}
+
+//UpdateCustomData updates the tenant custom data and returns that updated custom data as a map[string]interface
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (tenant *Tenant) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
+	updatedCustomData := map[string]interface{}{}
+
+	err := client.post(tenant.CustomData.Href, customData, &updatedCustomData)
+
+	return updatedCustomData, err
+}
+
+//DeleteCustomData deletes all the tenants custom data
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (tenant *Tenant) DeleteCustomData() error {
+	return client.delete(tenant.CustomData.Href, emptyPayload())
+}
+
+//GetCustomData gets the tenant custom data map
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (tenant *Tenant) GetCustomData() (map[string]interface{}, error) {
+	customData := map[string]interface{}{}
+
+	err := client.get(tenant.CustomData.Href, emptyPayload(), &customData)
+
+	return customData, err
 }

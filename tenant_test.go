@@ -20,21 +20,84 @@ var _ = Describe("Tenant", func() {
 		})
 	})
 
-	//Do to changes in the stormpath plans on a dev account only 1 app can be created so for now I'll comment this test
-	//Describe("CreateApplication", func() {
-	//	It("should create a new application", func() {
-	//		application := NewApplication("create-app")
-	//		err := tenant.CreateApplication(application)
-	//		application.Purge()
-	//
-	//		Expect(err).NotTo(HaveOccurred())
-	//		Expect(application.Href).NotTo(BeEmpty())
-	//	})
-	//})
+	Describe("CreateApplication", func() {
+		It("should create a new application", func() {
+			application := newTestApplication()
+			err := tenant.CreateApplication(application)
+			application.Purge()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(application.Href).NotTo(BeEmpty())
+		})
+	})
+
+	Describe("Custom Data", func() {
+		It("UpdateCustomData should update the given tenant custom data", func() {
+			customData := map[string]interface{}{
+				"testIntField":    1,
+				"testStringField": "test",
+			}
+
+			updatedCustomData, err := tenant.UpdateCustomData(customData)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedCustomData["testIntField"]).To(Equal(float64(1)))
+			tenant.DeleteCustomData()
+		})
+
+		It("GetCustomData should update the given tenant custom data", func() {
+			customData := map[string]interface{}{
+				"testIntField":    1,
+				"testStringField": "test",
+			}
+
+			tenant.UpdateCustomData(customData)
+
+			customData, err := tenant.GetCustomData()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(customData["testIntField"]).To(Equal(float64(1)))
+		})
+
+		It("DeleteCustomData should update the given tenant custom data", func() {
+			customData := map[string]interface{}{
+				"testIntField":    1,
+				"testStringField": "test",
+			}
+
+			tenant.UpdateCustomData(customData)
+			err := tenant.DeleteCustomData()
+
+			customData, _ = tenant.GetCustomData()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(customData).To(HaveLen(3))
+		})
+
+		Describe("concurrent access", func() {
+			It("should allow current access and be consistent at the end", func() {
+				for i := 0; i < 8; i++ {
+					go func() {
+						defer GinkgoRecover()
+
+						customData := map[string]interface{}{
+							"testIntField":    i,
+							"testStringField": "test",
+						}
+
+						data, err := tenant.UpdateCustomData(customData)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(data["testIntField"]).To(Equal(float64(i)))
+						//tenant.DeleteCustomData()
+					}()
+				}
+			})
+		})
+	})
 
 	Describe("CreateDirectory", func() {
 		It("should create a new directory", func() {
-			dir := NewDirectory("create-dir")
+			dir := newTestDirectory()
 			err := tenant.CreateDirectory(dir)
 			dir.Delete()
 
