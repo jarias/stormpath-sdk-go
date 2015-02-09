@@ -1,9 +1,7 @@
 package stormpath_test
 
 import (
-	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	. "github.com/jarias/stormpath-sdk-go"
@@ -48,27 +46,27 @@ var _ = Describe("Stormpath SAuthc1", func() {
 			"sauthc1Signature=e30a62c0d03ca6cb422e66039786865f3eb6269400941ede6226760553a832d3"))
 	})
 
-	Describe("https://github.com/stormpath/stormpath-sdk-python/issues/101", func() {
-		It("should authenticate a paginated request of groups", func() {
-			directory := NewDirectory("new-directory-test")
-			tenant.CreateDirectory(directory)
-
-			for i := 1; i <= 50; i++ {
-				group := NewGroup(fmt.Sprintf("group-%d", i))
-				directory.CreateGroup(group)
-			}
-
-			filter := url.Values{}
-			filter.Add("q", "group")
-
-			groups, err := directory.GetGroups(NewPageRequest(25, 25), filter)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(groups.Href).NotTo(BeEmpty())
-			Expect(groups.Offset).To(Equal(25))
-			Expect(groups.Limit).To(Equal(25))
-			Expect(groups.Items).NotTo(BeEmpty())
-			directory.Delete()
-		})
-	})
+	//Describe("https://github.com/stormpath/stormpath-sdk-python/issues/101", func() {
+	//	It("should authenticate a paginated request of groups", func() {
+	//		directory := NewDirectory("new-directory-test")
+	//		tenant.CreateDirectory(directory)
+	//
+	//		for i := 1; i <= 50; i++ {
+	//			group := NewGroup(fmt.Sprintf("group-%d", i))
+	//			directory.CreateGroup(group)
+	//		}
+	//
+	//		filter := url.Values{}
+	//		filter.Add("q", "group")
+	//
+	//		groups, err := directory.GetGroups(NewPageRequest(25, 25), filter)
+	//
+	//		Expect(err).NotTo(HaveOccurred())
+	//		Expect(groups.Href).NotTo(BeEmpty())
+	//		Expect(groups.Offset).To(Equal(25))
+	//		Expect(groups.Limit).To(Equal(25))
+	//		Expect(groups.Items).NotTo(BeEmpty())
+	//		directory.Delete()
+	//	})
+	//})
 })
