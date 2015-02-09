@@ -24,7 +24,7 @@ var _ = Describe("Application", func() {
 
 	Describe("Save", func() {
 		It("should update an existing application", func() {
-			app.Name = "new-name"
+			app.Name = "new-name" + randomName()
 			err := app.Save()
 
 			Expect(err).NotTo(HaveOccurred())
@@ -33,7 +33,7 @@ var _ = Describe("Application", func() {
 
 	Describe("RegisterAccount", func() {
 		It("should register a new account", func() {
-			account := NewAccount("newaccount@test.org", "1234567z!A89", "test", "test")
+			account := newTestAccount()
 			err := app.RegisterAccount(account)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -43,10 +43,10 @@ var _ = Describe("Application", func() {
 
 	Describe("AuthenticateAccount", func() {
 		It("should authenticate and return the account if the credentials are valid", func() {
-			account := NewAccount("auth@test.org", "1234567z!A89", "test", "test")
+			account := newTestAccount()
 			app.RegisterAccount(account)
 
-			a, err := app.AuthenticateAccount("auth@test.org", "1234567z!A89")
+			a, err := app.AuthenticateAccount(account.Email, "1234567z!A89")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(a.Account.Href).To(Equal(account.Href))
 		})
@@ -72,7 +72,7 @@ var _ = Describe("Application", func() {
 
 		Describe("GetApplicationGroups", func() {
 			It("should return the paged list of application groups", func() {
-				group := NewGroup("another-test-group")
+				group := newTestGroup()
 				app.CreateGroup(group)
 
 				groups, err := app.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())

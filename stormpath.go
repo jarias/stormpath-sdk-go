@@ -10,12 +10,14 @@ import (
 
 	"time"
 
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 )
+
+//BaseURL defines the Stormpath API base URL
+var BaseURL = "https://api.stormpath.com/v1/"
 
 //Version is the current SDK Version
 const version = "0.1.0-beta.3"
-const baseURL = "https://api.stormpath.com/v1/"
 const followRedirectsHeader = "Stormpath-Go-FollowRedirects"
 const locationHeader = "Location"
 
@@ -84,7 +86,7 @@ func (client *Client) execute(method string, urlStr string, body interface{}, re
 }
 
 func buildRelativeURL(parts ...string) string {
-	buffer := bytes.NewBufferString(baseURL)
+	buffer := bytes.NewBufferString(BaseURL)
 
 	for i, part := range parts {
 		buffer.WriteString(part)

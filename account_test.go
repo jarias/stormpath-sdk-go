@@ -22,7 +22,7 @@ var _ = Describe("Account", func() {
 
 	Describe("Save", func() {
 		It("should update an existing account", func() {
-			account := NewAccount("u@test.org", "1234567z!A89", "teset", "test")
+			account := newTestAccount()
 			app.RegisterAccount(account)
 
 			account.GivenName = "julio"
@@ -35,7 +35,7 @@ var _ = Describe("Account", func() {
 
 	Describe("Delete", func() {
 		It("should delete an existing account", func() {
-			account := NewAccount("d@test.org", "1234567z!A89", "teset", "test")
+			account := newTestAccount()
 			app.RegisterAccount(account)
 
 			err := account.Delete()
@@ -46,7 +46,7 @@ var _ = Describe("Account", func() {
 
 	Describe("AddToGroup", func() {
 		It("should add an account to an existing group", func() {
-			group := NewGroup("test-group-for-account")
+			group := newTestGroup()
 			app.CreateGroup(group)
 
 			_, err := account.AddToGroup(group)
@@ -54,19 +54,25 @@ var _ = Describe("Account", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gm.Items).To(HaveLen(1))
+			account.RemoveFromGroup(group)
 			group.Delete()
 		})
 	})
 
 	Describe("RemoveFromGroup", func() {
 		It("should remove an account from an existing group", func() {
+			account := newTestAccount()
+			app.RegisterAccount(account)
+
 			var groupCountBefore int
-			group := NewGroup("test-group-for-account-remove")
+			group := newTestGroup()
 			app.CreateGroup(group)
 
-			account.AddToGroup(group)
 			gm, _ := account.GetGroupMemberships(NewDefaultPageRequest())
 			groupCountBefore = len(gm.Items)
+
+			account.AddToGroup(group)
+
 			err := account.RemoveFromGroup(group)
 			gm, _ = account.GetGroupMemberships(NewDefaultPageRequest())
 
@@ -85,9 +91,9 @@ var _ = Describe("Account", func() {
 		})
 	})
 
-	Describe("SetCustomData", func() {
+	Describe("UpdateCustomData", func() {
 		It("should set an account custom data", func() {
-			err := account.SetCustomData(map[string]string{"custom": "data"})
+			err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
 
 			customData, _ := account.GetCustomData()
 
@@ -96,8 +102,8 @@ var _ = Describe("Account", func() {
 		})
 
 		It("should update an account custom data", func() {
-			account.SetCustomData(map[string]string{"custom": "data"})
-			err := account.SetCustomData(map[string]string{"custom": "nodata"})
+			account.UpdateCustomData(map[string]interface{}{"custom": "data"})
+			err := account.UpdateCustomData(map[string]interface{}{"custom": "nodata"})
 			customData, _ := account.GetCustomData()
 
 			Expect(err).NotTo(HaveOccurred())

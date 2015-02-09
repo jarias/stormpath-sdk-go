@@ -2,6 +2,7 @@ package stormpath_test
 
 import (
 	"encoding/json"
+
 	. "github.com/jarias/stormpath-sdk-go"
 
 	. "github.com/onsi/ginkgo"
@@ -21,7 +22,7 @@ var _ = Describe("AccountStoreMapping", func() {
 
 	Describe("Save", func() {
 		It("should create a new account store mapping", func() {
-			dir := NewDirectory("test-dir")
+			dir := newTestDirectory()
 
 			tenant.CreateDirectory(dir)
 
