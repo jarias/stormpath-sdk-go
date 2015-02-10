@@ -1,6 +1,12 @@
 Go SDK for the [Stormpath](http://stormpath.com/) API
 
-[![Build Status](https://drone.io/github.com/jarias/stormpath-sdk-go/status.png)](https://drone.io/github.com/jarias/stormpath-sdk-go/latest) [![Coverage Status](https://coveralls.io/repos/jarias/stormpath-sdk-go/badge.png?branch=develop)](https://coveralls.io/r/jarias/stormpath-sdk-go?branch=develop)
+Develop:
+
+[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=develop)](https://travis-ci.org/jarias/stormpath-sdk-go) [![Coverage Status](https://coveralls.io/repos/jarias/stormpath-sdk-go/badge.png?branch=develop)](https://coveralls.io/r/jarias/stormpath-sdk-go?branch=develop)
+
+Master:
+
+[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=master)](https://travis-ci.org/jarias/stormpath-sdk-go) [![Coverage Status](https://coveralls.io/repos/jarias/stormpath-sdk-go/badge.png?branch=master)](https://coveralls.io/r/jarias/stormpath-sdk-go?branch=master)
 
 #Usage
 
