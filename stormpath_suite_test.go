@@ -1,10 +1,12 @@
 package stormpath_test
 
 import (
+	"log"
 	"os"
 	"runtime"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/hashicorp/logutils"
 	. "github.com/jarias/stormpath-sdk-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,7 +25,6 @@ var (
 
 func TestStormpath(t *testing.T) {
 	runtime.GOMAXPROCS(4)
-	InitInTestMode()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Stormpath Suite")
 }
@@ -50,6 +51,16 @@ func newTestAccount() *Account {
 	return NewAccount(name+"@test.org", "1234567z!A89", name, name)
 }
 
+func initLogInTestMode() {
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
+		MinLevel: "DEBUG",
+		Writer:   GinkgoWriter,
+	}
+
+	log.SetOutput(filter)
+}
+
 var _ = BeforeSuite(func() {
 	var err error
 	cred, err = NewDefaultCredentials()
@@ -57,9 +68,9 @@ var _ = BeforeSuite(func() {
 		panic(err)
 	}
 
-	stormpathBaseUrl := os.Getenv("STORMPATH_BASE_URL")
-	if stormpathBaseUrl != "" {
-		BaseURL = stormpathBaseUrl
+	stormpathBaseURL := os.Getenv("STORMPATH_BASE_URL")
+	if stormpathBaseURL != "" {
+		BaseURL = stormpathBaseURL
 	}
 
 	cacheEnabled := os.Getenv("CACHE_ENABLED")
@@ -74,6 +85,7 @@ var _ = BeforeSuite(func() {
 	} else {
 		Init(cred, nil)
 	}
+	initLogInTestMode()
 
 	tenant, err = CurrentTenant()
 	if err != nil {

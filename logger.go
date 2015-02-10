@@ -4,23 +4,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/onsi/ginkgo"
+	"github.com/hashicorp/logutils"
 )
 
-var (
-	//ERROR logger
-	ERROR = log.New(os.Stderr, "ERROR stormpath-sdk-go: ", log.Ldate|log.Ltime)
-	//INFO logger
-	INFO = log.New(os.Stdout, "INFO stormpath-sdk-go: ", log.Ldate|log.Ltime)
-	//DEBUG logger
-	DEBUG = log.New(os.Stderr, "DEBUG stormpath-sdk-go: ", log.Ldate|log.Ltime)
-	//CACHE logger
-	CACHE = log.New(os.Stdout, "CACHE stormpath-sdk-go: ", log.Ldate|log.Ltime)
-)
+func initLog() {
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
+		MinLevel: "WARN",
+		Writer:   os.Stderr,
+	}
 
-//Init initnitializes the INFO and ERROR loggers
-func InitInTestMode() {
-	INFO = log.New(ginkgo.GinkgoWriter, "INFO stormpath-sdk-go: ", log.Ldate|log.Ltime)
-	ERROR = log.New(ginkgo.GinkgoWriter, "ERROR stormpath-sdk-go: ", log.Ldate|log.Ltime)
-	CACHE = log.New(ginkgo.GinkgoWriter, "CACHE stormpath-sdk-go: ", log.Ldate|log.Ltime)
+	log.SetOutput(filter)
 }
