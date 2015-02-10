@@ -74,25 +74,25 @@ var _ = Describe("Tenant", func() {
 			Expect(customData).To(HaveLen(3))
 		})
 
-		Describe("concurrent access", func() {
-			It("should allow current access and be consistent at the end", func() {
-				for i := 0; i < 8; i++ {
-					go func() {
-						defer GinkgoRecover()
-
-						customData := map[string]interface{}{
-							"testIntField":    i,
-							"testStringField": "test",
-						}
-
-						data, err := tenant.UpdateCustomData(customData)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(data["testIntField"]).To(Equal(float64(i)))
-						//tenant.DeleteCustomData()
-					}()
-				}
-			})
-		})
+		//Describe("concurrent access", func() {
+		//	It("should allow current access and be consistent at the end", func() {
+		//		for i := 0; i < 8; i++ {
+		//			go func() {
+		//				defer GinkgoRecover()
+		//
+		//				customData := map[string]interface{}{
+		//					"testIntField":    i,
+		//					"testStringField": "test",
+		//				}
+		//
+		//				data, err := tenant.UpdateCustomData(customData)
+		//				Expect(err).NotTo(HaveOccurred())
+		//				Expect(data["testIntField"]).To(Equal(float64(i)))
+		//				tenant.DeleteCustomData()
+		//			}()
+		//		}
+		//	})
+		//})
 	})
 
 	Describe("CreateDirectory", func() {
