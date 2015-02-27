@@ -1,7 +1,10 @@
 package stormpath_test
 
 import (
+	"net/url"
 	"regexp"
+
+	"github.com/dgrijalva/jwt-go"
 
 	. "github.com/jarias/stormpath-sdk-go"
 
@@ -125,6 +128,35 @@ var _ = Describe("Application", func() {
 				_, err := app.ValidatePasswordResetToken("invalid token")
 
 				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Describe("CreateIDSiteURL", func() {
+			It("Should create valid ID Site URL", func() {
+				idSiteURL, err := app.CreateIDSiteURL(map[string]string{"callbackURI": "http://localhost:8080"})
+
+				u, _ := url.Parse(idSiteURL)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(u.Path).To(Equal("/sso"))
+				Expect(u.Query()).NotTo(BeEmpty())
+
+				//Check Token
+				jwtRequest := u.Query().Get("jwtRequest")
+
+				token, _ := jwt.Parse(jwtRequest, func(token *jwt.Token) (interface{}, error) {
+					return []byte(cred.Secret), nil
+				})
+
+				Expect(token.Valid).To(BeTrue())
+
+				Expect(token.Claims["cb_uri"]).To(Equal("http://localhost:8080"))
+				Expect(token.Claims["state"]).To(Equal(""))
+				Expect(token.Claims["path"]).To(Equal("/"))
+				Expect(token.Claims["iss"]).To(Equal(cred.ID))
+				Expect(token.Claims["sub"]).To(Equal(app.Href))
+				Expect(token.Claims["jti"]).NotTo(BeEmpty())
+				Expect(token.Claims["iat"]).To(BeNumerically(">", 0))
 			})
 		})
 	})

@@ -3,6 +3,11 @@ package stormpath
 import (
 	"encoding/base64"
 	"net/url"
+	"time"
+
+	"github.com/nu7hatch/gouuid"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 //Application represents a Stormpath application object
@@ -174,4 +179,33 @@ func (app *Application) GetGroups(pageRequest url.Values, filter url.Values) (*G
 	)
 
 	return groups, err
+}
+
+//CreateIDSiteURL creates the IDSite URL for the application
+func (app *Application) CreateIDSiteURL(options map[string]string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	nonce, _ := uuid.NewV4()
+
+	if options["path"] == "" {
+		options["path"] = "/"
+	}
+
+	token.Claims["jti"] = nonce.String()
+	token.Claims["iat"] = time.Now().Unix()
+	token.Claims["iss"] = client.Credentials.ID
+	token.Claims["sub"] = app.Href
+	token.Claims["state"] = options["state"]
+	token.Claims["path"] = options["path"]
+	token.Claims["cb_uri"] = options["callbackURI"]
+
+	tokenString, err := token.SignedString([]byte(client.Credentials.Secret))
+	if err != nil {
+		return "", err
+	}
+
+	p, _ := url.Parse(app.Href)
+	ssoURL := p.Scheme + "://" + p.Host + "/sso" + "?jwtRequest=" + tokenString
+
+	return ssoURL, nil
 }
