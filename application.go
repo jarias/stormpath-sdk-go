@@ -2,6 +2,7 @@ package stormpath
 
 import (
 	"encoding/base64"
+	"errors"
 	"net/url"
 	"time"
 
@@ -31,6 +32,13 @@ type Application struct {
 type Applications struct {
 	list
 	Items []Application `json:"items"`
+}
+
+type IDSiteCallbackResult struct {
+	Account *Account
+	State   string
+	IsNew   bool
+	Status  string
 }
 
 //NewApplication creates a new application
@@ -205,7 +213,55 @@ func (app *Application) CreateIDSiteURL(options map[string]string) (string, erro
 	}
 
 	p, _ := url.Parse(app.Href)
-	ssoURL := p.Scheme + "://" + p.Host + "/sso" + "?jwtRequest=" + tokenString
+	ssoURL := p.Scheme + "://" + p.Host + "/sso"
+
+	if options["logout"] == "true" {
+		ssoURL = ssoURL + "/logout" + "?jwtRequest=" + tokenString
+	} else {
+		ssoURL = ssoURL + "?jwtRequest=" + tokenString
+	}
 
 	return ssoURL, nil
+}
+
+//HandleIDSiteCallback
+func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult, error) {
+	result := &IDSiteCallbackResult{}
+
+	cbURL, err := url.Parse(URL)
+	if err != nil {
+		return nil, err
+	}
+
+	jwtResponse := cbURL.Query().Get("jwtResponse")
+
+	token, err := jwt.Parse(jwtResponse, func(token *jwt.Token) (interface{}, error) {
+		return []byte(client.Credentials.Secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if token.Claims["aud"].(string) != client.Credentials.ID {
+		return nil, errors.New("ID Site invalid aud")
+	}
+
+	if time.Now().Unix() > int64(token.Claims["exp"].(float64)) {
+		return nil, errors.New("ID Site JWT has expired")
+	}
+
+	if token.Claims["sub"] != nil {
+		accountRef := AccountRef{link{token.Claims["sub"].(string)}}
+		account, err := accountRef.GetAccount()
+		if err != nil {
+			return nil, err
+		}
+		result.Account = account
+	}
+	if token.Claims["state"] != nil {
+		result.State = token.Claims["state"].(string)
+	}
+	result.Status = token.Claims["status"].(string)
+
+	return result, nil
 }
