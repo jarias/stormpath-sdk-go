@@ -121,15 +121,15 @@ func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMembe
 }
 
 //GetCustomData returns the given account custom data as a map
-func (account *Account) GetCustomData() (map[string]string, error) {
-	customData := make(map[string]string)
+func (account *Account) GetCustomData() (map[string]interface{}, error) {
+	customData := make(map[string]interface{})
 
 	err := client.get(account.CustomData.Href, emptyPayload(), &customData)
 
 	return customData, err
 }
 
-//SetCustomData sets or updates the given account custom data
-func (account *Account) SetCustomData(data map[string]string) error {
+//UpdateCustomData sets or updates the given account custom data
+func (account *Account) UpdateCustomData(data map[string]interface{}) error {
 	return client.post(account.CustomData.Href, data, &data)
 }

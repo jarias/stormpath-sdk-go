@@ -22,7 +22,7 @@ var _ = Describe("Directory", func() {
 
 	Describe("Delete", func() {
 		It("should delete an existing directory", func() {
-			directory := NewDirectory("new-directory-test")
+			directory := newTestDirectory()
 
 			tenant.CreateDirectory(directory)
 			err := directory.Delete()
@@ -33,7 +33,7 @@ var _ = Describe("Directory", func() {
 
 	Describe("GetGroups", func() {
 		It("should retrive all directory groups", func() {
-			directory := NewDirectory("new-directory-test")
+			directory := newTestDirectory()
 			tenant.CreateDirectory(directory)
 
 			groups, err := directory.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
@@ -49,7 +49,7 @@ var _ = Describe("Directory", func() {
 
 	Describe("GetAccounts", func() {
 		It("should retrieve all directory accounts", func() {
-			directory := NewDirectory("new-directory-test")
+			directory := newTestDirectory()
 			tenant.CreateDirectory(directory)
 
 			accounts, err := directory.GetAccounts(NewDefaultPageRequest(), NewEmptyFilter())
@@ -65,7 +65,7 @@ var _ = Describe("Directory", func() {
 
 	Describe("CreateGroup", func() {
 		It("should create new group", func() {
-			directory := NewDirectory("new-directory-test")
+			directory := newTestDirectory()
 			tenant.CreateDirectory(directory)
 
 			group := NewGroup("new-group")

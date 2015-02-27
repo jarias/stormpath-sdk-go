@@ -5,17 +5,20 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 
 	"time"
 
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 )
 
+//BaseURL defines the Stormpath API base URL
+var BaseURL = "https://api.stormpath.com/v1/"
+
 //Version is the current SDK Version
-const version = "0.1.0-beta.3"
-const baseURL = "https://api.stormpath.com/v1/"
+const version = "0.1.0-beta.4"
 const followRedirectsHeader = "Stormpath-Go-FollowRedirects"
 const locationHeader = "Location"
 
@@ -60,11 +63,15 @@ func Init(credentials Credentials, cache Cache) {
 	httpClient := &http.Client{Transport: tr}
 
 	client = &Client{credentials, httpClient, cache}
+
+	initLog()
 }
 
 //InitWithCustomHTTPClient initializes the underlying client that communicates with Stormpath with a custom http.Client
 func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *http.Client) {
 	client = &Client{credentials, httpClient, cache}
+
+	initLog()
 }
 
 func (client *Client) post(urlStr string, body interface{}, result interface{}) error {
@@ -84,7 +91,7 @@ func (client *Client) execute(method string, urlStr string, body interface{}, re
 }
 
 func buildRelativeURL(parts ...string) string {
-	buffer := bytes.NewBufferString(baseURL)
+	buffer := bytes.NewBufferString(BaseURL)
 
 	for i, part := range parts {
 		buffer.WriteString(part)
@@ -153,7 +160,7 @@ func appendParams(params url.Values, toAppend url.Values) url.Values {
 func handleResponseError(resp *http.Response, err error) error {
 	//Error from the request execution
 	if err != nil {
-		ERROR.Printf("%s [%s]", err, resp.Request.URL.String())
+		log.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
 		return err
 	}
 	//Check for Stormpath specific errors
@@ -165,7 +172,7 @@ func handleResponseError(resp *http.Response, err error) error {
 			return err
 		}
 
-		ERROR.Printf("%s [%s]", spError.Message, resp.Request.URL.String())
+		log.Printf("[ERROR] %s [%s]", spError.Message, resp.Request.URL.String())
 		return errors.New(spError.Message)
 	}
 	//No errors from the request execution
@@ -221,7 +228,7 @@ func (client *Client) execRequest(req *http.Request) (*http.Response, error) {
 		resp, err := client.HTTPClient.Transport.RoundTrip(req)
 		err = handleResponseError(resp, err)
 		if err != nil {
-			ERROR.Printf("%s [%s]", err, resp.Request.URL.String())
+			log.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
 			return nil, err
 		}
 		//Get the redirect location from the response headers

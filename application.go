@@ -3,6 +3,11 @@ package stormpath
 import (
 	"encoding/base64"
 	"net/url"
+	"time"
+
+	"github.com/nu7hatch/gouuid"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 //Application represents a Stormpath application object
@@ -154,17 +159,17 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	return account, err
 }
 
-//CreateApplicationGroup creates a new group in the application
+//CreateGroup creates a new group in the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-groups
-func (app *Application) CreateApplicationGroup(group *Group) error {
+func (app *Application) CreateGroup(group *Group) error {
 	return client.post(app.Groups.Href, group, group)
 }
 
-//GetApplicationGroups returns all the application groups
+//GetGroups returns all the application groups
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-groups
-func (app *Application) GetApplicationGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
+func (app *Application) GetGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
 	groups := &Groups{}
 
 	err := client.get(
@@ -174,4 +179,33 @@ func (app *Application) GetApplicationGroups(pageRequest url.Values, filter url.
 	)
 
 	return groups, err
+}
+
+//CreateIDSiteURL creates the IDSite URL for the application
+func (app *Application) CreateIDSiteURL(options map[string]string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	nonce, _ := uuid.NewV4()
+
+	if options["path"] == "" {
+		options["path"] = "/"
+	}
+
+	token.Claims["jti"] = nonce.String()
+	token.Claims["iat"] = time.Now().Unix()
+	token.Claims["iss"] = client.Credentials.ID
+	token.Claims["sub"] = app.Href
+	token.Claims["state"] = options["state"]
+	token.Claims["path"] = options["path"]
+	token.Claims["cb_uri"] = options["callbackURI"]
+
+	tokenString, err := token.SignedString([]byte(client.Credentials.Secret))
+	if err != nil {
+		return "", err
+	}
+
+	p, _ := url.Parse(app.Href)
+	ssoURL := p.Scheme + "://" + p.Host + "/sso" + "?jwtRequest=" + tokenString
+
+	return ssoURL, nil
 }

@@ -1,7 +1,10 @@
 package stormpath_test
 
 import (
+	"net/url"
 	"regexp"
+
+	"github.com/dgrijalva/jwt-go"
 
 	. "github.com/jarias/stormpath-sdk-go"
 
@@ -24,7 +27,7 @@ var _ = Describe("Application", func() {
 
 	Describe("Save", func() {
 		It("should update an existing application", func() {
-			app.Name = "new-name"
+			app.Name = "new-name" + randomName()
 			err := app.Save()
 
 			Expect(err).NotTo(HaveOccurred())
@@ -33,7 +36,7 @@ var _ = Describe("Application", func() {
 
 	Describe("RegisterAccount", func() {
 		It("should register a new account", func() {
-			account := NewAccount("newaccount@test.org", "1234567z!A89", "test", "test")
+			account := newTestAccount()
 			err := app.RegisterAccount(account)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -43,26 +46,26 @@ var _ = Describe("Application", func() {
 
 	Describe("AuthenticateAccount", func() {
 		It("should authenticate and return the account if the credentials are valid", func() {
-			account := NewAccount("auth@test.org", "1234567z!A89", "test", "test")
+			account := newTestAccount()
 			app.RegisterAccount(account)
 
-			a, err := app.AuthenticateAccount("auth@test.org", "1234567z!A89")
+			a, err := app.AuthenticateAccount(account.Email, "1234567z!A89")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(a.Account.Href).To(Equal(account.Href))
 		})
 	})
 
 	Describe("groups", func() {
-		Describe("CreateApplicationGroup", func() {
+		Describe("CreateGroup", func() {
 			It("should return error is group has no name", func() {
-				err := app.CreateApplicationGroup(&Group{})
+				err := app.CreateGroup(&Group{})
 
 				Expect(err).To(HaveOccurred())
 			})
 
 			It("should create a new application group", func() {
 				group := NewGroup("new-test-group")
-				err := app.CreateApplicationGroup(group)
+				err := app.CreateGroup(group)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(group.Href).NotTo(BeEmpty())
@@ -72,10 +75,10 @@ var _ = Describe("Application", func() {
 
 		Describe("GetApplicationGroups", func() {
 			It("should return the paged list of application groups", func() {
-				group := NewGroup("another-test-group")
-				app.CreateApplicationGroup(group)
+				group := newTestGroup()
+				app.CreateGroup(group)
 
-				groups, err := app.GetApplicationGroups(NewDefaultPageRequest(), NewEmptyFilter())
+				groups, err := app.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
 
 				Expect(err).NotTo(HaveOccurred())
 
@@ -125,6 +128,35 @@ var _ = Describe("Application", func() {
 				_, err := app.ValidatePasswordResetToken("invalid token")
 
 				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Describe("CreateIDSiteURL", func() {
+			It("Should create valid ID Site URL", func() {
+				idSiteURL, err := app.CreateIDSiteURL(map[string]string{"callbackURI": "http://localhost:8080"})
+
+				u, _ := url.Parse(idSiteURL)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(u.Path).To(Equal("/sso"))
+				Expect(u.Query()).NotTo(BeEmpty())
+
+				//Check Token
+				jwtRequest := u.Query().Get("jwtRequest")
+
+				token, _ := jwt.Parse(jwtRequest, func(token *jwt.Token) (interface{}, error) {
+					return []byte(cred.Secret), nil
+				})
+
+				Expect(token.Valid).To(BeTrue())
+
+				Expect(token.Claims["cb_uri"]).To(Equal("http://localhost:8080"))
+				Expect(token.Claims["state"]).To(Equal(""))
+				Expect(token.Claims["path"]).To(Equal("/"))
+				Expect(token.Claims["iss"]).To(Equal(cred.ID))
+				Expect(token.Claims["sub"]).To(Equal(app.Href))
+				Expect(token.Claims["jti"]).NotTo(BeEmpty())
+				Expect(token.Claims["iat"]).To(BeNumerically(">", 0))
 			})
 		})
 	})
