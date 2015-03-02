@@ -7,12 +7,20 @@ import (
 	"github.com/hashicorp/logutils"
 )
 
+var Logger *log.Logger
+
 func initLog() {
+	logLevel := os.Getenv("STORMPATH_LOG_LEVEL")
+
+	if logLevel == "" {
+		logLevel = "ERROR"
+	}
+
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
-		MinLevel: "WARN",
+		MinLevel: logutils.LogLevel(logLevel),
 		Writer:   os.Stderr,
 	}
 
-	log.SetOutput(filter)
+	Logger = log.New(filter, "stormapth-sdk-go", log.Ldate|log.Ltime|log.Lshortfile)
 }

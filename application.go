@@ -34,6 +34,12 @@ type Applications struct {
 	Items []Application `json:"items"`
 }
 
+//ApplicationRef holds the the Href of an application
+type ApplicationRef struct {
+	Application link
+}
+
+//IDSiteCallbackResult holds the ID Site callback parsed JWT token information + the acccount if one was given
 type IDSiteCallbackResult struct {
 	Account *Account
 	State   string
@@ -44,6 +50,20 @@ type IDSiteCallbackResult struct {
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
+}
+
+//NewApplicationRef creates an ApplicationHref from a URL
+func NewApplicationRef(href string) *ApplicationRef {
+	return &ApplicationRef{link{href}}
+}
+
+//GetApplication loads an application from the given ApplicationRef
+func (applicationRef *ApplicationRef) GetApplication() (*Application, error) {
+	application := &Application{}
+
+	err := client.get(applicationRef.Application.Href, emptyPayload(), application)
+
+	return application, err
 }
 
 //Save saves the given application
@@ -224,7 +244,8 @@ func (app *Application) CreateIDSiteURL(options map[string]string) (string, erro
 	return ssoURL, nil
 }
 
-//HandleIDSiteCallback
+//HandleIDSiteCallback handles the URL from an ID Site callback it parses the JWT token
+//validates it and return an IDSiteCallbackResult with the token info + the Account if the sub was given
 func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult, error) {
 	result := &IDSiteCallbackResult{}
 
