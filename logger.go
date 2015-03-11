@@ -22,5 +22,5 @@ func initLog() {
 		Writer:   os.Stderr,
 	}
 
-	Logger = log.New(filter, "stormapth-sdk-go", log.Ldate|log.Ltime|log.Lshortfile)
+	Logger = log.New(filter, "", log.Ldate|log.Ltime|log.Lshortfile)
 }

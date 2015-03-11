@@ -6,7 +6,6 @@ import (
 	"runtime"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/hashicorp/logutils"
 	. "github.com/jarias/stormpath-sdk-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -52,13 +51,7 @@ func newTestAccount() *Account {
 }
 
 func initLogInTestMode() {
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
-		MinLevel: "DEBUG",
-		Writer:   GinkgoWriter,
-	}
-
-	log.SetOutput(filter)
+	Logger = log.New(GinkgoWriter, "", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 var _ = BeforeSuite(func() {
