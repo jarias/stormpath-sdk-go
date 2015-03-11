@@ -132,6 +132,17 @@ func (app *Application) RegisterAccount(account *Account) error {
 	return client.post(app.Accounts.Href, account, account)
 }
 
+//RegisterSocialAccount registers a new account into the application using an external provider Google, Facebook
+//
+//See: http://docs.stormpath.com/rest/product-guide/#accessing-accounts-with-google-authorization-codes-or-an-access-tokens
+func (app *Application) RegisterSocialAccount(socialAccount *SocialAccount) (*Account, error) {
+	account := Account{}
+
+	err := client.post(app.Accounts.Href, socialAccount, &account)
+
+	return &account, err
+}
+
 //AuthenticateAccount authenticates an account against the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#authenticate-an-account

@@ -48,6 +48,15 @@ type AccountPasswordResetToken struct {
 	Account link
 }
 
+type SocialAccount struct {
+	Data ProviderData `json:"providerData"`
+}
+
+type ProviderData struct {
+	ProviderId string `json:"providerId"`
+	AccessToken string `json:"accessToken"`
+}
+
 //NewAccount is a conviniece constructor for an Account, it accepts all the required fields according to
 //the Stormpath API, it returns a pointer to an Account
 func NewAccount(email string, password string, givenName string, surname string) *Account {
