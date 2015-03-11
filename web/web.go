@@ -64,7 +64,7 @@ func LogoutHandler(options map[string]string) LoginLogoutHandler {
 func (h LoginLogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	idSiteURL, _ := GetApplication(r).CreateIDSiteURL(h.Options)
 
-	http.Redirect(w, r, idSiteURL, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, idSiteURL, http.StatusFound)
 }
 
 //GetApplication returns the application for a web app from the context previouly set by the ApplicationMiddleware
@@ -121,7 +121,7 @@ func (cbh AuthCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	} else {
 		cbh.clearAccountInSession(w, r)
 	}
-	http.Redirect(w, r, cbh.RedirectURI, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, cbh.RedirectURI, http.StatusFound)
 }
 
 //StoreAccountInSession stores a given account in the session as the current account
@@ -161,7 +161,7 @@ func (am AuthenticationMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Requ
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		http.Redirect(w, r, am.UnauthorizedRedirectURL, http.StatusTemporaryRedirect)
+		http.Redirect(w, r, am.UnauthorizedRedirectURL, http.StatusFound)
 		return
 	}
 
