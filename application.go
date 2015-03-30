@@ -2,6 +2,7 @@ package stormpath
 
 import (
 	"encoding/base64"
+	"errors"
 	"net/url"
 	"time"
 
@@ -33,9 +34,36 @@ type Applications struct {
 	Items []Application `json:"items"`
 }
 
+//ApplicationRef holds the the Href of an application
+type ApplicationRef struct {
+	Application link
+}
+
+//IDSiteCallbackResult holds the ID Site callback parsed JWT token information + the acccount if one was given
+type IDSiteCallbackResult struct {
+	Account *Account
+	State   string
+	IsNew   bool
+	Status  string
+}
+
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
+}
+
+//NewApplicationRef creates an ApplicationHref from a URL
+func NewApplicationRef(href string) *ApplicationRef {
+	return &ApplicationRef{link{href}}
+}
+
+//GetApplication loads an application from the given ApplicationRef
+func (applicationRef *ApplicationRef) GetApplication() (*Application, error) {
+	application := &Application{}
+
+	err := client.get(applicationRef.Application.Href, emptyPayload(), application)
+
+	return application, err
 }
 
 //Save saves the given application
@@ -102,6 +130,17 @@ func (app *Application) GetAccounts(pageRequest url.Values, filter url.Values) (
 //See: http://docs.stormpath.com/rest/product-guide/#create-an-application-aka-register-an-application-with-stormpath
 func (app *Application) RegisterAccount(account *Account) error {
 	return client.post(app.Accounts.Href, account, account)
+}
+
+//RegisterSocialAccount registers a new account into the application using an external provider Google, Facebook
+//
+//See: http://docs.stormpath.com/rest/product-guide/#accessing-accounts-with-google-authorization-codes-or-an-access-tokens
+func (app *Application) RegisterSocialAccount(socialAccount *SocialAccount) (*Account, error) {
+	account := Account{}
+
+	err := client.post(app.Accounts.Href, socialAccount, &account)
+
+	return &account, err
 }
 
 //AuthenticateAccount authenticates an account against the application
@@ -205,7 +244,56 @@ func (app *Application) CreateIDSiteURL(options map[string]string) (string, erro
 	}
 
 	p, _ := url.Parse(app.Href)
-	ssoURL := p.Scheme + "://" + p.Host + "/sso" + "?jwtRequest=" + tokenString
+	ssoURL := p.Scheme + "://" + p.Host + "/sso"
+
+	if options["logout"] == "true" {
+		ssoURL = ssoURL + "/logout" + "?jwtRequest=" + tokenString
+	} else {
+		ssoURL = ssoURL + "?jwtRequest=" + tokenString
+	}
 
 	return ssoURL, nil
+}
+
+//HandleIDSiteCallback handles the URL from an ID Site callback it parses the JWT token
+//validates it and return an IDSiteCallbackResult with the token info + the Account if the sub was given
+func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult, error) {
+	result := &IDSiteCallbackResult{}
+
+	cbURL, err := url.Parse(URL)
+	if err != nil {
+		return nil, err
+	}
+
+	jwtResponse := cbURL.Query().Get("jwtResponse")
+
+	token, err := jwt.Parse(jwtResponse, func(token *jwt.Token) (interface{}, error) {
+		return []byte(client.Credentials.Secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if token.Claims["aud"].(string) != client.Credentials.ID {
+		return nil, errors.New("ID Site invalid aud")
+	}
+
+	if time.Now().Unix() > int64(token.Claims["exp"].(float64)) {
+		return nil, errors.New("ID Site JWT has expired")
+	}
+
+	if token.Claims["sub"] != nil {
+		accountRef := AccountRef{link{token.Claims["sub"].(string)}}
+		account, err := accountRef.GetAccount()
+		if err != nil {
+			return nil, err
+		}
+		result.Account = account
+	}
+	if token.Claims["state"] != nil {
+		result.State = token.Claims["state"].(string)
+	}
+	result.Status = token.Claims["status"].(string)
+
+	return result, nil
 }

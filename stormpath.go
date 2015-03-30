@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -18,7 +17,7 @@ import (
 var BaseURL = "https://api.stormpath.com/v1/"
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.4"
+const version = "0.1.0-beta.5"
 const followRedirectsHeader = "Stormpath-Go-FollowRedirects"
 const locationHeader = "Location"
 
@@ -160,7 +159,7 @@ func appendParams(params url.Values, toAppend url.Values) url.Values {
 func handleResponseError(resp *http.Response, err error) error {
 	//Error from the request execution
 	if err != nil {
-		log.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
+		Logger.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
 		return err
 	}
 	//Check for Stormpath specific errors
@@ -172,7 +171,7 @@ func handleResponseError(resp *http.Response, err error) error {
 			return err
 		}
 
-		log.Printf("[ERROR] %s [%s]", spError.Message, resp.Request.URL.String())
+		Logger.Printf("[ERROR] %s [%s]", spError.Message, resp.Request.URL.String())
 		return errors.New(spError.Message)
 	}
 	//No errors from the request execution
@@ -228,7 +227,7 @@ func (client *Client) execRequest(req *http.Request) (*http.Response, error) {
 		resp, err := client.HTTPClient.Transport.RoundTrip(req)
 		err = handleResponseError(resp, err)
 		if err != nil {
-			log.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
+			Logger.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
 			return nil, err
 		}
 		//Get the redirect location from the response headers
