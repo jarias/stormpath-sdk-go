@@ -18,16 +18,16 @@ import "fmt"
 
 //This would look for env variables first STORMPATH_API_KEY_ID and STORMPATH_API_KEY_SECRET if empty
 //then it would look for os.Getenv("HOME") + "/.config/stormpath/apiKey.properties" for the credentials
-credentials := stormpath.NewDefaultCredentials()
+credentials, _ := stormpath.NewDefaultCredentials()
 
 //Init Whithout cache
 stormpath.Init(credentials, nil)
 
 //Get the current tenant
-tenant := stormpath.CurrentTenant()
+tenant, _ := stormpath.CurrentTenant()
 
 //Get the tenat applications
-apps := tenant.GetApplications(stormpath.NewDefaultPageRequest(), stormpath.NewEmptyFilter())
+apps, _ := tenant.GetApplications(stormpath.NewDefaultPageRequest(), stormpath.NewEmptyFilter())
 
 //Get the first application
 app := apps.Items[0]

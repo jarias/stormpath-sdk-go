@@ -2,7 +2,6 @@ package stormpath
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -25,7 +24,7 @@ func (r RedisCache) Exists(key string) bool {
 	exists, err := r.Conn.Do("EXISTS", key)
 	if err != nil {
 		//Log the error but don't crash or pass it along if the cache is not working the reset should
-		log.Printf("[ERROR] %s", err)
+		Logger.Printf("[ERROR] %s", err)
 		return false
 	}
 	return exists.(int64) == 1
@@ -33,21 +32,21 @@ func (r RedisCache) Exists(key string) bool {
 
 //Set stores data in the the cache for the given key
 func (r RedisCache) Set(key string, data interface{}) {
-	log.Printf("[DEBUG] Setting data from cache for key [%s]", key)
+	Logger.Printf("[DEBUG] Setting data from cache for key [%s]", key)
 	jsonData, _ := json.Marshal(data)
 	_, err := r.Conn.Do("SETEX", key, 30, string(jsonData))
 	if err != nil {
-		log.Printf("[ERROR] %s", err)
+		Logger.Printf("[ERROR] %s", err)
 	}
 }
 
 //Get returns the data store under key it should return an error if any occur
 func (r RedisCache) Get(key string, result interface{}) error {
-	log.Printf("[DEBUG] Geting data from cache for key [%s]", key)
+	Logger.Printf("[DEBUG] Geting data from cache for key [%s]", key)
 	cacheData, err := r.Conn.Do("GET", key)
 	if err != nil {
 		//Log the error and return an empty slice along with the error
-		log.Printf("[ERROR] %s", err)
+		Logger.Printf("[ERROR] %s", err)
 		return err
 	}
 	return json.Unmarshal(cacheData.([]byte), result)
@@ -55,9 +54,9 @@ func (r RedisCache) Get(key string, result interface{}) error {
 
 //Del deletes a key from the cache
 func (r RedisCache) Del(key string) {
-	log.Printf("[DEBUG] Deleting data from cache for key [%s]", key)
+	Logger.Printf("[DEBUG] Deleting data from cache for key [%s]", key)
 	_, err := r.Conn.Do("DEL", key)
 	if err != nil {
-		log.Printf("[ERROR] %s", err)
+		Logger.Printf("[ERROR] %s", err)
 	}
 }
