@@ -7,7 +7,6 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-
 	"time"
 
 	uuid "github.com/nu7hatch/gouuid"

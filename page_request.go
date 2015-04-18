@@ -1,9 +1,8 @@
 package stormpath
 
 import (
-	"strconv"
-
 	"net/url"
+	"strconv"
 )
 
 //PageRequest contains the limit and offset values for any paginated Stormpath request

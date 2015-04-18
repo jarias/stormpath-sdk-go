@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	. "github.com/jarias/stormpath-sdk-go"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

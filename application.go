@@ -6,9 +6,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/nu7hatch/gouuid"
-
 	"github.com/dgrijalva/jwt-go"
+	"github.com/nu7hatch/gouuid"
 )
 
 //Application represents a Stormpath application object
