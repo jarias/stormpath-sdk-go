@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -170,7 +171,7 @@ func handleResponseError(resp *http.Response, err error) error {
 			return err
 		}
 
-		Logger.Printf("[ERROR] %s [%s]", spError.Message, resp.Request.URL.String())
+		Logger.Printf("[ERROR] %s", spError)
 		return errors.New(spError.Message)
 	}
 	//No errors from the request execution
@@ -236,4 +237,8 @@ func (client *Client) execRequest(req *http.Request) (*http.Response, error) {
 
 	resp, err := client.HTTPClient.Do(req)
 	return resp, handleResponseError(resp, err)
+}
+
+func (e stormpathError) String() string {
+	return fmt.Sprintf("Stormpath request error \nCode: [ %d ]\nMessage: [ %s ]\nDeveloper Message: [ %s ]\nMore info [ %s ]", e.Code, e.Message, e.DeveloperMessage, e.MoreInfo)
 }
