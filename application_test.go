@@ -4,12 +4,10 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/dgrijalva/jwt-go"
-
-	. "github.com/jarias/stormpath-sdk-go"
-
 	"encoding/json"
 
+	"github.com/dgrijalva/jwt-go"
+	. "github.com/jarias/stormpath-sdk-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

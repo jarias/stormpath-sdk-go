@@ -4,15 +4,13 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"testing"
 
 	"github.com/garyburd/redigo/redis"
 	. "github.com/jarias/stormpath-sdk-go"
+	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	uuid "github.com/nu7hatch/gouuid"
-
-	"testing"
 )
 
 var (
