@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"runtime"
 	"time"
 
 	uuid "github.com/nu7hatch/gouuid"
@@ -118,7 +119,7 @@ func buildAbsoluteURL(parts ...string) string {
 func (client *Client) newRequest(method string, urlStr string, body interface{}) *http.Request {
 	jsonBody, _ := json.Marshal(body)
 	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(jsonBody))
-	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+version)
+	req.Header.Set("User-Agent", fmt.Sprintf("jarias/stormpath-sdk-go/%s (%s; %s)", version, runtime.GOOS, runtime.GOARCH))
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 
