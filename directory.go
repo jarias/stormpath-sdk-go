@@ -66,3 +66,21 @@ func (dir *Directory) GetAccounts(pageRequest url.Values, filter url.Values) (*A
 func (dir *Directory) CreateGroup(group *Group) error {
 	return client.post(dir.Groups.Href, group, group)
 }
+
+//RegisterAccount registers a new account into the directory
+//
+//See: http://docs.stormpath.com/rest/product-guide/#directory-accounts
+func (dir *Directory) RegisterAccount(account *Account) error {
+	return client.post(dir.Accounts.Href, account, account)
+}
+
+//RegisterSocialAccount registers a new account into the application using an external provider Google, Facebook
+//
+//See: http://docs.stormpath.com/rest/product-guide/#accessing-accounts-with-google-authorization-codes-or-an-access-tokens
+func (dir *Directory) RegisterSocialAccount(socialAccount *SocialAccount) (*Account, error) {
+	account := Account{}
+
+	err := client.post(dir.Accounts.Href, socialAccount, &account)
+
+	return &account, err
+}
