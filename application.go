@@ -126,7 +126,7 @@ func (app *Application) GetAccounts(pageRequest url.Values, filter url.Values) (
 
 //RegisterAccount registers a new account into the application
 //
-//See: http://docs.stormpath.com/rest/product-guide/#create-an-application-aka-register-an-application-with-stormpath
+//See: http://docs.stormpath.com/rest/product-guide/#application-accounts
 func (app *Application) RegisterAccount(account *Account) error {
 	return client.post(app.Accounts.Href, account, account)
 }
