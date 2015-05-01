@@ -19,7 +19,7 @@ func CurrentTenant() (*Tenant, error) {
 	tenant := &Tenant{}
 
 	err := client.doWithResult(
-		client.newRequestWithoutRedirects(
+		client.newRequest(
 			"GET",
 			buildRelativeURL("tenants", "current"),
 			emptyPayload(),
