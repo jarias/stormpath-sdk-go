@@ -67,6 +67,7 @@ func Init(credentials Credentials, cache Cache) {
 
 //InitWithCustomHTTPClient initializes the underlying client that communicates with Stormpath with a custom http.Client
 func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *http.Client) {
+	httpClient.CheckRedirect = checkRedirect
 	client = &Client{credentials, httpClient, cache}
 
 	initLog()
