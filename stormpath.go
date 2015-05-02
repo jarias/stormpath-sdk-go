@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"runtime"
 	"time"
@@ -217,7 +218,17 @@ func (client *Client) do(request *http.Request) error {
 
 //execRequest executes a request, it would return a byte slice with the raw resoponse data and an error if any occurred
 func (client *Client) execRequest(req *http.Request) (*http.Response, error) {
+	if logLevel == "DEBUG" {
+		//Print request
+		dump, _ := httputil.DumpRequest(req, true)
+		Logger.Printf("[DEBUG] Stormpath request\n%s", dump)
+	}
 	resp, err := client.HTTPClient.Do(req)
+	if logLevel == "DEBUG" {
+		//Print response
+		dump, _ := httputil.DumpResponse(resp, true)
+		Logger.Printf("[DEBUG] Stormpath response\n%s", dump)
+	}
 	return resp, handleResponseError(resp, err)
 }
 
