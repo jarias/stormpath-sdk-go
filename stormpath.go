@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
+	"runtime"
 	"time"
 
 	uuid "github.com/nu7hatch/gouuid"
@@ -17,9 +19,7 @@ import (
 var BaseURL = "https://api.stormpath.com/v1/"
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.6"
-const followRedirectsHeader = "Stormpath-Go-FollowRedirects"
-const locationHeader = "Location"
+const version = "0.1.0-beta.8"
 
 var client *Client
 
@@ -60,6 +60,7 @@ func Init(credentials Credentials, cache Cache) {
 		DisableCompression: true,
 	}
 	httpClient := &http.Client{Transport: tr}
+	httpClient.CheckRedirect = checkRedirect
 
 	client = &Client{credentials, httpClient, cache}
 
@@ -68,6 +69,7 @@ func Init(credentials Credentials, cache Cache) {
 
 //InitWithCustomHTTPClient initializes the underlying client that communicates with Stormpath with a custom http.Client
 func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *http.Client) {
+	httpClient.CheckRedirect = checkRedirect
 	client = &Client{credentials, httpClient, cache}
 
 	initLog()
@@ -115,16 +117,10 @@ func buildAbsoluteURL(parts ...string) string {
 	return buffer.String()
 }
 
-func (client *Client) newRequestWithoutRedirects(method string, urlStr string, body interface{}) *http.Request {
-	req := client.newRequest(method, urlStr, body)
-	req.Header.Add(followRedirectsHeader, "false")
-	return req
-}
-
 func (client *Client) newRequest(method string, urlStr string, body interface{}) *http.Request {
 	jsonBody, _ := json.Marshal(body)
 	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(jsonBody))
-	req.Header.Set("User-Agent", "jarias/stormpath-sdk-go/"+version)
+	req.Header.Set("User-Agent", fmt.Sprintf("jarias/stormpath-sdk-go/%s (%s; %s)", version, runtime.GOOS, runtime.GOARCH))
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 
@@ -222,21 +218,39 @@ func (client *Client) do(request *http.Request) error {
 
 //execRequest executes a request, it would return a byte slice with the raw resoponse data and an error if any occurred
 func (client *Client) execRequest(req *http.Request) (*http.Response, error) {
-	if req.Header.Get(followRedirectsHeader) == "false" {
-		req.Header.Del(followRedirectsHeader)
-		resp, err := client.HTTPClient.Transport.RoundTrip(req)
-		err = handleResponseError(resp, err)
-		if err != nil {
-			Logger.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
-			return nil, err
-		}
-		//Get the redirect location from the response headers
-		newReq := client.newRequest("GET", resp.Header.Get(locationHeader), emptyPayload())
-		return client.execRequest(newReq)
+	if logLevel == "DEBUG" {
+		//Print request
+		dump, _ := httputil.DumpRequest(req, true)
+		Logger.Printf("[DEBUG] Stormpath request\n%s", dump)
 	}
-
 	resp, err := client.HTTPClient.Do(req)
+	if logLevel == "DEBUG" {
+		//Print response
+		dump, _ := httputil.DumpResponse(resp, true)
+		Logger.Printf("[DEBUG] Stormpath response\n%s", dump)
+	}
 	return resp, handleResponseError(resp, err)
+}
+
+func checkRedirect(req *http.Request, via []*http.Request) error {
+	//Go client defautl behavior is to bail after 10 redirects
+	if len(via) > 10 {
+		return errors.New("stopped after 10 redirects")
+	}
+	//No redirect do nothing
+	if len(via) == 0 {
+		// No redirects
+		return nil
+	}
+	// Re-Authenticate the redirect request
+	uuid, _ := uuid.NewV4()
+	nonce := uuid.String()
+
+	//We can use an empty payload cause the only redirect is for the current tenant
+	//this could change in the future
+	Authenticate(req, emptyPayload(), time.Now().In(time.UTC), client.Credentials, nonce)
+
+	return nil
 }
 
 func (e stormpathError) String() string {

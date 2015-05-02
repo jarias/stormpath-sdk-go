@@ -75,4 +75,17 @@ var _ = Describe("Directory", func() {
 			directory.Delete()
 		})
 	})
+
+	Describe("RegisterAccount", func() {
+		It("should create a new accout for the group", func() {
+			directory := newTestDirectory()
+			tenant.CreateDirectory(directory)
+
+			account := newTestAccount()
+			err := directory.RegisterAccount(account)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(account.Href).NotTo(BeEmpty())
+			directory.Delete()
+		})
+	})
 })
