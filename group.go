@@ -62,3 +62,32 @@ func (group *Group) GetGroupMemberships(pageRequest url.Values, filter url.Value
 
 	return groupMemberships, err
 }
+
+//UpdateCustomData updates the group custom data and returns that updated custom data as a map[string]interface
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (group *Group) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
+	updatedCustomData := map[string]interface{}{}
+
+	err := client.post(buildAbsoluteURL(group.Href, "customData"), customData, &updatedCustomData)
+
+	return updatedCustomData, err
+}
+
+//DeleteCustomData deletes all the group custom data
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (group *Group) DeleteCustomData() error {
+	return client.delete(buildAbsoluteURL(group.Href, "customData"), emptyPayload())
+}
+
+//GetCustomData gets the group custom data map
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (group *Group) GetCustomData() (map[string]interface{}, error) {
+	customData := map[string]interface{}{}
+
+	err := client.get(buildAbsoluteURL(group.Href, "customData"), emptyPayload(), &customData)
+
+	return customData, err
+}

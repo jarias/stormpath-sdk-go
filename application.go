@@ -301,3 +301,32 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 
 	return result, nil
 }
+
+//UpdateCustomData updates the application custom data and returns that updated custom data as a map[string]interface
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (app *Application) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
+	updatedCustomData := map[string]interface{}{}
+
+	err := client.post(buildAbsoluteURL(app.Href, "customData"), customData, &updatedCustomData)
+
+	return updatedCustomData, err
+}
+
+//DeleteCustomData deletes all the application custom data
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (app *Application) DeleteCustomData() error {
+	return client.delete(buildAbsoluteURL(app.Href, "customData"), emptyPayload())
+}
+
+//GetCustomData gets the application custom data map
+//
+//See: http://docs.stormpath.com/rest/product-guide/#custom-data
+func (app *Application) GetCustomData() (map[string]interface{}, error) {
+	customData := map[string]interface{}{}
+
+	err := client.get(buildAbsoluteURL(app.Href, "customData"), emptyPayload(), &customData)
+
+	return customData, err
+}
