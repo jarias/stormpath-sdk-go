@@ -4,25 +4,28 @@ package stormpath
 //
 //See: http://docs.stormpath.com/rest/product-guide/#account-store-mappings
 type AccountStoreMapping struct {
-	Href                  string `json:"href,omitempty"`
-	ListIndex             *int   `json:"listIndex,omitempty"`
-	IsDefaultAccountStore *bool  `json:"isDefaultAccountStore,omitempty"`
-	IsDefaultGroupStore   *bool  `json:"isDefaultGroupStore,omitempty"`
-	Application           link   `json:"application"`
-	AccountStore          link   `json:"accountStore"`
+	resource
+	ListIndex             *int        `json:"collectionResourceIndex,omitempty"`
+	IsDefaultAccountStore *bool       `json:"isDefaultAccountStore,omitempty"`
+	IsDefaultGroupStore   *bool       `json:"isDefaultGroupStore,omitempty"`
+	Application           Application `json:"application"`
+	AccountStore          resource    `json:"accountStore"`
 }
 
 //AccountStoreMappings represents a pages result of account store mappings
 //
-//See: http://docs.stormpath.com/rest/product-guide/#list-account-store-mappings
+//See: http://docs.stormpath.com/rest/product-guide/#collectionResource-account-store-mappings
 type AccountStoreMappings struct {
-	list
+	collectionResource
 	Items []AccountStoreMapping `json:"items"`
 }
 
 //NewAccountStoreMapping creates a new account store mappings
 func NewAccountStoreMapping(applicationHref string, accountStoreHref string) *AccountStoreMapping {
-	return &AccountStoreMapping{Application: link{Href: applicationHref}, AccountStore: link{Href: accountStoreHref}}
+	return &AccountStoreMapping{
+		Application:  *MakeApplication(applicationHref),
+		AccountStore: resource{Href: accountStoreHref},
+	}
 }
 
 //Save saves the given account store mapping

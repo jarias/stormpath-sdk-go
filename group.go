@@ -6,25 +6,29 @@ import "net/url"
 //
 //See: http://docs.stormpath.com/rest/product-guide/#groups
 type Group struct {
-	Href        string `json:"href,omitempty"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Status      string `json:"status,omitempty"`
-	CustomData  *link  `json:"customData,omitempty"`
-	Accounts    *link  `json:"accounts,omitempty"`
-	Tenant      *link  `json:"tenant,omitempty"`
-	Directory   *link  `json:"directory,omitempty"`
+	resource
+	Name        string      `json:"name"`
+	Description string      `json:"description,omitempty"`
+	Status      string      `json:"status,omitempty"`
+	CustomData  *CustomData `json:"customData,omitempty"`
+	Accounts    *Accounts   `json:"accounts,omitempty"`
+	Tenant      *Tenant     `json:"tenant,omitempty"`
+	Directory   *Directory  `json:"directory,omitempty"`
 }
 
 //Groups represent a paged result of groups
 type Groups struct {
-	list
+	collectionResource
 	Items []Groups `json:"items"`
 }
 
 //NewGroup creates a new Group with the given name
 func NewGroup(name string) *Group {
 	return &Group{Name: name}
+}
+
+func MakeGroup(href string) *Group {
+	return &Group{resource: resource{Href: href}}
 }
 
 func (group *Group) Save() error {

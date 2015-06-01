@@ -1,18 +1,21 @@
 package stormpath
 
 type GroupMembership struct {
-	Href    string `json:"href,omitempty"`
-	Account link   `json:"account"`
-	Group   link   `json:"group"`
+	resource
+	Account Account `json:"account"`
+	Group   Group   `json:"group"`
 }
 
 type GroupMemberships struct {
-	list
+	collectionResource
 	Items []GroupMembership `json:"items"`
 }
 
 func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
-	return &GroupMembership{Account: link{accountHref}, Group: link{groupHref}}
+	return &GroupMembership{
+		Account: *MakeAccount(accountHref),
+		Group:   *MakeGroup(groupHref),
+	}
 }
 
 func (groupmembership *GroupMembership) Delete() error {

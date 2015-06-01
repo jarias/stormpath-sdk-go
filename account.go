@@ -6,37 +6,29 @@ import "net/url"
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accounts
 type Account struct {
-	Href                   string `json:"href,omitempty"`
-	Username               string `json:"username,omitempty"`
-	Email                  string `json:"email"`
-	Password               string `json:"password"`
-	FullName               string `json:"fullName,omitempty"`
-	GivenName              string `json:"givenName"`
-	MiddleName             string `json:"middleName,omitempty"`
-	Surname                string `json:"surname"`
-	Status                 string `json:"status,omitempty"`
-	CustomData             *link  `json:"customData,omitempty"`
-	Groups                 *link  `json:"groups,omitempty"`
-	GroupMemberships       *link  `json:"groupMemberships,omitempty"`
-	Directory              *link  `json:"directory,omitempty"`
-	Tenant                 *link  `json:"tenant,omitempty"`
-	EmailVerificationToken *link  `json:"emailVerificationToken,omitempty"`
+	resource
+	Username               string            `json:"username,omitempty"`
+	Email                  string            `json:"email"`
+	Password               string            `json:"password"`
+	FullName               string            `json:"fullName,omitempty"`
+	GivenName              string            `json:"givenName"`
+	MiddleName             string            `json:"middleName,omitempty"`
+	Surname                string            `json:"surname"`
+	Status                 string            `json:"status,omitempty"`
+	CustomData             *CustomData       `json:"customData,omitempty"`
+	Groups                 *Groups           `json:"groups,omitempty"`
+	GroupMemberships       *GroupMemberships `json:"groupMemberships,omitempty"`
+	Directory              *Directory        `json:"directory,omitempty"`
+	Tenant                 *Tenant           `json:"tenant,omitempty"`
+	EmailVerificationToken *resource         `json:"emailVerificationToken,omitempty"`
 }
 
 //Accounts represents a paged result of Account objects
 //
-//See: http://docs.stormpath.com/rest/product-guide/#accounts-list
+//See: http://docs.stormpath.com/rest/product-guide/#accounts-collectionResource
 type Accounts struct {
-	list
+	collectionResource
 	Items []Account `json:"items"`
-}
-
-//AccountRef represent a link to an account, this type of resource is return when expand is not especify,
-//use only in account authentication
-//
-//See: http://docs.stormpath.com/rest/product-guide/#application-accounts (Log In (Authenticate) an Account)
-type AccountRef struct {
-	Account link
 }
 
 //AccountPasswordResetToken represents an password reset token for a given account
@@ -45,16 +37,23 @@ type AccountRef struct {
 type AccountPasswordResetToken struct {
 	Href    string
 	Email   string
-	Account link
+	Account Account
 }
 
+type accountRef struct {
+	Account resource `json:"account"`
+}
+
+//SocialAccount represents the JSON payload use to create an account for a social backend directory
+//(Google, Facebook, Github, etc)
 type SocialAccount struct {
 	Data ProviderData `json:"providerData"`
 }
 
+//ProviderData represents the especific information needed by the social provider (Google, Github, Faceboo, etc)
 type ProviderData struct {
-	ProviderId string `json:"providerId"`
-	AccessToken string `json:"accessToken"`
+	ProviderID  string `json:"providerId"`
+	AccessToken string `json:"accessToken,omitempty"`
 }
 
 //NewAccount is a conviniece constructor for an Account, it accepts all the required fields according to
@@ -63,11 +62,14 @@ func NewAccount(email string, password string, givenName string, surname string)
 	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
 }
 
-//GetAccount returns the Account from an AccountRef
-func (accountRef *AccountRef) GetAccount() (*Account, error) {
-	account := &Account{}
+//MakeAccount creates an account resource from an href
+func MakeAccount(href string) *Account {
+	return &Account{resource: resource{Href: href}}
+}
 
-	err := client.get(accountRef.Account.Href, emptyPayload(), account)
+//Load refreses the account from the account href
+func (account *Account) Load() (*Account, error) {
+	err := client.get(account.Href, emptyPayload(), account)
 
 	return account, err
 }
@@ -121,7 +123,10 @@ func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMembe
 	groupMemberships := &GroupMemberships{}
 
 	err := client.get(
-		buildAbsoluteURL(account.GroupMemberships.Href, requestParams(pageRequest, NewEmptyFilter(), url.Values{})),
+		buildAbsoluteURL(
+			account.GroupMemberships.Href,
+			requestParams(pageRequest, NewEmptyFilter(), url.Values{}),
+		),
 		emptyPayload(),
 		groupMemberships,
 	)
@@ -133,12 +138,12 @@ func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMembe
 func (account *Account) GetCustomData() (map[string]interface{}, error) {
 	customData := make(map[string]interface{})
 
-	err := client.get(account.CustomData.Href, emptyPayload(), &customData)
+	err := client.get(buildAbsoluteURL(account.Href, "customData"), emptyPayload(), &customData)
 
 	return customData, err
 }
 
 //UpdateCustomData sets or updates the given account custom data
 func (account *Account) UpdateCustomData(data map[string]interface{}) error {
-	return client.post(account.CustomData.Href, data, &data)
+	return client.post(buildAbsoluteURL(account.Href, "customData"), data, &data)
 }

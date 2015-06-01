@@ -6,18 +6,19 @@ import "net/url"
 //
 //See: http://docs.stormpath.com/rest/product-guide/#directories
 type Directory struct {
-	Href        string `json:"href,omitempty"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Status      string `json:"status,omitempty"`
-	Accounts    *link  `json:"accounts,omitempty"`
-	Groups      *link  `json:"groups,omitempty"`
-	Tenant      *link  `json:"tenant,omitempty"`
+	resource
+	Name        string      `json:"name"`
+	Description string      `json:"description,omitempty"`
+	Status      string      `json:"status,omitempty"`
+	CustomData  *CustomData `json:"customData,omitempty"`
+	Accounts    *Accounts   `json:"accounts,omitempty"`
+	Groups      *Groups     `json:"groups,omitempty"`
+	Tenant      *Tenant     `json:"tenant,omitempty"`
 }
 
 //Directories represnets a paged result of directories
 type Directories struct {
-	list
+	collectionResource
 	Items []Directory `json:"items"`
 }
 

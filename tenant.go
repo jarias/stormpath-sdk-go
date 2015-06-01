@@ -6,12 +6,12 @@ import (
 
 //Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
 type Tenant struct {
-	Href         string `json:"href"`
-	Name         string `json:"name"`
-	Key          string `json:"key"`
-	CustomData   link   `json:"customData"`
-	Applications link   `json:"applications"`
-	Directories  link   `json:"directories"`
+	Href         string       `json:"href"`
+	Name         string       `json:"name"`
+	Key          string       `json:"key"`
+	CustomData   CustomData   `json:"customData"`
+	Applications Applications `json:"applications"`
+	Directories  Directories  `json:"directories"`
 }
 
 //CurrentTenant returns the current tenant see http://docs.stormpath.com/rest/product-guide/#retrieve-the-current-tenant
@@ -73,7 +73,7 @@ func (tenant *Tenant) GetDirectories(pageRequest url.Values, filter url.Values) 
 func (tenant *Tenant) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
 	updatedCustomData := map[string]interface{}{}
 
-	err := client.post(tenant.CustomData.Href, customData, &updatedCustomData)
+	err := client.post(buildAbsoluteURL(tenant.Href, "customData"), customData, &updatedCustomData)
 
 	return updatedCustomData, err
 }
@@ -82,7 +82,7 @@ func (tenant *Tenant) UpdateCustomData(customData map[string]interface{}) (map[s
 //
 //See: http://docs.stormpath.com/rest/product-guide/#custom-data
 func (tenant *Tenant) DeleteCustomData() error {
-	return client.delete(tenant.CustomData.Href, emptyPayload())
+	return client.delete(buildAbsoluteURL(tenant.Href, "customData"), emptyPayload())
 }
 
 //GetCustomData gets the tenant custom data map
@@ -91,7 +91,7 @@ func (tenant *Tenant) DeleteCustomData() error {
 func (tenant *Tenant) GetCustomData() (map[string]interface{}, error) {
 	customData := map[string]interface{}{}
 
-	err := client.get(tenant.CustomData.Href, emptyPayload(), &customData)
+	err := client.get(buildAbsoluteURL(tenant.Href, "customData"), emptyPayload(), &customData)
 
 	return customData, err
 }

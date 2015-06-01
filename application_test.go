@@ -49,7 +49,7 @@ var _ = Describe("Application", func() {
 
 			a, err := app.AuthenticateAccount(account.Email, "1234567z!A89")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(a.Account.Href).To(Equal(account.Href))
+			Expect(a.Href).To(Equal(account.Href))
 		})
 	})
 
@@ -72,7 +72,7 @@ var _ = Describe("Application", func() {
 		})
 
 		Describe("GetApplicationGroups", func() {
-			It("should return the paged list of application groups", func() {
+			It("should return the paged collectionResource of application groups", func() {
 				group := newTestGroup()
 				app.CreateGroup(group)
 
@@ -106,7 +106,7 @@ var _ = Describe("Application", func() {
 				a, err := app.ResetPassword(re.FindString(token.Href), "8787987!kJKJdfW")
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(a.Account.Href).To(Equal(account.Href))
+				Expect(a.Href).To(Equal(account.Href))
 			})
 		})
 

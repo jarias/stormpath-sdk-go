@@ -33,10 +33,10 @@ apps, _ := tenant.GetApplications(stormpath.NewDefaultPageRequest(), stormpath.N
 app := apps.Items[0]
 
 //Authenticate a user against the app
-accountRef, _ := app.AuthenticateAccount("username", "password")
+account, _ := app.AuthenticateAccount("username", "password")
 
 //Print the account information
-account, _ := accountRef.GetAccount()
+account, _ := account.Load()
 fmt.Println(account)
 ```
 

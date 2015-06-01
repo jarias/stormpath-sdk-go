@@ -14,28 +14,24 @@ import (
 //
 //See: http://docs.stormpath.com/rest/product-guide/#applications
 type Application struct {
-	Href                       string `json:"href,omitempty"`
-	Name                       string `json:"name"`
-	Description                string `json:"description,omitempty"`
-	Status                     string `json:"status,omitempty"`
-	Accounts                   *link  `json:"accounts,omitempty"`
-	Groups                     *link  `json:"groups,omitempty"`
-	Tenant                     *link  `json:"tenant,omitempty"`
-	PasswordResetTokens        *link  `json:"passwordResetTokens,omitempty"`
-	AccountStoreMappings       *link  `json:"accountStoreMappings,omitempty"`
-	DefaultAccountStoreMapping *link  `json:"defaultAccountStoreMapping,omitempty"`
-	DefaultGroupStoreMapping   *link  `json:"defaultGroupStoreMapping,omitempty"`
+	resource
+	Name                       string                `json:"name,omitempty"`
+	Description                string                `json:"description,omitempty"`
+	Status                     string                `json:"status,omitempty"`
+	CustomData                 *CustomData           `json:"customData,omitempty"`
+	Accounts                   *Accounts             `json:"accounts,omitempty"`
+	Groups                     *Groups               `json:"groups,omitempty"`
+	Tenant                     *Tenant               `json:"tenant,omitempty"`
+	PasswordResetTokens        *resource             `json:"passwordResetTokens,omitempty"`
+	AccountStoreMappings       *AccountStoreMappings `json:"accountStoreMappings,omitempty"`
+	DefaultAccountStoreMapping *AccountStoreMapping  `json:"defaultAccountStoreMapping,omitempty"`
+	DefaultGroupStoreMapping   *AccountStoreMapping  `json:"defaultGroupStoreMapping,omitempty"`
 }
 
 //Applications represents a paged result or applications
 type Applications struct {
-	list
+	collectionResource
 	Items []Application `json:"items"`
-}
-
-//ApplicationRef holds the the Href of an application
-type ApplicationRef struct {
-	Application link
 }
 
 //IDSiteCallbackResult holds the ID Site callback parsed JWT token information + the acccount if one was given
@@ -51,18 +47,16 @@ func NewApplication(name string) *Application {
 	return &Application{Name: name}
 }
 
-//NewApplicationRef creates an ApplicationHref from a URL
-func NewApplicationRef(href string) *ApplicationRef {
-	return &ApplicationRef{link{href}}
+//MakeApplication creates an application resource from an href
+func MakeApplication(href string) *Application {
+	return &Application{resource: resource{Href: href}}
 }
 
-//GetApplication loads an application from the given ApplicationRef
-func (applicationRef *ApplicationRef) GetApplication() (*Application, error) {
-	application := &Application{}
+//Load refresh the application resource calling the application href endpoint
+func (app *Application) Load() (*Application, error) {
+	err := client.get(app.Href, emptyPayload(), app)
 
-	err := client.get(applicationRef.Application.Href, emptyPayload(), application)
-
-	return application, err
+	return app, err
 }
 
 //Save saves the given application
@@ -135,25 +129,31 @@ func (app *Application) RegisterAccount(account *Account) error {
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accessing-accounts-with-google-authorization-codes-or-an-access-tokens
 func (app *Application) RegisterSocialAccount(socialAccount *SocialAccount) (*Account, error) {
-	account := Account{}
+	account := &Account{}
 
-	err := client.post(app.Accounts.Href, socialAccount, &account)
+	err := client.post(app.Accounts.Href, socialAccount, account)
 
-	return &account, err
+	return account, err
 }
 
 //AuthenticateAccount authenticates an account against the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#authenticate-an-account
-func (app *Application) AuthenticateAccount(username string, password string) (*AccountRef, error) {
-	account := &AccountRef{}
+func (app *Application) AuthenticateAccount(username string, password string) (*Account, error) {
+	accountRef := &accountRef{}
+	account := &Account{}
 
 	loginAttemptPayload := make(map[string]string)
 
 	loginAttemptPayload["type"] = "basic"
 	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
-	err := client.post(buildAbsoluteURL(app.Href, "loginAttempts"), loginAttemptPayload, account)
+	err := client.post(buildAbsoluteURL(app.Href, "loginAttempts"), loginAttemptPayload, accountRef)
+
+	if err != nil {
+		return nil, err
+	}
+	account.Href = accountRef.Account.Href
 
 	return account, err
 }
@@ -186,13 +186,19 @@ func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswo
 //ResetPassword resets a user password based on the reset token
 //
 //See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
-func (app *Application) ResetPassword(token string, newPassword string) (*AccountRef, error) {
-	account := &AccountRef{}
+func (app *Application) ResetPassword(token string, newPassword string) (*Account, error) {
+	accountRef := &accountRef{}
+	account := &Account{}
 
 	resetPasswordPayload := make(map[string]string)
 	resetPasswordPayload["password"] = newPassword
 
-	err := client.post(buildAbsoluteURL(app.Href, "passwordResetTokens", token), resetPasswordPayload, account)
+	err := client.post(buildAbsoluteURL(app.Href, "passwordResetTokens", token), resetPasswordPayload, accountRef)
+
+	if err != nil {
+		return nil, err
+	}
+	account.Href = accountRef.Account.Href
 
 	return account, err
 }
@@ -282,8 +288,7 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	}
 
 	if token.Claims["sub"] != nil {
-		accountRef := AccountRef{link{token.Claims["sub"].(string)}}
-		account, err := accountRef.GetAccount()
+		account, err := MakeAccount(token.Claims["sub"].(string)).Load()
 		if err != nil {
 			return nil, err
 		}

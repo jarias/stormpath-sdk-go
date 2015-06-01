@@ -40,7 +40,7 @@ func Authenticate(req *http.Request, payload []byte, date time.Time, credentials
 	canonicalRequest :=
 		req.Method +
 			NL +
-			canonicalizeResourcePath(req.URL.Path) +
+			canonicalizeresourcePath(req.URL.Path) +
 			NL +
 			canonicalizeQueryString(req) +
 			NL +
@@ -127,7 +127,7 @@ func canonicalizeQueryString(req *http.Request) string {
 	return stringBuffer.String()
 }
 
-func canonicalizeResourcePath(path string) string {
+func canonicalizeresourcePath(path string) string {
 	if len(path) == 0 {
 		return "/"
 	}

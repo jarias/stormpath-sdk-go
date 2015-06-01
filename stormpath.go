@@ -33,17 +33,22 @@ type Client struct {
 	Cache       Cache
 }
 
-//List defines the paged result metadata such as offset and limit
-type list struct {
-	Href   string `json:"href"`
-	Offset int    `json:"offset"`
-	Limit  int    `json:"limit"`
+//collectionResource represent the basic attributes of collection of resources (Application, Group, Account, etc.)
+type collectionResource struct {
+	resource
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
 }
 
-//Link defines href field in any of the data models this struct is meant to be embeded into other models
-type link struct {
-	Href string `json:"href"`
+//resource resprents the basic attributes of any resource (Application, Group, Account, etc.)
+type resource struct {
+	Href       string `json:"href,omitempty"`
+	CreatedAt  string `json:"createdAt,omitempty"`
+	ModifiedAt string `json:"modifiedAt,omitempty"`
 }
+
+//CustomData represents Stormpath's custom data resouce
+type CustomData map[string]interface{}
 
 type stormpathError struct {
 	Status           int
