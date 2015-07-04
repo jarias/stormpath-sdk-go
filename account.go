@@ -63,6 +63,10 @@ func NewAccount(email string, password string, givenName string, surname string)
 	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
 }
 
+func NewAccountRef(href string) *AccountRef {
+	return &AccountRef{Account: link{Href: href}}
+}
+
 //VerifyEmail verifies an email verification token associated with an account
 //
 //See: http://docs.stormpath.com/rest/product-guide/#account-verify-email
