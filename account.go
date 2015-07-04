@@ -53,7 +53,7 @@ type SocialAccount struct {
 }
 
 type ProviderData struct {
-	ProviderId string `json:"providerId"`
+	ProviderId  string `json:"providerId"`
 	AccessToken string `json:"accessToken"`
 }
 
@@ -61,6 +61,16 @@ type ProviderData struct {
 //the Stormpath API, it returns a pointer to an Account
 func NewAccount(email string, password string, givenName string, surname string) *Account {
 	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
+}
+
+//VerifyEmail verifies an email verification token associated with an account
+//
+//See: http://docs.stormpath.com/rest/product-guide/#account-verify-email
+func VerifyEmailTokens(token string) (*link, error) {
+	l := &link{}
+	err := client.post(buildAbsoluteURL(BaseURL, "accounts/emailVerificationTokens", token), emptyPayload(), l)
+
+	return l, err
 }
 
 //GetAccount returns the Account from an AccountRef
