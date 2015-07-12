@@ -45,12 +45,16 @@ type link struct {
 	Href string `json:"href"`
 }
 
-type stormpathError struct {
+type StormpathError struct {
 	Status           int
 	Code             int
 	Message          string
 	DeveloperMessage string
 	MoreInfo         string
+}
+
+func (e StormpathError) Error() string {
+	return e.Message
 }
 
 //Init initializes the underlying client that communicates with Stormpath
@@ -160,7 +164,7 @@ func handleResponseError(resp *http.Response, err error) error {
 	}
 	//Check for Stormpath specific errors
 	if resp.StatusCode != 200 && resp.StatusCode != 204 && resp.StatusCode != 201 && resp.StatusCode != 302 {
-		spError := &stormpathError{}
+		spError := &StormpathError{}
 
 		err := json.NewDecoder(resp.Body).Decode(spError)
 		if err != nil {
@@ -168,7 +172,7 @@ func handleResponseError(resp *http.Response, err error) error {
 		}
 
 		Logger.Printf("[ERROR] %s", spError)
-		return errors.New(spError.Message)
+		return *spError
 	}
 	//No errors from the request execution
 	return nil
@@ -253,6 +257,6 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 	return nil
 }
 
-func (e stormpathError) String() string {
+func (e StormpathError) String() string {
 	return fmt.Sprintf("Stormpath request error \nCode: [ %d ]\nMessage: [ %s ]\nDeveloper Message: [ %s ]\nMore info [ %s ]", e.Code, e.Message, e.DeveloperMessage, e.MoreInfo)
 }
