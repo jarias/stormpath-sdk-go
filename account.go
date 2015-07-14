@@ -67,10 +67,10 @@ func MakeAccount(href string) *Account {
 	return &Account{resource: resource{Href: href}}
 }
 
-//VerifyEmail verifies an email verification token associated with an account
+//VerifyEmailToken verifies an email verification token associated with an account
 //
 //See: http://docs.stormpath.com/rest/product-guide/#account-verify-email
-func VerifyEmailTokens(token string) (*Account, error) {
+func VerifyEmailToken(token string) (*Account, error) {
 	account := &Account{}
 	err := client.post(buildAbsoluteURL(BaseURL, "accounts/emailVerificationTokens", token), emptyPayload(), account)
 
