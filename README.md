@@ -47,6 +47,12 @@ Features:
 * Load credentials via properties file or env variables
 * Requests are authenticated via Stormpath SAuthc1 algorithm
 
+#Contributing
+
+Pull request are more than welcome, all pull requests should be from and directed to the develop branch NOT master.
+
+Please make sure you add tests ;)
+
 #License
 
 Copyright 2014 Julio Arias
