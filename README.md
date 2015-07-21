@@ -47,6 +47,11 @@ Features:
 * Load credentials via properties file or env variables
 * Requests are authenticated via Stormpath SAuthc1 algorithm
 
+#Debugging
+
+If you need to trace all requests done to stormpath you can enable debugging in the logs
+by setting the environment variable STORMPATH_LOG_LEVEL=DEBUG the default level is ERROR.
+
 #Contributing
 
 Pull request are more than welcome, all pull requests should be from and directed to the develop branch NOT master.
