@@ -8,7 +8,7 @@ install:
 - go get github.com/onsi/gomega
 - go get
 script: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace
-  --race && goveralls -service drone.io -coverprofile=stormpath-sdk-go.coverprofile
+  --race && goveralls -service travis-ci -coverprofile=stormpath-sdk-go.coverprofile
   -repotoken $COVERALLS_TOKEN
 env:
   global:
