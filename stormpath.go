@@ -50,18 +50,6 @@ type resource struct {
 //CustomData represents Stormpath's custom data resouce
 type CustomData map[string]interface{}
 
-type StormpathError struct {
-	Status           int
-	Code             int
-	Message          string
-	DeveloperMessage string
-	MoreInfo         string
-}
-
-func (e StormpathError) Error() string {
-	return e.Message
-}
-
 //Init initializes the underlying client that communicates with Stormpath
 func Init(credentials Credentials, cache Cache) {
 	tr := &http.Transport{
@@ -161,28 +149,6 @@ func appendParams(params url.Values, toAppend url.Values) url.Values {
 	return params
 }
 
-func handleResponseError(resp *http.Response, err error) error {
-	//Error from the request execution
-	if err != nil {
-		Logger.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
-		return err
-	}
-	//Check for Stormpath specific errors
-	if resp.StatusCode != 200 && resp.StatusCode != 204 && resp.StatusCode != 201 && resp.StatusCode != 302 {
-		spError := &StormpathError{}
-
-		err := json.NewDecoder(resp.Body).Decode(spError)
-		if err != nil {
-			return err
-		}
-
-		Logger.Printf("[ERROR] %s", spError)
-		return *spError
-	}
-	//No errors from the request execution
-	return nil
-}
-
 func emptyPayload() []byte {
 	return []byte{}
 }
@@ -260,8 +226,4 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 	Authenticate(req, emptyPayload(), time.Now().In(time.UTC), client.Credentials, nonce)
 
 	return nil
-}
-
-func (e StormpathError) String() string {
-	return fmt.Sprintf("Stormpath request error \nCode: [ %d ]\nMessage: [ %s ]\nDeveloper Message: [ %s ]\nMore info [ %s ]", e.Code, e.Message, e.DeveloperMessage, e.MoreInfo)
 }
