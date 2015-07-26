@@ -35,6 +35,10 @@ func (r RedisCache) Set(key string, data interface{}) {
 //Get returns the data store under key it should return an error if any occur
 func (r RedisCache) Get(key string, result interface{}) error {
 	Logger.Printf("[DEBUG] Geting data from cache for key [%s]", key)
+
+	if !r.Exists(key) {
+		return nil
+	}
 	cacheData, err := r.Conn.Do("GET", key)
 	if err != nil {
 		//Log the error and return an empty slice along with the error
