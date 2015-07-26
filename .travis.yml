@@ -2,6 +2,8 @@ language: go
 go:
 - 1.3
 - 1.4
+services:
+  - redis-server
 install:
 - go get github.com/mattn/goveralls
 - go get github.com/onsi/ginkgo/ginkgo
@@ -15,3 +17,4 @@ env:
   - secure: hobFfnH26htZpYBaAOJChUlETLH8NTnqxUARoqrgq/bAvIeza6ty/0XfkusGVckJMcC7ApWyGw3n7pUb9Fq3+rbJPyOGhQslW43lPbBlyFE5rqYsIPuvMOEkvGqPArnpY2y6q3txC9EYH4iry8wD/h/d/ka3+GXk0KzGNzC5E8k=
   - secure: AoKZhl1SRSJb0vTetzpC2kT3CQ+ipNrwvJpZAsKhtYqJysE7WYxIAYIaOU70XqKRt9HK7tHCIiZBOtazU+ldnvhAVAyru3qPfpl+F27NpQe/qs5acp8d3bmE+aNVf+8o1JLLsNBQzYRHtD4xudAQcZz/ulPuC5FRHsgnIvw/HN0=
   - secure: UcnEgz6XAPTJuFfVhOsxcWOX+T8MpgmF69elUoJOTVQI8EqNefJyROP7cEYpHvQ1ZdAhIivqTJeMqRf6MQKK9GccnwxREf3rlqKEU3nfIaD8eJ2nr7jApEAejvBvDVupjWU7GlGBlff+c9OJletYFrPNK9L8hbMbOpuriAWmrbA=
+  - REDIS_SERVER=localhost
