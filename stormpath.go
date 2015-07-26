@@ -40,11 +40,19 @@ type collectionResource struct {
 	Limit  int `json:"limit"`
 }
 
+func (r collectionResource) IsCacheable() bool {
+	return false
+}
+
 //resource resprents the basic attributes of any resource (Application, Group, Account, etc.)
 type resource struct {
 	Href       string `json:"href,omitempty"`
 	CreatedAt  string `json:"createdAt,omitempty"`
 	ModifiedAt string `json:"modifiedAt,omitempty"`
+}
+
+func (r resource) IsCacheable() bool {
+	return true
 }
 
 //CustomData represents Stormpath's custom data resouce
@@ -177,7 +185,7 @@ func (client *Client) doWithResult(request *http.Request, result interface{}) er
 			client.Cache.Del(key)
 			break
 		case "GET":
-			client.Cache.Set(key, result)
+			cacheResource(key, result, client.Cache)
 		}
 	}
 

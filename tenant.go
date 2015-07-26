@@ -6,7 +6,7 @@ import (
 
 //Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
 type Tenant struct {
-	Href         string       `json:"href"`
+	resource
 	Name         string       `json:"name"`
 	Key          string       `json:"key"`
 	CustomData   CustomData   `json:"customData"`
