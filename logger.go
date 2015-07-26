@@ -9,9 +9,10 @@ import (
 
 //Logger library wide logger
 var Logger *log.Logger
+var logLevel string
 
 func initLog() {
-	logLevel := os.Getenv("STORMPATH_LOG_LEVEL")
+	logLevel = os.Getenv("STORMPATH_LOG_LEVEL")
 
 	if logLevel == "" {
 		logLevel = "ERROR"
