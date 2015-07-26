@@ -71,11 +71,11 @@ func (tenant *Tenant) GetDirectories(pageRequest url.Values, filter url.Values) 
 //
 //See: http://docs.stormpath.com/rest/product-guide/#custom-data
 func (tenant *Tenant) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
-	updatedCustomData := map[string]interface{}{}
+	customData = cleanCustomData(customData)
 
-	err := client.post(buildAbsoluteURL(tenant.Href, "customData"), customData, &updatedCustomData)
+	err := client.post(buildAbsoluteURL(tenant.Href, "customData"), customData, &customData)
 
-	return updatedCustomData, err
+	return customData, err
 }
 
 //DeleteCustomData deletes all the tenants custom data

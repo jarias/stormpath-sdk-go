@@ -306,11 +306,11 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 //
 //See: http://docs.stormpath.com/rest/product-guide/#custom-data
 func (app *Application) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
-	updatedCustomData := map[string]interface{}{}
+	customData = cleanCustomData(customData)
 
-	err := client.post(buildAbsoluteURL(app.Href, "customData"), customData, &updatedCustomData)
+	err := client.post(buildAbsoluteURL(app.Href, "customData"), customData, &customData)
 
-	return updatedCustomData, err
+	return customData, err
 }
 
 //DeleteCustomData deletes all the application custom data

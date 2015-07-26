@@ -154,17 +154,8 @@ func (account *Account) GetCustomData() (map[string]interface{}, error) {
 }
 
 //UpdateCustomData sets or updates the given account custom data
-func (account *Account) UpdateCustomData(data map[string]interface{}) error {
-	// delete illegal keys from data
-	// http://docs.stormpath.com/rest/product-guide/#custom-data
-	keys := []string{
-		"href", "createdAt", "modifiedAt", "meta",
-		"spMeta", "spmeta", "ionmeta", "ionMeta",
-	}
+func (account *Account) UpdateCustomData(customData map[string]interface{}) error {
+	customData = cleanCustomData(customData)
 
-	for i := range keys {
-		delete(data, keys[i])
-	}
-
-	return client.post(buildAbsoluteURL(account.Href, "customData"), data, &data)
+	return client.post(buildAbsoluteURL(account.Href, "customData"), customData, &customData)
 }

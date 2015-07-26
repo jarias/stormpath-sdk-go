@@ -90,11 +90,11 @@ func (dir *Directory) RegisterSocialAccount(socialAccount *SocialAccount) (*Acco
 //
 //See: http://docs.stormpath.com/rest/product-guide/#custom-data
 func (dir *Directory) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
-	updatedCustomData := map[string]interface{}{}
+	customData = cleanCustomData(customData)
 
-	err := client.post(buildAbsoluteURL(dir.Href, "customData"), customData, &updatedCustomData)
+	err := client.post(buildAbsoluteURL(dir.Href, "customData"), customData, &customData)
 
-	return updatedCustomData, err
+	return customData, err
 }
 
 //DeleteCustomData deletes all the directory custom data

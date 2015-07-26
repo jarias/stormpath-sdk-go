@@ -235,3 +235,18 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 
 	return nil
 }
+
+func cleanCustomData(customData map[string]interface{}) map[string]interface{} {
+	// delete illegal keys from data
+	// http://docs.stormpath.com/rest/product-guide/#custom-data
+	keys := []string{
+		"href", "createdAt", "modifiedAt", "meta",
+		"spMeta", "spmeta", "ionmeta", "ionMeta",
+	}
+
+	for i := range keys {
+		delete(customData, keys[i])
+	}
+
+	return customData
+}
