@@ -8,10 +8,10 @@ install:
 - go get github.com/onsi/ginkgo/ginkgo
 - go get github.com/onsi/gomega
 - go get
-script: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace
-  --race
-after_success: goveralls -service travis-ci -coverprofile=stormpath-sdk-go.coverprofile
-  -repotoken $COVERALLS_TOKEN
+script:
+  - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 env:
   global:
   - REDIS_SERVER=localhost
