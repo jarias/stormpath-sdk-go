@@ -19,7 +19,7 @@ import (
 var BaseURL = "https://api.stormpath.com/v1/"
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.9"
+const version = "0.1.0-beta.10"
 
 var client *Client
 
