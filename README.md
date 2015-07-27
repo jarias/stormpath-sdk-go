@@ -2,11 +2,11 @@ Go SDK for the [Stormpath](http://stormpath.com/) API
 
 Develop:
 
-[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=develop)](https://travis-ci.org/jarias/stormpath-sdk-go) [![Coverage Status](https://coveralls.io/repos/jarias/stormpath-sdk-go/badge.png?branch=develop)](https://coveralls.io/r/jarias/stormpath-sdk-go?branch=develop)
+[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=develop)](https://travis-ci.org/jarias/stormpath-sdk-go) [![Coverage Status](http://coveralls.io/repos/jarias/stormpath-sdk-go/badge.svg?branch=develop&service=github)](http://coveralls.io/github/jarias/stormpath-sdk-go?branch=develop)
 
 Master:
 
-[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=master)](https://travis-ci.org/jarias/stormpath-sdk-go) [![Coverage Status](https://coveralls.io/repos/jarias/stormpath-sdk-go/badge.png?branch=master)](https://coveralls.io/r/jarias/stormpath-sdk-go?branch=master)
+[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=master)](https://travis-ci.org/jarias/stormpath-sdk-go) [![Coverage Status](http://coveralls.io/repos/jarias/stormpath-sdk-go/badge.svg?branch=master&service=github)](http://coveralls.io/github/jarias/stormpath-sdk-go?branch=develop)
 
 #Usage
 
