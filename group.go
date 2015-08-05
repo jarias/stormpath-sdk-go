@@ -1,14 +1,18 @@
 package stormpath
 
-import "net/url"
+import (
+	"net/url"
+
+	"github.com/asaskevich/govalidator"
+)
 
 //Group represents a Stormpath Group
 //
 //See: http://docs.stormpath.com/rest/product-guide/#groups
 type Group struct {
 	resource
-	Name        string      `json:"name"`
-	Description string      `json:"description,omitempty"`
+	Name        string      `json:"name,omitempty" valid:"required,length(1|255)"`
+	Description string      `json:"description,omitempty" valid:"length(0|1000)"`
 	Status      string      `json:"status,omitempty"`
 	CustomData  *CustomData `json:"customData,omitempty"`
 	Accounts    *Accounts   `json:"accounts,omitempty"`
@@ -27,11 +31,21 @@ func NewGroup(name string) *Group {
 	return &Group{Name: name}
 }
 
-func MakeGroup(href string) *Group {
-	return &Group{resource: resource{Href: href}}
+//Validate validates a group, returns true if valid and false + error if not
+func (group *Group) Validate() (bool, error) {
+	return govalidator.ValidateStruct(group)
+}
+
+//Refresh refreshes the group resource by doing a GET to the group href endpoint
+func (group *Group) Refresh() error {
+	return client.get(group.Href, emptyPayload(), group)
 }
 
 func (group *Group) Save() error {
+	ok, err := group.Validate()
+	if !ok && err != nil {
+		return err
+	}
 	return client.post(group.Href, group, group)
 }
 

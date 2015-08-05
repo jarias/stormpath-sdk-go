@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/nu7hatch/gouuid"
 )
@@ -15,8 +16,8 @@ import (
 //See: http://docs.stormpath.com/rest/product-guide/#applications
 type Application struct {
 	resource
-	Name                       string                `json:"name,omitempty"`
-	Description                string                `json:"description,omitempty"`
+	Name                       string                `json:"name,omitempty" valid:"required,length(1|255)"`
+	Description                string                `json:"description,omitempty" valid:"length(0|4000)"`
 	Status                     string                `json:"status,omitempty"`
 	CustomData                 *CustomData           `json:"customData,omitempty"`
 	Accounts                   *Accounts             `json:"accounts,omitempty"`
@@ -47,22 +48,24 @@ func NewApplication(name string) *Application {
 	return &Application{Name: name}
 }
 
-//MakeApplication creates an application resource from an href
-func MakeApplication(href string) *Application {
-	return &Application{resource: resource{Href: href}}
+//Validate validates an application, returns true if valid and false + error if not
+func (app *Application) Validate() (bool, error) {
+	return govalidator.ValidateStruct(app)
 }
 
-//Load refresh the application resource calling the application href endpoint
-func (app *Application) Load() (*Application, error) {
-	err := client.get(app.Href, emptyPayload(), app)
-
-	return app, err
+//Refresh refreshes the application resource by doing a GET to the app href endpoint
+func (app *Application) Refresh() error {
+	return client.get(app.Href, emptyPayload(), app)
 }
 
 //Save saves the given application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#create-an-application-aka-register-an-application-with-stormpath
 func (app *Application) Save() error {
+	ok, err := app.Validate()
+	if !ok && err != nil {
+		return err
+	}
 	return client.post(app.Href, app, app)
 }
 
@@ -288,7 +291,9 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	}
 
 	if token.Claims["sub"] != nil {
-		account, err := MakeAccount(token.Claims["sub"].(string)).Load()
+		account := &Account{}
+		account.Href = token.Claims["sub"].(string)
+		err := account.Refresh()
 		if err != nil {
 			return nil, err
 		}

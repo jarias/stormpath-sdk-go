@@ -13,6 +13,28 @@ import (
 )
 
 var _ = Describe("Application", func() {
+	Describe("Validate", func() {
+		It("should return true if the application is valid", func() {
+			ok, err := NewApplication("test").Validate()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ok).To(BeTrue())
+		})
+		It("should return false if application is invalid", func() {
+			invalidApps := []*Application{
+				&Application{},
+				&Application{Name: string256},
+				&Application{Name: "name", Description: string4001},
+			}
+
+			for _, app := range invalidApps {
+				ok, err := app.Validate()
+
+				Expect(err).To(HaveOccurred())
+				Expect(ok).To(BeFalse())
+			}
+		})
+	})
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the name", func() {
 			application := NewApplication("name")

@@ -1,19 +1,23 @@
 package stormpath
 
-import "net/url"
+import (
+	"github.com/asaskevich/govalidator"
+
+	"net/url"
+)
 
 //Account represents an Stormpath account object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accounts
 type Account struct {
 	resource
-	Username               string            `json:"username,omitempty"`
-	Email                  string            `json:"email"`
+	Username               string            `json:"username" valid:"required"`
+	Email                  string            `json:"email" valid:"email,required"`
 	Password               string            `json:"password"`
 	FullName               string            `json:"fullName,omitempty"`
-	GivenName              string            `json:"givenName"`
+	GivenName              string            `json:"givenName" valid:"required"`
 	MiddleName             string            `json:"middleName,omitempty"`
-	Surname                string            `json:"surname"`
+	Surname                string            `json:"surname" valid:"required"`
 	Status                 string            `json:"status,omitempty"`
 	CustomData             *CustomData       `json:"customData,omitempty"`
 	Groups                 *Groups           `json:"groups,omitempty"`
@@ -56,37 +60,28 @@ type ProviderData struct {
 	AccessToken string `json:"accessToken,omitempty"`
 }
 
-//NewAccount is a conviniece constructor for an Account, it accepts all the required fields according to
-//the Stormpath API, it returns a pointer to an Account
-func NewAccount(email string, password string, givenName string, surname string) *Account {
-	return &Account{Email: email, Password: password, GivenName: givenName, Surname: surname}
+//NewAccount returns a pointer to an Account with the minimum data required
+func NewAccount(username, password, email, givenName, surname string) *Account {
+	return &Account{Username: username, Password: password, Email: email, GivenName: givenName, Surname: surname}
 }
 
-//MakeAccount creates an account resource from an href
-func MakeAccount(href string) *Account {
-	return &Account{resource: resource{Href: href}}
+//Validate validates an account, returns true if valid and false + error if not
+func (account *Account) Validate() (bool, error) {
+	return govalidator.ValidateStruct(account)
 }
 
-//VerifyEmailToken verifies an email verification token associated with an account
-//
-//See: http://docs.stormpath.com/rest/product-guide/#account-verify-email
-func VerifyEmailToken(token string) (*Account, error) {
-	account := &Account{}
-	err := client.post(buildAbsoluteURL(BaseURL, "accounts/emailVerificationTokens", token), emptyPayload(), account)
-
-	return account, err
-}
-
-//Load refreses the account from the account href
-func (account *Account) Load() (*Account, error) {
-	err := client.get(account.Href, emptyPayload(), account)
-
-	return account, err
+//Refresh refreshes the account resource by doing a GET to the account href endpoint
+func (account *Account) Refresh() error {
+	return client.get(account.Href, emptyPayload(), account)
 }
 
 //Save updates the given account, by doing a POST to the account Href, if the account is a new account
 //it should be created via Application.RegisterAccount
 func (account *Account) Save() error {
+	ok, err := account.Validate()
+	if !ok && err != nil {
+		return err
+	}
 	return client.post(account.Href, account, account)
 }
 
@@ -158,4 +153,14 @@ func (account *Account) UpdateCustomData(customData map[string]interface{}) erro
 	customData = cleanCustomData(customData)
 
 	return client.post(buildAbsoluteURL(account.Href, "customData"), customData, &customData)
+}
+
+//VerifyEmailToken verifies an email verification token associated with an account
+//
+//See: http://docs.stormpath.com/rest/product-guide/#account-verify-email
+func VerifyEmailToken(token string) (*Account, error) {
+	account := &Account{}
+	err := client.post(buildAbsoluteURL(BaseURL, "accounts/emailVerificationTokens", token), emptyPayload(), account)
+
+	return account, err
 }

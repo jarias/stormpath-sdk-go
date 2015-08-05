@@ -9,13 +9,38 @@ import (
 )
 
 var _ = Describe("Account", func() {
+	Describe("Validate", func() {
+		It("should return true if the account is valid", func() {
+			ok, err := newTestAccount().Validate()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ok).To(BeTrue())
+		})
+		It("should return false if account is invalid", func() {
+			invalidAccounts := []*Account{
+				&Account{Email: "test@test.org", GivenName: "test", Surname: "test"},
+				&Account{Username: "test", GivenName: "test", Surname: "test"},
+				&Account{Username: "test", Email: "test", GivenName: "test", Surname: "test"},
+				&Account{Username: "test", GivenName: "test", Surname: "test"},
+				&Account{Username: "test", Email: "test@test.org", Surname: "test"},
+				&Account{Username: "test", Email: "test@test.org", GivenName: "test"},
+			}
+
+			for _, acct := range invalidAccounts {
+				ok, err := acct.Validate()
+
+				Expect(err).To(HaveOccurred())
+				Expect(ok).To(BeFalse())
+			}
+		})
+	})
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the account required fields", func() {
-			acc := NewAccount("test@test.org", "123", "test", "test")
+			acc := NewAccount("test@test.org", "123", "test@test.org", "test", "test")
 
 			jsonData, _ := json.Marshal(acc)
 
-			Expect(string(jsonData)).To(Equal("{\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}"))
+			Expect(string(jsonData)).To(Equal("{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}"))
 		})
 	})
 
