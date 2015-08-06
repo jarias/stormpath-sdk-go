@@ -9,6 +9,15 @@ import (
 )
 
 var _ = Describe("Account", func() {
+	invalidAccounts := []*Account{
+		&Account{Email: "test@test.org", GivenName: "test", Surname: "test"},
+		&Account{Username: "test", GivenName: "test", Surname: "test"},
+		&Account{Username: "test", Email: "test", GivenName: "test", Surname: "test"},
+		&Account{Username: "test", GivenName: "test", Surname: "test"},
+		&Account{Username: "test", Email: "test@test.org", Surname: "test"},
+		&Account{Username: "test", Email: "test@test.org", GivenName: "test"},
+	}
+
 	Describe("Validate", func() {
 		It("should return true if the account is valid", func() {
 			ok, err := newTestAccount().Validate()
@@ -17,15 +26,6 @@ var _ = Describe("Account", func() {
 			Expect(ok).To(BeTrue())
 		})
 		It("should return false if account is invalid", func() {
-			invalidAccounts := []*Account{
-				&Account{Email: "test@test.org", GivenName: "test", Surname: "test"},
-				&Account{Username: "test", GivenName: "test", Surname: "test"},
-				&Account{Username: "test", Email: "test", GivenName: "test", Surname: "test"},
-				&Account{Username: "test", GivenName: "test", Surname: "test"},
-				&Account{Username: "test", Email: "test@test.org", Surname: "test"},
-				&Account{Username: "test", Email: "test@test.org", GivenName: "test"},
-			}
-
 			for _, acct := range invalidAccounts {
 				ok, err := acct.Validate()
 
@@ -45,6 +45,13 @@ var _ = Describe("Account", func() {
 	})
 
 	Describe("Save", func() {
+		It("should not save if account is invalid", func() {
+			for _, acct := range invalidAccounts {
+				err := acct.Save()
+
+				Expect(err).To(HaveOccurred())
+			}
+		})
 		It("should update an existing account", func() {
 			account := newTestAccount()
 			app.RegisterAccount(account)

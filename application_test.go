@@ -13,6 +13,12 @@ import (
 )
 
 var _ = Describe("Application", func() {
+	invalidApps := []*Application{
+		&Application{},
+		&Application{Name: string256},
+		&Application{Name: "name", Description: string4001},
+	}
+
 	Describe("Validate", func() {
 		It("should return true if the application is valid", func() {
 			ok, err := NewApplication("test").Validate()
@@ -21,12 +27,6 @@ var _ = Describe("Application", func() {
 			Expect(ok).To(BeTrue())
 		})
 		It("should return false if application is invalid", func() {
-			invalidApps := []*Application{
-				&Application{},
-				&Application{Name: string256},
-				&Application{Name: "name", Description: string4001},
-			}
-
 			for _, app := range invalidApps {
 				ok, err := app.Validate()
 
@@ -46,6 +46,13 @@ var _ = Describe("Application", func() {
 	})
 
 	Describe("Save", func() {
+		It("should not save if application is invalid", func() {
+			for _, app := range invalidApps {
+				err := app.Save()
+
+				Expect(err).To(HaveOccurred())
+			}
+		})
 		It("should update an existing application", func() {
 			app.Name = "new-name" + randomName()
 			err := app.Save()
