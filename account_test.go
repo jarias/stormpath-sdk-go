@@ -18,7 +18,6 @@ var _ = Describe("Account", func() {
 			Expect(string(jsonData)).To(Equal("{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}"))
 		})
 	})
-
 	Describe("Save", func() {
 		It("should update an existing account", func() {
 			account := newTestAccount()
@@ -49,7 +48,7 @@ var _ = Describe("Account", func() {
 			app.CreateGroup(group)
 
 			_, err := account.AddToGroup(group)
-			gm, _ := account.GetGroupMemberships(NewDefaultPageRequest())
+			gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gm.Items).To(HaveLen(1))
@@ -67,18 +66,46 @@ var _ = Describe("Account", func() {
 			group := newTestGroup()
 			app.CreateGroup(group)
 
-			gm, _ := account.GetGroupMemberships(NewDefaultPageRequest())
+			gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
 			groupCountBefore = len(gm.Items)
 
 			account.AddToGroup(group)
 
 			err := account.RemoveFromGroup(group)
-			gm, _ = account.GetGroupMemberships(NewDefaultPageRequest())
+			gm, _ = account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gm.Items).To(HaveLen(groupCountBefore))
 			group.Delete()
 		})
+	})
+
+	Describe("GetGroupMemberships", func() {
+		It("should allow expanding the account", func() {
+			acct := registerTestAccount()
+			group := addAccountToGroup(acct)
+
+			groupMemberships, err := acct.GetGroupMemberships(MakeGroupMemershipCriteria().WithAccount().Offset(0).Limit(25))
+
+			Expect(err).NotTo(HaveOccurred())
+			for _, gm := range groupMemberships.Items {
+				Expect(gm.Account).To(BeEquivalentTo(*acct))
+				Expect(gm.Group).NotTo(BeEquivalentTo(*group))
+			}
+		})
+
+		//It("should allow expanding the group", func() {
+		//	account := registerTestAccount()
+		//	group := addAccountToGroup(account)
+		//
+		//	groupMemberships, err := account.GetGroupMemberships(NewDefaultPageRequest(), "group")
+		//
+		//	Expect(err).NotTo(HaveOccurred())
+		//	for _, gm := range groupMemberships.Items {
+		//		Expect(gm.Account).To(BeEquivalentTo(account))
+		//		Expect(gm.Group.Name).To(BeEquivalentTo(group.Name))
+		//	}
+		//})
 	})
 
 	Describe("GetCustomData", func() {

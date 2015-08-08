@@ -110,7 +110,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant directories", func() {
 			tenant, _ := CurrentTenant()
 
-			directories, err := tenant.GetDirectories(NewDefaultPageRequest(), NewEmptyFilter())
+			directories, err := tenant.GetDirectories(MakeDirectoriesCriteria())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(directories.Href).NotTo(BeEmpty())
@@ -122,7 +122,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant directories by page", func() {
 			tenant, _ := CurrentTenant()
 
-			directories, err := tenant.GetDirectories(NewPageRequest(1, 0), NewEmptyFilter())
+			directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().Limit(1))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(directories.Href).NotTo(BeEmpty())
@@ -134,9 +134,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant directories by page and filter", func() {
 			tenant, _ := CurrentTenant()
 
-			f := NewDefaultFilter("Stormpath Administrators", "", "")
-
-			directories, err := tenant.GetDirectories(NewDefaultPageRequest(), f)
+			directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().NameEq("Stormpath Administrators"))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(directories.Href).NotTo(BeEmpty())
@@ -149,7 +147,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant applications", func() {
 			tenant, _ := CurrentTenant()
 
-			apps, err := tenant.GetApplications(NewDefaultPageRequest(), NewEmptyFilter())
+			apps, err := tenant.GetApplications(MakeApplicationCriteria())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(apps.Href).NotTo(BeEmpty())
@@ -161,7 +159,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant applications by page", func() {
 			tenant, _ := CurrentTenant()
 
-			apps, err := tenant.GetApplications(NewPageRequest(1, 0), NewEmptyFilter())
+			apps, err := tenant.GetApplications(MakeApplicationCriteria().Offset(0).Limit(1))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(apps.Href).NotTo(BeEmpty())
@@ -173,9 +171,7 @@ var _ = Describe("Tenant", func() {
 		It("should retrive all the tenant applications by page and filter", func() {
 			tenant, _ := CurrentTenant()
 
-			f := NewDefaultFilter("stormpath", "", "")
-
-			apps, err := tenant.GetApplications(NewDefaultPageRequest(), f)
+			apps, err := tenant.GetApplications(MakeApplicationCriteria().NameEq("stormpath"))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(apps.Href).NotTo(BeEmpty())

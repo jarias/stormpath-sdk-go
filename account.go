@@ -1,7 +1,5 @@
 package stormpath
 
-import "net/url"
-
 //Account represents an Stormpath account object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accounts
@@ -60,6 +58,18 @@ func NewAccount(username, password, email, givenName, surname string) *Account {
 	return &Account{Username: username, Password: password, Email: email, GivenName: givenName, Surname: surname}
 }
 
+func GetAccount(href string, criteria Criteria) (*Account, error) {
+	account := &Account{}
+
+	err := client.get(
+		buildAbsoluteURL(href, criteria.ToQueryString()),
+		emptyPayload(),
+		account,
+	)
+
+	return account, err
+}
+
 //AddToGroup adds the given account to a given group and returns the respective GroupMembership
 func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 	groupMembership := NewGroupMembership(account.Href, group.Href)
@@ -72,7 +82,9 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 //RemoveFromGroup removes the given account from the given group by searching the account groupmemberships,
 //and deleting the corresponding one
 func (account *Account) RemoveFromGroup(group *Group) error {
-	groupMemberships, err := account.GetGroupMemberships(NewDefaultPageRequest())
+	groupMemberships, err := account.GetGroupMemberships(
+		MakeGroupMemershipCriteria().Offset(0).Limit(25),
+	)
 
 	if err != nil {
 		return err
@@ -84,7 +96,9 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 				return gm.Delete()
 			}
 		}
-		groupMemberships, err = account.GetGroupMemberships(NewPageRequest(25, i*25))
+		groupMemberships, err = account.GetGroupMemberships(
+			MakeGroupMemershipCriteria().Offset(i * 25).Limit(25),
+		)
 		if err != nil {
 			return err
 		}
@@ -94,13 +108,13 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 }
 
 //GetGroupMemberships returns a paged result of the group memeberships of the given account
-func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMemberships, error) {
+func (account *Account) GetGroupMemberships(criteria Criteria) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
 	err := client.get(
 		buildAbsoluteURL(
 			account.GroupMemberships.Href,
-			requestParams(pageRequest, NewEmptyFilter(), url.Values{}),
+			criteria.ToQueryString(),
 		),
 		emptyPayload(),
 		groupMemberships,

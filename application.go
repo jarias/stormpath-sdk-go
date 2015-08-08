@@ -45,11 +45,23 @@ func NewApplication(name string) *Application {
 	return &Application{Name: name}
 }
 
+func GetApplication(href string, criteria Criteria) (*Application, error) {
+	application := &Application{}
+
+	err := client.get(
+		buildAbsoluteURL(href, criteria.ToQueryString()),
+		emptyPayload(),
+		application,
+	)
+
+	return application, err
+}
+
 //Purge deletes all the account stores before deleting the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#delete-an-application
 func (app *Application) Purge() error {
-	accountStoreMappings, err := app.GetAccountStoreMappings(NewDefaultPageRequest(), NewEmptyFilter())
+	accountStoreMappings, err := app.GetAccountStoreMappings(MakeAccountStoreMappingCriteria().Offset(0).Limit(25))
 	if err != nil {
 		return err
 	}
@@ -63,11 +75,11 @@ func (app *Application) Purge() error {
 //GetAccountStoreMappings returns all the applications account store mappings
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-account-store-mappings
-func (app *Application) GetAccountStoreMappings(pageRequest url.Values, filter url.Values) (*AccountStoreMappings, error) {
+func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStoreMappings, error) {
 	accountStoreMappings := &AccountStoreMappings{}
 
 	err := client.get(
-		buildAbsoluteURL(app.AccountStoreMappings.Href, requestParams(pageRequest, filter, url.Values{})),
+		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.ToQueryString()),
 		emptyPayload(),
 		accountStoreMappings,
 	)
@@ -79,7 +91,12 @@ func (app *Application) GetAccountStoreMappings(pageRequest url.Values, filter u
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-accounts
 func (app *Application) RegisterAccount(account *Account) error {
-	return client.post(app.Accounts.Href, account, account)
+	err := client.post(app.Accounts.Href, account, account)
+	if err == nil {
+		//Password should be cleanup so we don't keep an unhash password in memory
+		account.Password = ""
+	}
+	return err
 }
 
 //RegisterSocialAccount registers a new account into the application using an external provider Google, Facebook
@@ -170,11 +187,11 @@ func (app *Application) CreateGroup(group *Group) error {
 //GetGroups returns all the application groups
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-groups
-func (app *Application) GetGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
+func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 	groups := &Groups{}
 
 	err := client.get(
-		buildAbsoluteURL(app.Groups.Href, requestParams(pageRequest, filter, url.Values{})),
+		buildAbsoluteURL(app.Groups.Href, criteria.ToQueryString()),
 		emptyPayload(),
 		groups,
 	)
@@ -245,9 +262,7 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	}
 
 	if token.Claims["sub"] != nil {
-		account := &Account{}
-		account.Href = token.Claims["sub"].(string)
-		err := account.Refresh()
+		account, err := GetAccount(token.Claims["sub"].(string), MakeAccountCriteria())
 		if err != nil {
 			return nil, err
 		}

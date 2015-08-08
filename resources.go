@@ -1,7 +1,5 @@
 package stormpath
 
-import "net/url"
-
 //collectionResource represent the basic attributes of collection of resources (Application, Group, Account, etc.)
 type collectionResource struct {
 	Href       string `json:"href,omitempty"`
@@ -49,11 +47,11 @@ type accountStoreResource struct {
 //GetAccounts returns all the accounts of the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-accounts
-func (r *accountStoreResource) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
+func (r *accountStoreResource) GetAccounts(criteria Criteria) (*Accounts, error) {
 	accounts := &Accounts{}
 
 	err := client.get(
-		buildAbsoluteURL(r.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
+		buildAbsoluteURL(r.Accounts.Href, criteria.ToQueryString()),
 		emptyPayload(),
 		accounts,
 	)

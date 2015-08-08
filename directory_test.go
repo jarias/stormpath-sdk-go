@@ -35,7 +35,7 @@ var _ = Describe("Directory", func() {
 			directory := newTestDirectory()
 			tenant.CreateDirectory(directory)
 
-			groups, err := directory.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
+			groups, err := directory.GetGroups(MakeGroupCriteria())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(groups.Href).NotTo(BeEmpty())
@@ -51,7 +51,7 @@ var _ = Describe("Directory", func() {
 			directory := newTestDirectory()
 			tenant.CreateDirectory(directory)
 
-			accounts, err := directory.GetAccounts(NewDefaultPageRequest(), NewEmptyFilter())
+			accounts, err := directory.GetAccounts(MakeAccountCriteria())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accounts.Href).NotTo(BeEmpty())

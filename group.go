@@ -1,7 +1,5 @@
 package stormpath
 
-import "net/url"
-
 //Group represents a Stormpath Group
 //
 //See: http://docs.stormpath.com/rest/product-guide/#groups
@@ -25,11 +23,23 @@ func NewGroup(name string) *Group {
 	return &Group{Name: name}
 }
 
-func (group *Group) GetGroupMemberships(pageRequest url.Values, filter url.Values) (*GroupMemberships, error) {
+func GetGroup(href string, criteria Criteria) (*Group, error) {
+	group := &Group{}
+
+	err := client.get(
+		buildAbsoluteURL(href, criteria.ToQueryString()),
+		emptyPayload(),
+		group,
+	)
+
+	return group, err
+}
+
+func (group *Group) GetGroupMemberships(criteria Criteria) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
 	err := client.get(
-		buildAbsoluteURL(group.Href, "accountMemberships", requestParams(pageRequest, filter, url.Values{})),
+		buildAbsoluteURL(group.Href, "accountMemberships", criteria.ToQueryString()),
 		emptyPayload(),
 		groupMemberships,
 	)

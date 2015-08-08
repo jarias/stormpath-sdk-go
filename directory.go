@@ -1,7 +1,5 @@
 package stormpath
 
-import "net/url"
-
 //Directory represents a Stormpath directory object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#directories
@@ -25,12 +23,24 @@ func NewDirectory(name string) *Directory {
 	return &Directory{Name: name}
 }
 
+func GetDirectory(href string, criteria Criteria) (*Directory, error) {
+	directory := &Directory{}
+
+	err := client.get(
+		buildAbsoluteURL(href, criteria.ToQueryString()),
+		emptyPayload(),
+		directory,
+	)
+
+	return directory, err
+}
+
 //GetGroups returns all the groups from a directory
-func (dir *Directory) GetGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
+func (dir *Directory) GetGroups(criteria Criteria) (*Groups, error) {
 	groups := &Groups{}
 
 	err := client.get(
-		buildAbsoluteURL(dir.Groups.Href, requestParams(pageRequest, filter, url.Values{})),
+		buildAbsoluteURL(dir.Groups.Href, criteria.ToQueryString()),
 		emptyPayload(),
 		groups,
 	)

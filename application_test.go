@@ -76,7 +76,7 @@ var _ = Describe("Application", func() {
 				group := newTestGroup()
 				app.CreateGroup(group)
 
-				groups, err := app.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
+				groups, err := app.GetGroups(MakeGroupCriteria())
 
 				Expect(err).NotTo(HaveOccurred())
 

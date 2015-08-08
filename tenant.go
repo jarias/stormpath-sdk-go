@@ -34,7 +34,7 @@ func (tenant *Tenant) CreateApplication(app *Application) error {
 	var extraParams = url.Values{}
 	extraParams.Add("createDirectory", "true")
 
-	return client.post(buildRelativeURL("applications", requestParams(nil, nil, extraParams)), app, app)
+	return client.post(buildRelativeURL("applications", requestParams(extraParams)), app, app)
 }
 
 //CreateDirectory creates a new directory for the given tenant
@@ -47,10 +47,10 @@ func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 //GetApplications returns all the applications for the given tenant
 //
 //See: http://docs.stormpath.com/rest/product-guide/#tenant-applications
-func (tenant *Tenant) GetApplications(pageRequest url.Values, filter url.Values) (*Applications, error) {
+func (tenant *Tenant) GetApplications(criteria Criteria) (*Applications, error) {
 	apps := &Applications{}
 
-	err := client.get(buildAbsoluteURL(tenant.Applications.Href, requestParams(pageRequest, filter, url.Values{})), emptyPayload(), apps)
+	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.ToQueryString()), emptyPayload(), apps)
 
 	return apps, err
 }
@@ -58,10 +58,10 @@ func (tenant *Tenant) GetApplications(pageRequest url.Values, filter url.Values)
 //GetDirectories returns all the directories for the given tenant
 //
 //See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
-func (tenant *Tenant) GetDirectories(pageRequest url.Values, filter url.Values) (*Directories, error) {
+func (tenant *Tenant) GetDirectories(criteria Criteria) (*Directories, error) {
 	directories := &Directories{}
 
-	err := client.get(buildAbsoluteURL(tenant.Directories.Href, requestParams(pageRequest, filter, url.Values{})), emptyPayload(), directories)
+	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.ToQueryString()), emptyPayload(), directories)
 
 	return directories, err
 }

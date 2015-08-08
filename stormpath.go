@@ -111,12 +111,36 @@ func (client *Client) newRequest(method string, urlStr string, body interface{})
 	return req
 }
 
-func requestParams(pageRequest url.Values, filter url.Values, extraParams url.Values) string {
+//buildExpandParam coverts a slice of expand attributes to a url.Values with
+//only one value "expand=attr1,attr2,etc"
+func buildExpandParam(expandAttributes []string) url.Values {
+	stringBuffer := bytes.NewBufferString("")
+
+	first := true
+	for _, expandAttribute := range expandAttributes {
+		if !first {
+			stringBuffer.WriteString(",")
+		}
+		stringBuffer.WriteString(expandAttribute)
+		first = false
+	}
+
+	values := url.Values{}
+	expandValue := stringBuffer.String()
+	//Should not include the expand query param if the value is empty
+	if expandValue != "" {
+		values.Add("expand", expandValue)
+	}
+
+	return values
+}
+
+func requestParams(values ...url.Values) string {
 	params := url.Values{}
 
-	params = appendParams(params, pageRequest)
-	params = appendParams(params, filter)
-	params = appendParams(params, extraParams)
+	for _, v := range values {
+		params = appendParams(params, v)
+	}
 
 	encodedParams := params.Encode()
 	if encodedParams != "" {
