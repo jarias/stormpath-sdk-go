@@ -2,7 +2,7 @@ Go SDK for the [Stormpath](http://stormpath.com/) API
 
 Develop:
 
-[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=develop)](https://travis-ci.org/jarias/stormpath-sdk-go) [![codecov.io](http://codecov.io/github/jarias/stormpath-sdk-go/coverage.svg?branch=master)](http://codecov.io/github/jarias/stormpath-sdk-go?branch=develop)
+[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=develop)](https://travis-ci.org/jarias/stormpath-sdk-go) [![codecov.io](http://codecov.io/github/jarias/stormpath-sdk-go/coverage.svg?branch=develop)](http://codecov.io/github/jarias/stormpath-sdk-go?branch=develop)
 
 Master:
 
