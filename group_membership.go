@@ -22,10 +22,6 @@ func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
 	}
 }
 
-func (groupmembership *GroupMembership) Delete() error {
-	return client.delete(groupmembership.Href, emptyPayload())
-}
-
 func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
 	account := &Account{}
 

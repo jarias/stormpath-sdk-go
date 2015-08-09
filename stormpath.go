@@ -33,48 +33,6 @@ type Client struct {
 	Cache       Cache
 }
 
-//collectionResource represent the basic attributes of collection of resources (Application, Group, Account, etc.)
-type collectionResource struct {
-	resource
-	Offset int `json:"offset"`
-	Limit  int `json:"limit"`
-}
-
-func (r collectionResource) IsCacheable() bool {
-	return false
-}
-
-//resource resprents the basic attributes of any resource (Application, Group, Account, etc.)
-type resource struct {
-	Href       string `json:"href,omitempty"`
-	CreatedAt  string `json:"createdAt,omitempty"`
-	ModifiedAt string `json:"modifiedAt,omitempty"`
-}
-
-func (r resource) IsCacheable() bool {
-	return true
-}
-
-type accountStoreResource struct {
-	customDataAwareResource
-	Accounts *Accounts `json:"accounts,omitempty"`
-}
-
-//GetAccounts returns all the accounts of the application
-//
-//See: http://docs.stormpath.com/rest/product-guide/#application-accounts
-func (r *accountStoreResource) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
-	accounts := &Accounts{}
-
-	err := client.get(
-		buildAbsoluteURL(r.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
-		emptyPayload(),
-		accounts,
-	)
-
-	return accounts, err
-}
-
 //Init initializes the underlying client that communicates with Stormpath
 func Init(credentials Credentials, cache Cache) {
 	tr := &http.Transport{

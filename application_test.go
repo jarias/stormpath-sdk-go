@@ -13,28 +13,6 @@ import (
 )
 
 var _ = Describe("Application", func() {
-	invalidApps := []*Application{
-		&Application{},
-		&Application{Name: string256},
-		&Application{Name: "name", Description: string4001},
-	}
-
-	Describe("Validate", func() {
-		It("should return true if the application is valid", func() {
-			ok, err := NewApplication("test").Validate()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ok).To(BeTrue())
-		})
-		It("should return false if application is invalid", func() {
-			for _, app := range invalidApps {
-				ok, err := app.Validate()
-
-				Expect(err).To(HaveOccurred())
-				Expect(ok).To(BeFalse())
-			}
-		})
-	})
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the name", func() {
 			application := NewApplication("name")
@@ -46,14 +24,7 @@ var _ = Describe("Application", func() {
 	})
 
 	Describe("Save", func() {
-		It("should not save if application is invalid", func() {
-			for _, app := range invalidApps {
-				err := app.Save()
-
-				Expect(err).To(HaveOccurred())
-			}
-		})
-		It("should update an existing application", func() {
+		It("should create a new application", func() {
 			app.Name = "new-name" + randomName()
 			err := app.Save()
 

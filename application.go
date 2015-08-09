@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/nu7hatch/gouuid"
 )
@@ -16,8 +15,8 @@ import (
 //See: http://docs.stormpath.com/rest/product-guide/#applications
 type Application struct {
 	accountStoreResource
-	Name                       string                `json:"name,omitempty" valid:"required,length(1|255)"`
-	Description                string                `json:"description,omitempty" valid:"length(0|4000)"`
+	Name                       string                `json:"name,omitempty"`
+	Description                string                `json:"description,omitempty"`
 	Status                     string                `json:"status,omitempty"`
 	Groups                     *Groups               `json:"groups,omitempty"`
 	Tenant                     *Tenant               `json:"tenant,omitempty"`
@@ -44,34 +43,6 @@ type IDSiteCallbackResult struct {
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
-}
-
-//Validate validates an application, returns true if valid and false + error if not
-func (app *Application) Validate() (bool, error) {
-	return govalidator.ValidateStruct(app)
-}
-
-//Refresh refreshes the application resource by doing a GET to the app href endpoint
-func (app *Application) Refresh() error {
-	return client.get(app.Href, emptyPayload(), app)
-}
-
-//Save saves the given application
-//
-//See: http://docs.stormpath.com/rest/product-guide/#create-an-application-aka-register-an-application-with-stormpath
-func (app *Application) Save() error {
-	ok, err := app.Validate()
-	if !ok && err != nil {
-		return err
-	}
-	return client.post(app.Href, app, app)
-}
-
-//Delete deletes the given applicaiton
-//
-//See: http://docs.stormpath.com/rest/product-guide/#delete-an-application
-func (app *Application) Delete() error {
-	return client.delete(app.Href, emptyPayload())
 }
 
 //Purge deletes all the account stores before deleting the application

@@ -1,23 +1,19 @@
 package stormpath
 
-import (
-	"github.com/asaskevich/govalidator"
-
-	"net/url"
-)
+import "net/url"
 
 //Account represents an Stormpath account object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accounts
 type Account struct {
 	customDataAwareResource
-	Username               string            `json:"username" valid:"required"`
-	Email                  string            `json:"email" valid:"email,required"`
+	Username               string            `json:"username"`
+	Email                  string            `json:"email"`
 	Password               string            `json:"password"`
 	FullName               string            `json:"fullName,omitempty"`
-	GivenName              string            `json:"givenName" valid:"required"`
+	GivenName              string            `json:"givenName"`
 	MiddleName             string            `json:"middleName,omitempty"`
-	Surname                string            `json:"surname" valid:"required"`
+	Surname                string            `json:"surname"`
 	Status                 string            `json:"status,omitempty"`
 	Groups                 *Groups           `json:"groups,omitempty"`
 	GroupMemberships       *GroupMemberships `json:"groupMemberships,omitempty"`
@@ -62,31 +58,6 @@ type ProviderData struct {
 //NewAccount returns a pointer to an Account with the minimum data required
 func NewAccount(username, password, email, givenName, surname string) *Account {
 	return &Account{Username: username, Password: password, Email: email, GivenName: givenName, Surname: surname}
-}
-
-//Validate validates an account, returns true if valid and false + error if not
-func (account *Account) Validate() (bool, error) {
-	return govalidator.ValidateStruct(account)
-}
-
-//Refresh refreshes the account resource by doing a GET to the account href endpoint
-func (account *Account) Refresh() error {
-	return client.get(account.Href, emptyPayload(), account)
-}
-
-//Save updates the given account, by doing a POST to the account Href, if the account is a new account
-//it should be created via Application.RegisterAccount
-func (account *Account) Save() error {
-	ok, err := account.Validate()
-	if !ok && err != nil {
-		return err
-	}
-	return client.post(account.Href, account, account)
-}
-
-//Delete deletes the given account, it wont modify the calling account
-func (account *Account) Delete() error {
-	return client.delete(account.Href, emptyPayload())
 }
 
 //AddToGroup adds the given account to a given group and returns the respective GroupMembership

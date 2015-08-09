@@ -9,28 +9,6 @@ import (
 )
 
 var _ = Describe("Directory", func() {
-	Describe("Validate", func() {
-		It("should return true if the directory is valid", func() {
-			ok, err := NewDirectory("test").Validate()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ok).To(BeTrue())
-		})
-		It("should return false if directory is invalid", func() {
-			invalidDirs := []*Directory{
-				&Directory{},
-				&Directory{Name: string256},
-				&Directory{Name: "name", Description: string1001},
-			}
-
-			for _, dir := range invalidDirs {
-				ok, err := dir.Validate()
-
-				Expect(err).To(HaveOccurred())
-				Expect(ok).To(BeFalse())
-			}
-		})
-	})
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the directory name", func() {
 			directory := NewDirectory("name")
