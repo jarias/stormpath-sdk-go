@@ -10,14 +10,12 @@ import (
 //
 //See: http://docs.stormpath.com/rest/product-guide/#directories
 type Directory struct {
-	customDataAwareResource
-	Name        string      `json:"name,omitempty" valid:"required,length(1|255)"`
-	Description string      `json:"description,omitempty" valid:"length(0|1000)"`
-	Status      string      `json:"status,omitempty"`
-	CustomData  *CustomData `json:"customData,omitempty"`
-	Accounts    *Accounts   `json:"accounts,omitempty"`
-	Groups      *Groups     `json:"groups,omitempty"`
-	Tenant      *Tenant     `json:"tenant,omitempty"`
+	accountStoreResource
+	Name        string  `json:"name,omitempty" valid:"required,length(1|255)"`
+	Description string  `json:"description,omitempty" valid:"length(0|1000)"`
+	Status      string  `json:"status,omitempty"`
+	Groups      *Groups `json:"groups,omitempty"`
+	Tenant      *Tenant `json:"tenant,omitempty"`
 }
 
 //Directories represnets a paged result of directories
@@ -66,19 +64,6 @@ func (dir *Directory) GetGroups(pageRequest url.Values, filter url.Values) (*Gro
 	)
 
 	return groups, err
-}
-
-//GetAccounts returns all the accounts from the directory
-func (dir *Directory) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
-	accounts := &Accounts{}
-
-	err := client.get(
-		buildAbsoluteURL(dir.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
-		emptyPayload(),
-		accounts,
-	)
-
-	return accounts, err
 }
 
 //CreateGroup creates a new group in the directory

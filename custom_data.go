@@ -2,6 +2,7 @@ package stormpath
 
 type customDataAwareResource struct {
 	resource
+	CustomData *CustomData `json:"customData,omitempty"`
 }
 
 //CustomData represents Stormpath's custom data resouce

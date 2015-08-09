@@ -19,7 +19,6 @@ type Account struct {
 	MiddleName             string            `json:"middleName,omitempty"`
 	Surname                string            `json:"surname" valid:"required"`
 	Status                 string            `json:"status,omitempty"`
-	CustomData             *CustomData       `json:"customData,omitempty"`
 	Groups                 *Groups           `json:"groups,omitempty"`
 	GroupMemberships       *GroupMemberships `json:"groupMemberships,omitempty"`
 	Directory              *Directory        `json:"directory,omitempty"`

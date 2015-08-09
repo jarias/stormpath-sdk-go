@@ -10,14 +10,12 @@ import (
 //
 //See: http://docs.stormpath.com/rest/product-guide/#groups
 type Group struct {
-	customDataAwareResource
-	Name        string      `json:"name,omitempty" valid:"required,length(1|255)"`
-	Description string      `json:"description,omitempty" valid:"length(0|1000)"`
-	Status      string      `json:"status,omitempty"`
-	CustomData  *CustomData `json:"customData,omitempty"`
-	Accounts    *Accounts   `json:"accounts,omitempty"`
-	Tenant      *Tenant     `json:"tenant,omitempty"`
-	Directory   *Directory  `json:"directory,omitempty"`
+	accountStoreResource
+	Name        string     `json:"name,omitempty" valid:"required,length(1|255)"`
+	Description string     `json:"description,omitempty" valid:"length(0|1000)"`
+	Status      string     `json:"status,omitempty"`
+	Tenant      *Tenant    `json:"tenant,omitempty"`
+	Directory   *Directory `json:"directory,omitempty"`
 }
 
 //Groups represent a paged result of groups
@@ -51,18 +49,6 @@ func (group *Group) Save() error {
 
 func (group *Group) Delete() error {
 	return client.delete(group.Href, emptyPayload())
-}
-
-func (group *Group) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
-	accounts := &Accounts{}
-
-	err := client.get(
-		buildAbsoluteURL(group.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
-		emptyPayload(),
-		accounts,
-	)
-
-	return accounts, err
 }
 
 func (group *Group) GetGroupMemberships(pageRequest url.Values, filter url.Values) (*GroupMemberships, error) {

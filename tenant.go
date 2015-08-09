@@ -9,7 +9,6 @@ type Tenant struct {
 	customDataAwareResource
 	Name         string       `json:"name"`
 	Key          string       `json:"key"`
-	CustomData   CustomData   `json:"customData"`
 	Applications Applications `json:"applications"`
 	Directories  Directories  `json:"directories"`
 }

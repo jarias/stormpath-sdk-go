@@ -15,12 +15,10 @@ import (
 //
 //See: http://docs.stormpath.com/rest/product-guide/#applications
 type Application struct {
-	customDataAwareResource
+	accountStoreResource
 	Name                       string                `json:"name,omitempty" valid:"required,length(1|255)"`
 	Description                string                `json:"description,omitempty" valid:"length(0|4000)"`
 	Status                     string                `json:"status,omitempty"`
-	CustomData                 *CustomData           `json:"customData,omitempty"`
-	Accounts                   *Accounts             `json:"accounts,omitempty"`
 	Groups                     *Groups               `json:"groups,omitempty"`
 	Tenant                     *Tenant               `json:"tenant,omitempty"`
 	PasswordResetTokens        *resource             `json:"passwordResetTokens,omitempty"`
@@ -104,21 +102,6 @@ func (app *Application) GetAccountStoreMappings(pageRequest url.Values, filter u
 	)
 
 	return accountStoreMappings, err
-}
-
-//GetAccounts returns all the accounts of the application
-//
-//See: http://docs.stormpath.com/rest/product-guide/#application-accounts
-func (app *Application) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
-	accounts := &Accounts{}
-
-	err := client.get(
-		buildAbsoluteURL(app.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
-		emptyPayload(),
-		accounts,
-	)
-
-	return accounts, err
 }
 
 //RegisterAccount registers a new account into the application
