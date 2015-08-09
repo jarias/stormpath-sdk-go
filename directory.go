@@ -1,14 +1,18 @@
 package stormpath
 
-import "net/url"
+import (
+	"net/url"
+
+	"github.com/asaskevich/govalidator"
+)
 
 //Directory represents a Stormpath directory object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#directories
 type Directory struct {
 	resource
-	Name        string      `json:"name"`
-	Description string      `json:"description,omitempty"`
+	Name        string      `json:"name,omitempty" valid:"required,length(1|255)"`
+	Description string      `json:"description,omitempty" valid:"length(0|1000)"`
 	Status      string      `json:"status,omitempty"`
 	CustomData  *CustomData `json:"customData,omitempty"`
 	Accounts    *Accounts   `json:"accounts,omitempty"`
@@ -27,8 +31,22 @@ func NewDirectory(name string) *Directory {
 	return &Directory{Name: name}
 }
 
+//Validate validates a directory, returns true if valid and false + error if not
+func (dir *Directory) Validate() (bool, error) {
+	return govalidator.ValidateStruct(dir)
+}
+
+//Refresh refreshes the directory resource by doing a GET to the directory href endpoint
+func (dir *Directory) Refresh() error {
+	return client.get(dir.Href, emptyPayload(), dir)
+}
+
 //Save saves the directory in Stormpath
 func (dir *Directory) Save() error {
+	ok, err := dir.Validate()
+	if !ok && err != nil {
+		return err
+	}
 	return client.post(dir.Href, dir, dir)
 }
 

@@ -13,8 +13,8 @@ type GroupMemberships struct {
 
 func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
 	return &GroupMembership{
-		Account: *MakeAccount(accountHref),
-		Group:   *MakeGroup(groupHref),
+		Account: Account{resource: resource{Href: accountHref}},
+		Group:   Group{resource: resource{Href: groupHref}},
 	}
 }
 
