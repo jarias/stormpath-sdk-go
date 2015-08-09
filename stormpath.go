@@ -55,9 +55,6 @@ func (r resource) IsCacheable() bool {
 	return true
 }
 
-//CustomData represents Stormpath's custom data resouce
-type CustomData map[string]interface{}
-
 //Init initializes the underlying client that communicates with Stormpath
 func Init(credentials Credentials, cache Cache) {
 	tr := &http.Transport{

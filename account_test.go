@@ -124,9 +124,7 @@ var _ = Describe("Account", func() {
 
 	Describe("UpdateCustomData", func() {
 		It("should set an account custom data", func() {
-			err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
-
-			customData, _ := account.GetCustomData()
+			customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(customData["custom"]).To(Equal("data"))
@@ -134,8 +132,7 @@ var _ = Describe("Account", func() {
 
 		It("should update an account custom data", func() {
 			account.UpdateCustomData(map[string]interface{}{"custom": "data"})
-			err := account.UpdateCustomData(map[string]interface{}{"custom": "nodata"})
-			customData, _ := account.GetCustomData()
+			customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "nodata"})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(customData["custom"]).To(Equal("nodata"))

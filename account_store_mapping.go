@@ -22,8 +22,10 @@ type AccountStoreMappings struct {
 
 //NewAccountStoreMapping creates a new account store mappings
 func NewAccountStoreMapping(applicationHref string, accountStoreHref string) *AccountStoreMapping {
+	app := Application{}
+	app.Href = applicationHref
 	return &AccountStoreMapping{
-		Application:  Application{resource: resource{Href: applicationHref}},
+		Application:  app,
 		AccountStore: resource{Href: accountStoreHref},
 	}
 }

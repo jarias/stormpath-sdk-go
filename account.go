@@ -10,7 +10,7 @@ import (
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accounts
 type Account struct {
-	resource
+	customDataAwareResource
 	Username               string            `json:"username" valid:"required"`
 	Email                  string            `json:"email" valid:"email,required"`
 	Password               string            `json:"password"`
@@ -137,22 +137,6 @@ func (account *Account) GetGroupMemberships(pageRequest url.Values) (*GroupMembe
 	)
 
 	return groupMemberships, err
-}
-
-//GetCustomData returns the given account custom data as a map
-func (account *Account) GetCustomData() (map[string]interface{}, error) {
-	customData := make(map[string]interface{})
-
-	err := client.get(buildAbsoluteURL(account.Href, "customData"), emptyPayload(), &customData)
-
-	return customData, err
-}
-
-//UpdateCustomData sets or updates the given account custom data
-func (account *Account) UpdateCustomData(customData map[string]interface{}) error {
-	customData = cleanCustomData(customData)
-
-	return client.post(buildAbsoluteURL(account.Href, "customData"), customData, &customData)
 }
 
 //VerifyEmailToken verifies an email verification token associated with an account

@@ -10,7 +10,7 @@ import (
 //
 //See: http://docs.stormpath.com/rest/product-guide/#directories
 type Directory struct {
-	resource
+	customDataAwareResource
 	Name        string      `json:"name,omitempty" valid:"required,length(1|255)"`
 	Description string      `json:"description,omitempty" valid:"length(0|1000)"`
 	Status      string      `json:"status,omitempty"`
@@ -102,33 +102,4 @@ func (dir *Directory) RegisterSocialAccount(socialAccount *SocialAccount) (*Acco
 	err := client.post(dir.Accounts.Href, socialAccount, &account)
 
 	return &account, err
-}
-
-//UpdateCustomData updates the directory custom data and returns that updated custom data as a map[string]interface
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (dir *Directory) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
-	customData = cleanCustomData(customData)
-
-	err := client.post(buildAbsoluteURL(dir.Href, "customData"), customData, &customData)
-
-	return customData, err
-}
-
-//DeleteCustomData deletes all the directory custom data
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (dir *Directory) DeleteCustomData() error {
-	return client.delete(buildAbsoluteURL(dir.Href, "customData"), emptyPayload())
-}
-
-//GetCustomData gets the directory custom data map
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (dir *Directory) GetCustomData() (map[string]interface{}, error) {
-	customData := map[string]interface{}{}
-
-	err := client.get(buildAbsoluteURL(dir.Href, "customData"), emptyPayload(), &customData)
-
-	return customData, err
 }

@@ -6,7 +6,7 @@ import (
 
 //Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
 type Tenant struct {
-	resource
+	customDataAwareResource
 	Name         string       `json:"name"`
 	Key          string       `json:"key"`
 	CustomData   CustomData   `json:"customData"`
@@ -65,33 +65,4 @@ func (tenant *Tenant) GetDirectories(pageRequest url.Values, filter url.Values) 
 	err := client.get(buildAbsoluteURL(tenant.Directories.Href, requestParams(pageRequest, filter, url.Values{})), emptyPayload(), directories)
 
 	return directories, err
-}
-
-//UpdateCustomData updates the tenant custom data and returns that updated custom data as a map[string]interface
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (tenant *Tenant) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
-	customData = cleanCustomData(customData)
-
-	err := client.post(buildAbsoluteURL(tenant.Href, "customData"), customData, &customData)
-
-	return customData, err
-}
-
-//DeleteCustomData deletes all the tenants custom data
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (tenant *Tenant) DeleteCustomData() error {
-	return client.delete(buildAbsoluteURL(tenant.Href, "customData"), emptyPayload())
-}
-
-//GetCustomData gets the tenant custom data map
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (tenant *Tenant) GetCustomData() (map[string]interface{}, error) {
-	customData := map[string]interface{}{}
-
-	err := client.get(buildAbsoluteURL(tenant.Href, "customData"), emptyPayload(), &customData)
-
-	return customData, err
 }
