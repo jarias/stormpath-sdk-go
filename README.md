@@ -27,7 +27,7 @@ stormpath.Init(credentials, nil)
 tenant, _ := stormpath.CurrentTenant()
 
 //Get the tenat applications
-apps, _ := tenant.GetApplications(stormpath.NewDefaultPageRequest(), stormpath.NewEmptyFilter())
+apps, _ := tenant.GetApplications(MakeApplicationCriteria().NameEq("test app"))
 
 //Get the first application
 app := apps.Items[0]
@@ -35,8 +35,6 @@ app := apps.Items[0]
 //Authenticate a user against the app
 account, _ := app.AuthenticateAccount("username", "password")
 
-//Print the account information
-account, _ := account.Load()
 fmt.Println(account)
 ```
 
