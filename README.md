@@ -58,7 +58,7 @@ Please make sure you add tests ;)
 
 #License
 
-Copyright 2014 Julio Arias
+Copyright 2014, 2015 Julio Arias
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
