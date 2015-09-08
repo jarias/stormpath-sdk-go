@@ -24,6 +24,8 @@ type Application struct {
 	AccountStoreMappings       *AccountStoreMappings `json:"accountStoreMappings,omitempty"`
 	DefaultAccountStoreMapping *AccountStoreMapping  `json:"defaultAccountStoreMapping,omitempty"`
 	DefaultGroupStoreMapping   *AccountStoreMapping  `json:"defaultGroupStoreMapping,omitempty"`
+	CreatedAt                  Date                  `json:"createdAt,omitempty"`
+	ModifiedAt                 Date                  `json:"modifiedAt,omitempty"`
 }
 
 //Applications represents a paged result or applications

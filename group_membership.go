@@ -2,8 +2,10 @@ package stormpath
 
 type GroupMembership struct {
 	resource
-	Account Account `json:"account"`
-	Group   Group   `json:"group"`
+	Account    Account `json:"account"`
+	Group      Group   `json:"group"`
+	CreatedAt  Date    `json:"createdAt,omitempty"`
+	ModifiedAt Date    `json:"modifiedAt,omitempty"`
 }
 
 type GroupMemberships struct {

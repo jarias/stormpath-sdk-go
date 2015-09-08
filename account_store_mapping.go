@@ -10,6 +10,8 @@ type AccountStoreMapping struct {
 	IsDefaultGroupStore   *bool       `json:"isDefaultGroupStore,omitempty"`
 	Application           Application `json:"application"`
 	AccountStore          resource    `json:"accountStore"`
+	CreatedAt             Date        `json:"createdAt,omitempty"`
+	ModifiedAt            Date        `json:"modifiedAt,omitempty"`
 }
 
 //AccountStoreMappings represents a pages result of account store mappings

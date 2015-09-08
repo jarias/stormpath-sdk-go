@@ -10,6 +10,8 @@ type Group struct {
 	Status      string     `json:"status,omitempty"`
 	Tenant      *Tenant    `json:"tenant,omitempty"`
 	Directory   *Directory `json:"directory,omitempty"`
+	CreatedAt   Date       `json:"createdAt,omitempty"`
+	ModifiedAt  Date       `json:"modifiedAt,omitempty"`
 }
 
 //Groups represent a paged result of groups
