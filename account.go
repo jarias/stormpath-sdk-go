@@ -18,6 +18,8 @@ type Account struct {
 	Directory              *Directory        `json:"directory,omitempty"`
 	Tenant                 *Tenant           `json:"tenant,omitempty"`
 	EmailVerificationToken *resource         `json:"emailVerificationToken,omitempty"`
+	CreatedAt              Date              `json:"createdAt,omitempty"`
+	ModifiedAt             Date              `json:"modifiedAt,omitempty"`
 }
 
 //Accounts represents a paged result of Account objects
