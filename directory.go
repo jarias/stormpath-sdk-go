@@ -10,6 +10,8 @@ type Directory struct {
 	Status      string  `json:"status,omitempty"`
 	Groups      *Groups `json:"groups,omitempty"`
 	Tenant      *Tenant `json:"tenant,omitempty"`
+	CreatedAt   Date    `json:"createdAt,omitempty"`
+	ModifiedAt  Date    `json:"modifiedAt,omitempty"`
 }
 
 //Directories represnets a paged result of directories
