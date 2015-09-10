@@ -1,5 +1,9 @@
 package stormpath
 
+import (
+	"time"
+)
+
 //Group represents a Stormpath Group
 //
 //See: http://docs.stormpath.com/rest/product-guide/#groups
@@ -10,6 +14,8 @@ type Group struct {
 	Status      string     `json:"status,omitempty"`
 	Tenant      *Tenant    `json:"tenant,omitempty"`
 	Directory   *Directory `json:"directory,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt,omitempty"`
+	ModifiedAt  time.Time  `json:"modifiedAt,omitempty"`
 }
 
 //Groups represent a paged result of groups

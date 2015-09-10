@@ -2,6 +2,7 @@ package stormpath
 
 import (
 	"net/url"
+	"time"
 )
 
 //Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
@@ -11,6 +12,8 @@ type Tenant struct {
 	Key          string       `json:"key"`
 	Applications Applications `json:"applications"`
 	Directories  Directories  `json:"directories"`
+	CreatedAt    time.Time    `json:"createdAt,omitempty"`
+	ModifiedAt   time.Time    `json:"modifiedAt,omitempty"`
 }
 
 //CurrentTenant returns the current tenant see http://docs.stormpath.com/rest/product-guide/#retrieve-the-current-tenant
