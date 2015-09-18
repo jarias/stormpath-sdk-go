@@ -1,9 +1,15 @@
 package stormpath
 
+import (
+	"time"
+)
+
 type GroupMembership struct {
 	resource
-	Account Account `json:"account"`
-	Group   Group   `json:"group"`
+	Account    Account   `json:"account"`
+	Group      Group     `json:"group"`
+	CreatedAt  time.Time `json:"createdAt,omitempty"`
+	ModifiedAt time.Time `json:"modifiedAt,omitempty"`
 }
 
 type GroupMemberships struct {
