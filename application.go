@@ -57,6 +57,16 @@ func GetApplication(href string, criteria Criteria) (*Application, error) {
 	return application, err
 }
 
+//Refresh refreshes the resource by doing a GET to the resource href endpoint
+func (app *Application) Refresh() error {
+	return client.get(app.Href, emptyPayload(), app)
+}
+
+//Update updates the given resource, by doing a POST to the resource Href
+func (app *Application) Update() error {
+	return client.post(app.Href, app, app)
+}
+
 //Purge deletes all the account stores before deleting the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#delete-an-application

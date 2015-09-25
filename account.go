@@ -7,7 +7,7 @@ type Account struct {
 	customDataAwareResource
 	Username               string            `json:"username"`
 	Email                  string            `json:"email"`
-	Password               string            `json:"password"`
+	Password               string            `json:"password,omitempty"`
 	FullName               string            `json:"fullName,omitempty"`
 	GivenName              string            `json:"givenName"`
 	MiddleName             string            `json:"middleName,omitempty"`
@@ -68,6 +68,16 @@ func GetAccount(href string, criteria Criteria) (*Account, error) {
 	)
 
 	return account, err
+}
+
+//Refresh refreshes the resource by doing a GET to the resource href endpoint
+func (account *Account) Refresh() error {
+	return client.get(account.Href, emptyPayload(), account)
+}
+
+//Update updates the given resource, by doing a POST to the resource Href
+func (account *Account) Update() error {
+	return client.post(account.Href, account, account)
 }
 
 //AddToGroup adds the given account to a given group and returns the respective GroupMembership

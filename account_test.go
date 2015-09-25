@@ -41,15 +41,29 @@ var _ = Describe("Account", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.(Error).Status).To(Equal(404))
 		})
-		PIt("should return an account if the token is valid", func() {})
+		It("should return an account if the token is valid", func() {
+			directory := newTestDirectory()
+			tenant.CreateDirectory(directory)
+
+			policy, _ := directory.GetAccountCreationPolicy()
+			policy.VerificationEmailStatus = Enabled
+			policy.Update()
+
+			account := newTestAccount()
+			directory.RegisterAccount(account)
+			a, err := VerifyEmailToken(GetToken(account.EmailVerificationToken.Href))
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(a.Href).To(Equal(account.Href))
+		})
 	})
-	Describe("Save", func() {
+	Describe("Update", func() {
 		It("should update an existing account", func() {
 			account := newTestAccount()
 			app.RegisterAccount(account)
 
 			account.GivenName = "julio"
-			err := account.Save()
+			err := account.Update()
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(account.GivenName).To(Equal("julio"))

@@ -23,10 +23,10 @@ var _ = Describe("Application", func() {
 		})
 	})
 
-	Describe("Save", func() {
-		It("should create a new application", func() {
+	Describe("Update", func() {
+		It("should update an existing application", func() {
 			app.Name = "new-name" + randomName()
-			err := app.Save()
+			err := app.Update()
 
 			Expect(err).NotTo(HaveOccurred())
 		})

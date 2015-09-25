@@ -35,6 +35,16 @@ func GetGroup(href string, criteria Criteria) (*Group, error) {
 	return group, err
 }
 
+//Refresh refreshes the resource by doing a GET to the resource href endpoint
+func (group *Group) Refresh() error {
+	return client.get(group.Href, emptyPayload(), group)
+}
+
+//Update updates the given resource, by doing a POST to the resource Href
+func (group *Group) Update() error {
+	return client.post(group.Href, group, group)
+}
+
 func (group *Group) GetGroupMemberships(criteria Criteria) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 

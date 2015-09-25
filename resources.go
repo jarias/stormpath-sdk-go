@@ -29,16 +29,6 @@ func (r resource) IsCacheable() bool {
 	return true
 }
 
-//Refresh refreshes the resource by doing a GET to the resource href endpoint
-func (r *resource) Refresh() error {
-	return client.get(r.Href, emptyPayload(), r)
-}
-
-//Save updates the given resource, by doing a POST to the resource Href
-func (r *resource) Save() error {
-	return client.post(r.Href, r, r)
-}
-
 //Delete deletes the given account, it wont modify the calling account
 func (r *resource) Delete() error {
 	return client.delete(r.Href, emptyPayload())

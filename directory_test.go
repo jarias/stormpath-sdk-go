@@ -30,6 +30,21 @@ var _ = Describe("Directory", func() {
 		})
 	})
 
+	Describe("GetAccountCreationPolicy", func() {
+		It("should retrive the directory account creation policy", func() {
+			directory := newTestDirectory()
+			tenant.CreateDirectory(directory)
+
+			policy, err := directory.GetAccountCreationPolicy()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(policy).To(Equal(directory.AccountCreationPolicy))
+			Expect(policy.VerificationEmailStatus).To(Equal("DISABLED"))
+			Expect(policy.VerificationSuccessEmailStatus).To(Equal("DISABLED"))
+			Expect(policy.WelcomeEmailStatus).To(Equal("DISABLED"))
+		})
+	})
+
 	Describe("GetGroups", func() {
 		It("should retrive all directory groups", func() {
 			directory := newTestDirectory()

@@ -22,6 +22,11 @@ var BaseURL = "https://api.stormpath.com/v1/"
 //Version is the current SDK Version
 const version = "0.1.0-beta.11"
 
+const (
+	Enabled  = "ENABLED"
+	Disabled = "DISABLED"
+)
+
 var client *Client
 
 //Client is low level REST client for any Stormpath request,
