@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"runtime"
+	"strings"
 	"time"
 
 	uuid "github.com/nu7hatch/gouuid"
@@ -76,7 +77,7 @@ func buildRelativeURL(parts ...string) string {
 
 	for i, part := range parts {
 		buffer.WriteString(part)
-		if i+1 < len(parts) {
+		if !strings.HasSuffix(part, "/") && i+1 < len(parts) {
 			buffer.WriteString("/")
 		}
 	}
@@ -89,7 +90,7 @@ func buildAbsoluteURL(parts ...string) string {
 
 	for i, part := range parts {
 		buffer.WriteString(part)
-		if i+1 < len(parts) {
+		if !strings.HasSuffix(part, "/") && i+1 < len(parts) {
 			buffer.WriteString("/")
 		}
 	}

@@ -135,11 +135,11 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 //SendPasswordResetEmail sends a password reset email to the given user
 //
 //See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
-func (app *Application) SendPasswordResetEmail(username string) (*AccountPasswordResetToken, error) {
+func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
 	passwordResetPayload := make(map[string]string)
-	passwordResetPayload["email"] = username
+	passwordResetPayload["email"] = email
 
 	err := client.post(buildAbsoluteURL(app.Href, "passwordResetTokens"), passwordResetPayload, passwordResetToken)
 

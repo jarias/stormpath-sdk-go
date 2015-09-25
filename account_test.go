@@ -18,6 +18,31 @@ var _ = Describe("Account", func() {
 			Expect(string(jsonData)).To(Equal("{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}"))
 		})
 	})
+	Describe("GetAccount", func() {
+		It("should return an error if the account doesn't exists", func() {
+			_, err := GetAccount(BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
+		})
+		It("should return the account for the given href", func() {
+			newAccount := newTestAccount()
+			app.RegisterAccount(newAccount)
+
+			account, err := GetAccount(newAccount.Href, MakeAccountCriteria())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(account).To(Equal(newAccount))
+		})
+	})
+	Describe("VerifyEmailToken", func() {
+		It("should return error if the token doesn't exists", func() {
+			_, err := VerifyEmailToken("token")
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
+		})
+		PIt("should return an account if the token is valid", func() {})
+	})
 	Describe("Save", func() {
 		It("should update an existing account", func() {
 			account := newTestAccount()

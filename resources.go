@@ -1,6 +1,7 @@
 package stormpath
 
 import (
+	"strings"
 	"time"
 )
 
@@ -61,4 +62,8 @@ func (r *accountStoreResource) GetAccounts(criteria Criteria) (*Accounts, error)
 	)
 
 	return accounts, err
+}
+
+func GetToken(href string) string {
+	return href[strings.LastIndex(href, "/")+1:]
 }
