@@ -28,6 +28,8 @@ var _ = Describe("Account", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(account.GivenName).To(Equal("julio"))
+			Expect(account.CreatedAt).NotTo(BeNil())
+			Expect(account.ModifiedAt).NotTo(BeNil())
 		})
 	})
 

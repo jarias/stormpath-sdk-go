@@ -1,12 +1,16 @@
 package stormpath
 
+import (
+	"time"
+)
+
 //collectionResource represent the basic attributes of collection of resources (Application, Group, Account, etc.)
 type collectionResource struct {
-	Href       string `json:"href,omitempty"`
-	CreatedAt  string `json:"createdAt,omitempty"`
-	ModifiedAt string `json:"modifiedAt,omitempty"`
-	Offset     int    `json:"offset"`
-	Limit      int    `json:"limit"`
+	Href       string     `json:"href,omitempty"`
+	CreatedAt  *time.Time `json:"createdAt,omitempty"`
+	ModifiedAt *time.Time `json:"modifiedAt,omitempty"`
+	Offset     int        `json:"offset"`
+	Limit      int        `json:"limit"`
 }
 
 func (r collectionResource) IsCacheable() bool {
@@ -15,9 +19,9 @@ func (r collectionResource) IsCacheable() bool {
 
 //resource resprents the basic attributes of any resource (Application, Group, Account, etc.)
 type resource struct {
-	Href       string `json:"href,omitempty"`
-	CreatedAt  string `json:"createdAt,omitempty"`
-	ModifiedAt string `json:"modifiedAt,omitempty"`
+	Href       string     `json:"href,omitempty"`
+	CreatedAt  *time.Time `json:"createdAt,omitempty"`
+	ModifiedAt *time.Time `json:"modifiedAt,omitempty"`
 }
 
 func (r resource) IsCacheable() bool {

@@ -1,21 +1,15 @@
 package stormpath
 
-import (
-	"time"
-)
-
 //Directory represents a Stormpath directory object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#directories
 type Directory struct {
 	accountStoreResource
-	Name        string    `json:"name,omitempty"`
-	Description string    `json:"description,omitempty"`
-	Status      string    `json:"status,omitempty"`
-	Groups      *Groups   `json:"groups,omitempty"`
-	Tenant      *Tenant   `json:"tenant,omitempty"`
-	CreatedAt   time.Time `json:"createdAt,omitempty"`
-	ModifiedAt  time.Time `json:"modifiedAt,omitempty"`
+	Name        string  `json:"name,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Status      string  `json:"status,omitempty"`
+	Groups      *Groups `json:"groups,omitempty"`
+	Tenant      *Tenant `json:"tenant,omitempty"`
 }
 
 //Directories represnets a paged result of directories
