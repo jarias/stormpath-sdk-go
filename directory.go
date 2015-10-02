@@ -19,19 +19,6 @@ type Directories struct {
 	Items []Directory `json:"items"`
 }
 
-//AccountCreationPolicy represents a directory account creation policy object
-//
-//See: http://docs.stormpath.com/rest/product-guide/#directory-account-creation-policy
-type AccountCreationPolicy struct {
-	resource
-	VerificationEmailStatus           string    `json:"verificationEmailStatus,omitempty"`
-	VerificationEmailTemplates        *resource `json:"verificationEmailTemplates,omitempty"`
-	VerificationSuccessEmailStatus    string    `json:"verificationSuccessEmailStatus,omitempty"`
-	VerificationSuccessEmailTemplates *resource `json:"verificationSuccessEmailTemplates,omitempty"`
-	WelcomeEmailStatus                string    `json:"welcomeEmailStatus,omitempty"`
-	WelcomeEmailTemplates             *resource `json:"welcomeEmailTemplates,omitempty"`
-}
-
 //NewDirectory creates a new directory with the given name
 func NewDirectory(name string) *Directory {
 	return &Directory{Name: name}
@@ -47,16 +34,6 @@ func GetDirectory(href string, criteria Criteria) (*Directory, error) {
 	)
 
 	return directory, err
-}
-
-//Refresh refreshes the resource by doing a GET to the resource href endpoint
-func (policy *AccountCreationPolicy) Refresh() error {
-	return client.get(policy.Href, emptyPayload(), policy)
-}
-
-//Update updates the given resource, by doing a POST to the resource Href
-func (policy *AccountCreationPolicy) Update() error {
-	return client.post(policy.Href, policy, policy)
 }
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
