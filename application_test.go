@@ -13,6 +13,20 @@ import (
 )
 
 var _ = Describe("Application", func() {
+	Describe("OAuthToken", func() {
+		It("should return a OAuth token response if the user auth is valid", func() {
+			account := newTestAccount()
+			app.RegisterAccount(account)
+
+			response, err := app.GetOAuthToken(account.Username, "1234567z!A89")
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response).NotTo(BeNil())
+			Expect(response.AccessToken).NotTo(BeEmpty())
+			Expect(response.RefreshToken).NotTo(BeEmpty())
+			Expect(response.ExpiresIn).To(Equal(3600))
+		})
+	})
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the name", func() {
 			application := NewApplication("name")

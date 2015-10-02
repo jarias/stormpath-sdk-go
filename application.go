@@ -40,6 +40,14 @@ type IDSiteCallbackResult struct {
 	Status  string
 }
 
+type OAuthResponse struct {
+	AccessToken              string `json:"access_token"`
+	RefreshToken             string `json:"refresh_token"`
+	TokenType                string `json:"token_type"`
+	ExpiresIn                int    `json:"expires_in"`
+	StormpathAccessTokenHref string `json:"stormpath_access_token_href"`
+}
+
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
@@ -140,6 +148,23 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	account.Href = accountRef.Account.Href
 
 	return account, err
+}
+
+func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
+
+	params := url.Values{}
+	params.Add("grant_type", "password")
+	params.Add("username", username)
+	params.Add("password", password)
+
+	err := client.postURLEncodedForm(
+		buildAbsoluteURL(app.Href, "oauth/token"),
+		params,
+		response,
+	)
+
+	return response, err
 }
 
 //SendPasswordResetEmail sends a password reset email to the given user

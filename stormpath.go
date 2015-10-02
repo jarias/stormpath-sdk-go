@@ -23,8 +23,10 @@ var BaseURL = "https://api.stormpath.com/v1/"
 const version = "0.1.0-beta.11"
 
 const (
-	Enabled  = "ENABLED"
-	Disabled = "DISABLED"
+	Enabled                   = "ENABLED"
+	Disabled                  = "DISABLED"
+	ApplicationJson           = "application/json"
+	ApplicationFormURLencoded = "application/x-www-form-urlencoded"
 )
 
 var client *Client
@@ -61,20 +63,24 @@ func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *
 	initLog()
 }
 
+func (client *Client) postURLEncodedForm(urlStr string, body url.Values, result interface{}) error {
+	return client.execute("POST", urlStr+requestParams(body), emptyPayload(), result, ApplicationFormURLencoded)
+}
+
 func (client *Client) post(urlStr string, body interface{}, result interface{}) error {
-	return client.execute("POST", urlStr, body, result)
+	return client.execute("POST", urlStr, body, result, ApplicationJson)
 }
 
 func (client *Client) get(urlStr string, body interface{}, result interface{}) error {
-	return client.execute("GET", urlStr, body, result)
+	return client.execute("GET", urlStr, body, result, ApplicationJson)
 }
 
 func (client *Client) delete(urlStr string, body interface{}) error {
-	return client.do(client.newRequest("DELETE", urlStr, body))
+	return client.do(client.newRequest("DELETE", urlStr, body, ApplicationJson))
 }
 
-func (client *Client) execute(method string, urlStr string, body interface{}, result interface{}) error {
-	return client.doWithResult(client.newRequest(method, urlStr, body), result)
+func (client *Client) execute(method string, urlStr string, body interface{}, result interface{}, contentType string) error {
+	return client.doWithResult(client.newRequest(method, urlStr, body, contentType), result)
 }
 
 func buildRelativeURL(parts ...string) string {
@@ -103,17 +109,23 @@ func buildAbsoluteURL(parts ...string) string {
 	return buffer.String()
 }
 
-func (client *Client) newRequest(method string, urlStr string, body interface{}) *http.Request {
-	jsonBody, _ := json.Marshal(body)
-	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(jsonBody))
+func (client *Client) newRequest(method string, urlStr string, body interface{}, contentType string) *http.Request {
+	var encodedBody []byte
+	if contentType == ApplicationJson {
+		encodedBody, _ = json.Marshal(body)
+	} else {
+		//If content type is not application/json then it is application/x-www-form-urlencoded in which case the body should be an empty []byte
+		encodedBody = body.([]byte)
+	}
+	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(encodedBody))
 	req.Header.Set("User-Agent", fmt.Sprintf("jarias/stormpath-sdk-go/%s (%s; %s)", version, runtime.GOOS, runtime.GOARCH))
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", ApplicationJson)
+	req.Header.Set("Content-Type", contentType)
 
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, jsonBody, time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, encodedBody, time.Now().In(time.UTC), client.Credentials, nonce)
 	return req
 }
 

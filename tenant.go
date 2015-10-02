@@ -20,6 +20,7 @@ func CurrentTenant() (*Tenant, error) {
 			"GET",
 			buildRelativeURL("tenants", "current"),
 			emptyPayload(),
+			ApplicationJson,
 		), tenant)
 
 	return tenant, err
