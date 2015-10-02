@@ -20,10 +20,11 @@ var _ = Describe("Account", func() {
 	})
 	Describe("GetAccount", func() {
 		It("should return an error if the account doesn't exists", func() {
-			_, err := GetAccount(BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
+			account, err := GetAccount(BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
 
 			Expect(err).To(HaveOccurred())
 			Expect(err.(Error).Status).To(Equal(404))
+			Expect(account).To(BeNil())
 		})
 		It("should return the account for the given href", func() {
 			newAccount := newTestAccount()
@@ -37,9 +38,10 @@ var _ = Describe("Account", func() {
 	})
 	Describe("VerifyEmailToken", func() {
 		It("should return error if the token doesn't exists", func() {
-			_, err := VerifyEmailToken("token")
+			account, err := VerifyEmailToken("token")
 			Expect(err).To(HaveOccurred())
 			Expect(err.(Error).Status).To(Equal(404))
+			Expect(account).To(BeNil())
 		})
 		It("should return an account if the token is valid", func() {
 			directory := newTestDirectory()
@@ -134,19 +136,6 @@ var _ = Describe("Account", func() {
 				Expect(gm.Group).NotTo(BeEquivalentTo(*group))
 			}
 		})
-
-		//It("should allow expanding the group", func() {
-		//	account := registerTestAccount()
-		//	group := addAccountToGroup(account)
-		//
-		//	groupMemberships, err := account.GetGroupMemberships(NewDefaultPageRequest(), "group")
-		//
-		//	Expect(err).NotTo(HaveOccurred())
-		//	for _, gm := range groupMemberships.Items {
-		//		Expect(gm.Account).To(BeEquivalentTo(account))
-		//		Expect(gm.Group.Name).To(BeEquivalentTo(group.Name))
-		//	}
-		//})
 	})
 
 	Describe("GetCustomData", func() {
@@ -155,6 +144,15 @@ var _ = Describe("Account", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(customData).NotTo(BeEmpty())
+		})
+		It("should return error if account doesn't exists", func() {
+			account := &Account{}
+			account.Href = BaseURL + "/accounts/XXXX"
+
+			customData, err := account.GetCustomData()
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
+			Expect(customData).To(BeNil())
 		})
 	})
 

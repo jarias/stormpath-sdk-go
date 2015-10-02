@@ -27,19 +27,31 @@ func (policy *AccountCreationPolicy) Update() error {
 func (policy *AccountCreationPolicy) GetVerificationEmailTemplates() (*EmailTemplates, error) {
 	err := client.get(policy.VerificationEmailTemplates.Href, emptyPayload(), policy.VerificationEmailTemplates)
 
-	return policy.VerificationEmailTemplates, err
+	if err != nil {
+		return nil, err
+	}
+
+	return policy.VerificationEmailTemplates, nil
 }
 
 //GetVerificationSuccessEmailTemplates loads the policy VerificationSuccessEmailTemplates collection and returns it
 func (policy *AccountCreationPolicy) GetVerificationSuccessEmailTemplates() (*EmailTemplates, error) {
 	err := client.get(policy.VerificationSuccessEmailTemplates.Href, emptyPayload(), policy.VerificationSuccessEmailTemplates)
 
-	return policy.VerificationSuccessEmailTemplates, err
+	if err != nil {
+		return nil, err
+	}
+
+	return policy.VerificationSuccessEmailTemplates, nil
 }
 
 //GetWelcomeEmailTemplates loads the policy WelcomeEmailTemplates collection and returns it
 func (policy *AccountCreationPolicy) GetWelcomeEmailTemplates() (*EmailTemplates, error) {
 	err := client.get(policy.WelcomeEmailTemplates.Href, emptyPayload(), policy.WelcomeEmailTemplates)
 
-	return policy.WelcomeEmailTemplates, err
+	if err != nil {
+		return nil, err
+	}
+
+	return policy.WelcomeEmailTemplates, nil
 }

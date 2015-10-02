@@ -24,6 +24,7 @@ func NewDirectory(name string) *Directory {
 	return &Directory{Name: name}
 }
 
+//GetDirectory loads a directory by href and criteria
 func GetDirectory(href string, criteria Criteria) (*Directory, error) {
 	directory := &Directory{}
 
@@ -33,7 +34,11 @@ func GetDirectory(href string, criteria Criteria) (*Directory, error) {
 		directory,
 	)
 
-	return directory, err
+	if err != nil {
+		return nil, err
+	}
+
+	return directory, nil
 }
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
@@ -46,10 +51,15 @@ func (dir *Directory) Update() error {
 	return client.post(dir.Href, dir, dir)
 }
 
+//GetAccountCreationPolicy loads the directory account creation policy
 func (dir *Directory) GetAccountCreationPolicy() (*AccountCreationPolicy, error) {
 	err := client.get(buildAbsoluteURL(dir.AccountCreationPolicy.Href), emptyPayload(), dir.AccountCreationPolicy)
 
-	return dir.AccountCreationPolicy, err
+	if err != nil {
+		return nil, err
+	}
+
+	return dir.AccountCreationPolicy, nil
 }
 
 //GetGroups returns all the groups from a directory
@@ -60,7 +70,11 @@ func (dir *Directory) GetGroups(criteria Criteria) (*Groups, error) {
 		dir.Groups,
 	)
 
-	return dir.Groups, err
+	if err != nil {
+		return nil, err
+	}
+
+	return dir.Groups, nil
 }
 
 //CreateGroup creates a new group in the directory
@@ -79,9 +93,13 @@ func (dir *Directory) RegisterAccount(account *Account) error {
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accessing-accounts-with-google-authorization-codes-or-an-access-tokens
 func (dir *Directory) RegisterSocialAccount(socialAccount *SocialAccount) (*Account, error) {
-	account := Account{}
+	account := &Account{}
 
-	err := client.post(dir.Accounts.Href, socialAccount, &account)
+	err := client.post(dir.Accounts.Href, socialAccount, account)
 
-	return &account, err
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }

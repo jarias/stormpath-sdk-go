@@ -40,6 +40,7 @@ type IDSiteCallbackResult struct {
 	Status  string
 }
 
+//OAuthResponse represents an OAuth2 response from StormPath
 type OAuthResponse struct {
 	AccessToken              string `json:"access_token"`
 	RefreshToken             string `json:"refresh_token"`
@@ -53,6 +54,7 @@ func NewApplication(name string) *Application {
 	return &Application{Name: name}
 }
 
+//GetApplication loads an application by href and criteria
 func GetApplication(href string, criteria Criteria) (*Application, error) {
 	application := &Application{}
 
@@ -102,7 +104,11 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStor
 		accountStoreMappings,
 	)
 
-	return accountStoreMappings, err
+	if err != nil {
+		return nil, err
+	}
+
+	return accountStoreMappings, nil
 }
 
 //RegisterAccount registers a new account into the application
@@ -125,18 +131,20 @@ func (app *Application) RegisterSocialAccount(socialAccount *SocialAccount) (*Ac
 
 	err := client.post(app.Accounts.Href, socialAccount, account)
 
-	return account, err
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
 //AuthenticateAccount authenticates an account against the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#authenticate-an-account
 func (app *Application) AuthenticateAccount(username string, password string) (*Account, error) {
-	accountRef := &accountRef{}
-	account := &Account{}
+	accountRef := &accountRef{Account: &Account{}}
 
 	loginAttemptPayload := make(map[string]string)
-
 	loginAttemptPayload["type"] = "basic"
 	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
@@ -145,11 +153,11 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	if err != nil {
 		return nil, err
 	}
-	account.Href = accountRef.Account.Href
 
-	return account, err
+	return accountRef.Account, nil
 }
 
+//GetOAuthToken creates a OAuth2 token response for a given user credentials
 func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
 	response := &OAuthResponse{}
 
@@ -164,7 +172,11 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 		response,
 	)
 
-	return response, err
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
 //SendPasswordResetEmail sends a password reset email to the given user
@@ -178,7 +190,11 @@ func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordRe
 
 	err := client.post(buildAbsoluteURL(app.Href, "passwordResetTokens"), passwordResetPayload, passwordResetToken)
 
-	return passwordResetToken, err
+	if err != nil {
+		return nil, err
+	}
+
+	return passwordResetToken, nil
 }
 
 //ValidatePasswordResetToken validates a password reset token
@@ -189,7 +205,11 @@ func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswo
 
 	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), emptyPayload(), passwordResetToken)
 
-	return passwordResetToken, err
+	if err != nil {
+		return nil, err
+	}
+
+	return passwordResetToken, nil
 }
 
 //ResetPassword resets a user password based on the reset token
@@ -209,7 +229,7 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	}
 	account.Href = accountRef.Account.Href
 
-	return account, err
+	return account, nil
 }
 
 //CreateGroup creates a new group in the application
@@ -231,7 +251,11 @@ func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 		groups,
 	)
 
-	return groups, err
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
 }
 
 //CreateIDSiteURL creates the IDSite URL for the application

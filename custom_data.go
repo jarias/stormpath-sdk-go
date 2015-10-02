@@ -16,7 +16,11 @@ func (r *customDataAwareResource) GetCustomData() (CustomData, error) {
 
 	err := client.get(buildAbsoluteURL(r.Href, "customData"), emptyPayload(), &customData)
 
-	return customData, err
+	if err != nil {
+		return nil, err
+	}
+
+	return customData, nil
 }
 
 //UpdateCustomData sets or updates the given resource custom data
@@ -27,7 +31,11 @@ func (r *customDataAwareResource) UpdateCustomData(customData CustomData) (Custo
 
 	err := client.post(buildAbsoluteURL(r.Href, "customData"), customData, &customData)
 
-	return customData, err
+	if err != nil {
+		return nil, err
+	}
+
+	return customData, nil
 }
 
 //DeleteCustomData deletes all the resource custom data

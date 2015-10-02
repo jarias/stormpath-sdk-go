@@ -38,7 +38,7 @@ type AccountPasswordResetToken struct {
 }
 
 type accountRef struct {
-	Account resource `json:"account"`
+	Account *Account `json:"account"`
 }
 
 //SocialAccount represents the JSON payload use to create an account for a social backend directory
@@ -58,6 +58,7 @@ func NewAccount(username, password, email, givenName, surname string) *Account {
 	return &Account{Username: username, Password: password, Email: email, GivenName: givenName, Surname: surname}
 }
 
+//GetAccount fetches an account by href and criteria
 func GetAccount(href string, criteria Criteria) (*Account, error) {
 	account := &Account{}
 
@@ -67,7 +68,11 @@ func GetAccount(href string, criteria Criteria) (*Account, error) {
 		account,
 	)
 
-	return account, err
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
@@ -86,7 +91,11 @@ func (account *Account) AddToGroup(group *Group) (*GroupMembership, error) {
 
 	err := client.post(buildRelativeURL("groupMemberships"), groupMembership, groupMembership)
 
-	return groupMembership, err
+	if err != nil {
+		return nil, err
+	}
+
+	return groupMembership, nil
 }
 
 //RemoveFromGroup removes the given account from the given group by searching the account groupmemberships,
@@ -130,7 +139,11 @@ func (account *Account) GetGroupMemberships(criteria Criteria) (*GroupMembership
 		groupMemberships,
 	)
 
-	return groupMemberships, err
+	if err != nil {
+		return nil, err
+	}
+
+	return groupMemberships, nil
 }
 
 //VerifyEmailToken verifies an email verification token associated with an account
@@ -140,5 +153,9 @@ func VerifyEmailToken(token string) (*Account, error) {
 	account := &Account{}
 	err := client.post(buildAbsoluteURL(BaseURL, "accounts/emailVerificationTokens", token), emptyPayload(), account)
 
-	return account, err
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }

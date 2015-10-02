@@ -31,7 +31,11 @@ func (groupmembership *GroupMembership) GetAccount(criteria Criteria) (*Account,
 		account,
 	)
 
-	return account, err
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
 func (groupmembership *GroupMembership) GetGroup(criteria Criteria) (*Group, error) {
@@ -43,5 +47,9 @@ func (groupmembership *GroupMembership) GetGroup(criteria Criteria) (*Group, err
 		group,
 	)
 
-	return group, err
+	if err != nil {
+		return nil, err
+	}
+
+	return group, nil
 }

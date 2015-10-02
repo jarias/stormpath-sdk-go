@@ -23,6 +23,7 @@ func NewGroup(name string) *Group {
 	return &Group{Name: name}
 }
 
+//GetGroup loads a group by href and criteria
 func GetGroup(href string, criteria Criteria) (*Group, error) {
 	group := &Group{}
 
@@ -32,7 +33,11 @@ func GetGroup(href string, criteria Criteria) (*Group, error) {
 		group,
 	)
 
-	return group, err
+	if err != nil {
+		return nil, err
+	}
+
+	return group, nil
 }
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
@@ -45,6 +50,7 @@ func (group *Group) Update() error {
 	return client.post(group.Href, group, group)
 }
 
+//GetGroupMemberships loads the given group memeberships
 func (group *Group) GetGroupMemberships(criteria Criteria) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
@@ -54,5 +60,9 @@ func (group *Group) GetGroupMemberships(criteria Criteria) (*GroupMemberships, e
 		groupMemberships,
 	)
 
-	return groupMemberships, err
+	if err != nil {
+		return nil, err
+	}
+
+	return groupMemberships, nil
 }

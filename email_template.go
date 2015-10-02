@@ -1,26 +1,31 @@
 package stormpath
 
 const (
+	//TextPlain "text/plain" mime type
 	TextPlain = "text/plain"
-	TextHTML  = "text/html"
+	//TextHTML "text/html" mime type
+	TextHTML = "text/html"
 )
 
+//EmailTemplate represents an account creation policy email template
 type EmailTemplate struct {
 	resource
 	FromEmailAddress string            `json:"fromEmailAddress"`
 	FromName         string            `json:"fromName"`
 	Subject          string            `json:"subject"`
-	HtmlBody         string            `json:"htmlBody"`
+	HTMLBody         string            `json:"htmlBody"`
 	TextBody         string            `json:"textBody"`
 	MimeType         string            `json:"mimeType"`
 	DefaultModel     map[string]string `json:"defaultModel"`
 }
 
+//EmailTemplates represents a collection of EmailTemplate
 type EmailTemplates struct {
 	collectionResource
 	Items []EmailTemplate `json:"items"`
 }
 
+//GetEmailTemplate loads an email template by href
 func GetEmailTemplate(href string) (*EmailTemplate, error) {
 	emailTemplate := &EmailTemplate{}
 
@@ -30,7 +35,11 @@ func GetEmailTemplate(href string) (*EmailTemplate, error) {
 		emailTemplate,
 	)
 
-	return emailTemplate, err
+	if err != nil {
+		return nil, err
+	}
+
+	return emailTemplate, nil
 }
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint

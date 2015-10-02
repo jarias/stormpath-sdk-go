@@ -12,9 +12,10 @@ var _ = Describe("AccountCreationPolicy", func() {
 			policy := &AccountCreationPolicy{VerificationEmailTemplates: &EmailTemplates{}}
 			policy.VerificationEmailTemplates.Href = "https://api.stormpath.com/v1/accountCreationPolicies/xxxx/verificationEmailTemplates"
 
-			_, err := policy.GetVerificationEmailTemplates()
+			templates, err := policy.GetVerificationEmailTemplates()
 
 			Expect(err).To(HaveOccurred())
+			Expect(templates).To(BeNil())
 		})
 
 		It("should return the default verification email templates collection", func() {
@@ -34,9 +35,10 @@ var _ = Describe("AccountCreationPolicy", func() {
 			policy := &AccountCreationPolicy{VerificationSuccessEmailTemplates: &EmailTemplates{}}
 			policy.VerificationSuccessEmailTemplates.Href = "https://api.stormpath.com/v1/accountCreationPolicies/xxxx/verificationEmailTemplates"
 
-			_, err := policy.GetVerificationSuccessEmailTemplates()
+			templates, err := policy.GetVerificationSuccessEmailTemplates()
 
 			Expect(err).To(HaveOccurred())
+			Expect(templates).To(BeNil())
 		})
 
 		It("should return the default verification success email templates collection", func() {
@@ -56,9 +58,10 @@ var _ = Describe("AccountCreationPolicy", func() {
 			policy := &AccountCreationPolicy{WelcomeEmailTemplates: &EmailTemplates{}}
 			policy.WelcomeEmailTemplates.Href = "https://api.stormpath.com/v1/accountCreationPolicies/xxxx/verificationEmailTemplates"
 
-			_, err := policy.GetWelcomeEmailTemplates()
+			templates, err := policy.GetWelcomeEmailTemplates()
 
 			Expect(err).To(HaveOccurred())
+			Expect(templates).To(BeNil())
 		})
 
 		It("should return the default welcome email templates collection", func() {
@@ -85,6 +88,15 @@ var _ = Describe("AccountCreationPolicy", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(policy.VerificationEmailStatus).To(Equal(Enabled))
 		})
+		It("should return error not found if the policy doesn't exists", func() {
+			policy := AccountCreationPolicy{}
+			policy.Href = BaseURL + "accountCreationPolicies/XXXX"
+
+			err := policy.Update()
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
+		})
 	})
 	Describe("Refresh", func() {
 		It("should refresh a given account creation policy", func() {
@@ -97,6 +109,15 @@ var _ = Describe("AccountCreationPolicy", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(policy.VerificationEmailStatus).To(Equal(Disabled))
+		})
+		It("should return error not found if the policy doesn't exists", func() {
+			policy := AccountCreationPolicy{}
+			policy.Href = BaseURL + "accountCreationPolicies/XXXX"
+
+			err := policy.Refresh()
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
 		})
 	})
 })
