@@ -63,8 +63,8 @@ func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *
 	initLog()
 }
 
-func (client *Client) postURLEncodedForm(urlStr string, body url.Values, result interface{}) error {
-	return client.execute("POST", urlStr+requestParams(body), emptyPayload(), result, ApplicationFormURLencoded)
+func (client *Client) postURLEncodedForm(urlStr string, body string, result interface{}) error {
+	return client.execute("POST", urlStr, []byte(body), result, ApplicationFormURLencoded)
 }
 
 func (client *Client) post(urlStr string, body interface{}, result interface{}) error {
@@ -114,7 +114,7 @@ func (client *Client) newRequest(method string, urlStr string, body interface{},
 	if contentType == ApplicationJson {
 		encodedBody, _ = json.Marshal(body)
 	} else {
-		//If content type is not application/json then it is application/x-www-form-urlencoded in which case the body should be an empty []byte
+		//If content type is not application/json then it is application/x-www-form-urlencoded in which case the body should the encoded params as a []byte
 		encodedBody = body.([]byte)
 	}
 	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(encodedBody))
