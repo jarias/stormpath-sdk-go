@@ -20,7 +20,7 @@ func (m ApplicationMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	//Check if it the current app already exists
 	app := GetApplication(r)
 	if app == nil {
-		app, err := stormpath.NewApplicationRef(m.ApplicationHref).GetApplication()
+		app, err := stormpath.GetApplication(m.ApplicationHref, stormpath.MakeApplicationCriteria())
 		if err == nil {
 			context.Set(r, ApplicationKey, *app)
 		}
