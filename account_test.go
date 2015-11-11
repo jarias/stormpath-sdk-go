@@ -9,31 +9,6 @@ import (
 )
 
 var _ = Describe("Account", func() {
-	invalidAccounts := []*Account{
-		&Account{Email: "test@test.org", GivenName: "test", Surname: "test"},
-		&Account{Username: "test", GivenName: "test", Surname: "test"},
-		&Account{Username: "test", Email: "test", GivenName: "test", Surname: "test"},
-		&Account{Username: "test", GivenName: "test", Surname: "test"},
-		&Account{Username: "test", Email: "test@test.org", Surname: "test"},
-		&Account{Username: "test", Email: "test@test.org", GivenName: "test"},
-	}
-
-	Describe("Validate", func() {
-		It("should return true if the account is valid", func() {
-			ok, err := newTestAccount().Validate()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ok).To(BeTrue())
-		})
-		It("should return false if account is invalid", func() {
-			for _, acct := range invalidAccounts {
-				ok, err := acct.Validate()
-
-				Expect(err).To(HaveOccurred())
-				Expect(ok).To(BeFalse())
-			}
-		})
-	})
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the account required fields", func() {
 			acc := NewAccount("test@test.org", "123", "test@test.org", "test", "test")
@@ -43,24 +18,59 @@ var _ = Describe("Account", func() {
 			Expect(string(jsonData)).To(Equal("{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}"))
 		})
 	})
+	Describe("GetAccount", func() {
+		It("should return an error if the account doesn't exists", func() {
+			account, err := GetAccount(BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
 
-	Describe("Save", func() {
-		It("should not save if account is invalid", func() {
-			for _, acct := range invalidAccounts {
-				err := acct.Save()
-
-				Expect(err).To(HaveOccurred())
-			}
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
+			Expect(account).To(BeNil())
 		})
+		It("should return the account for the given href", func() {
+			newAccount := newTestAccount()
+			app.RegisterAccount(newAccount)
+
+			account, err := GetAccount(newAccount.Href, MakeAccountCriteria())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(account).To(Equal(newAccount))
+		})
+	})
+	Describe("VerifyEmailToken", func() {
+		It("should return error if the token doesn't exists", func() {
+			account, err := VerifyEmailToken("token")
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
+			Expect(account).To(BeNil())
+		})
+		It("should return an account if the token is valid", func() {
+			directory := newTestDirectory()
+			tenant.CreateDirectory(directory)
+
+			policy, _ := directory.GetAccountCreationPolicy()
+			policy.VerificationEmailStatus = Enabled
+			policy.Update()
+
+			account := newTestAccount()
+			directory.RegisterAccount(account)
+			a, err := VerifyEmailToken(GetToken(account.EmailVerificationToken.Href))
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(a.Href).To(Equal(account.Href))
+		})
+	})
+	Describe("Update", func() {
 		It("should update an existing account", func() {
 			account := newTestAccount()
 			app.RegisterAccount(account)
 
 			account.GivenName = "julio"
-			err := account.Save()
+			err := account.Update()
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(account.GivenName).To(Equal("julio"))
+			Expect(account.CreatedAt).NotTo(BeNil())
+			Expect(account.ModifiedAt).NotTo(BeNil())
 		})
 	})
 
@@ -81,7 +91,7 @@ var _ = Describe("Account", func() {
 			app.CreateGroup(group)
 
 			_, err := account.AddToGroup(group)
-			gm, _ := account.GetGroupMemberships(NewDefaultPageRequest())
+			gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gm.Items).To(HaveLen(1))
@@ -99,17 +109,32 @@ var _ = Describe("Account", func() {
 			group := newTestGroup()
 			app.CreateGroup(group)
 
-			gm, _ := account.GetGroupMemberships(NewDefaultPageRequest())
+			gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
 			groupCountBefore = len(gm.Items)
 
 			account.AddToGroup(group)
 
 			err := account.RemoveFromGroup(group)
-			gm, _ = account.GetGroupMemberships(NewDefaultPageRequest())
+			gm, _ = account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gm.Items).To(HaveLen(groupCountBefore))
 			group.Delete()
+		})
+	})
+
+	Describe("GetGroupMemberships", func() {
+		It("should allow expanding the account", func() {
+			acct := registerTestAccount()
+			group := addAccountToGroup(acct)
+
+			groupMemberships, err := acct.GetGroupMemberships(MakeGroupMemershipCriteria().WithAccount().Offset(0).Limit(25))
+
+			Expect(err).NotTo(HaveOccurred())
+			for _, gm := range groupMemberships.Items {
+				Expect(gm.Account).To(BeEquivalentTo(*acct))
+				Expect(gm.Group).NotTo(BeEquivalentTo(*group))
+			}
 		})
 	})
 
@@ -120,13 +145,20 @@ var _ = Describe("Account", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(customData).NotTo(BeEmpty())
 		})
+		It("should return error if account doesn't exists", func() {
+			account := &Account{}
+			account.Href = BaseURL + "/accounts/XXXX"
+
+			customData, err := account.GetCustomData()
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(404))
+			Expect(customData).To(BeNil())
+		})
 	})
 
 	Describe("UpdateCustomData", func() {
 		It("should set an account custom data", func() {
-			err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
-
-			customData, _ := account.GetCustomData()
+			customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(customData["custom"]).To(Equal("data"))
@@ -134,8 +166,7 @@ var _ = Describe("Account", func() {
 
 		It("should update an account custom data", func() {
 			account.UpdateCustomData(map[string]interface{}{"custom": "data"})
-			err := account.UpdateCustomData(map[string]interface{}{"custom": "nodata"})
-			customData, _ := account.GetCustomData()
+			customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "nodata"})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(customData["custom"]).To(Equal("nodata"))

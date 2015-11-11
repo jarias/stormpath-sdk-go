@@ -12,28 +12,44 @@ type GroupMemberships struct {
 }
 
 func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
+	account := Account{}
+	account.Href = accountHref
+	group := Group{}
+	group.Href = groupHref
 	return &GroupMembership{
-		Account: Account{resource: resource{Href: accountHref}},
-		Group:   Group{resource: resource{Href: groupHref}},
+		Account: account,
+		Group:   group,
 	}
 }
 
-func (groupmembership *GroupMembership) Delete() error {
-	return client.delete(groupmembership.Href, emptyPayload())
-}
-
-func (groupmembership *GroupMembership) GetAccount() (*Account, error) {
+func (groupmembership *GroupMembership) GetAccount(criteria Criteria) (*Account, error) {
 	account := &Account{}
 
-	err := client.get(groupmembership.Account.Href, emptyPayload(), account)
+	err := client.get(
+		buildAbsoluteURL(groupmembership.Account.Href, criteria.ToQueryString()),
+		emptyPayload(),
+		account,
+	)
 
-	return account, err
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
-func (groupmembership *GroupMembership) GetGroup() (*Group, error) {
+func (groupmembership *GroupMembership) GetGroup(criteria Criteria) (*Group, error) {
 	group := &Group{}
 
-	err := client.get(groupmembership.Group.Href, emptyPayload(), group)
+	err := client.get(
+		buildAbsoluteURL(groupmembership.Group.Href, criteria.ToQueryString()),
+		emptyPayload(),
+		group,
+	)
 
-	return group, err
+	if err != nil {
+		return nil, err
+	}
+
+	return group, nil
 }

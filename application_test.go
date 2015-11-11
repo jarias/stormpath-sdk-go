@@ -13,26 +13,18 @@ import (
 )
 
 var _ = Describe("Application", func() {
-	invalidApps := []*Application{
-		&Application{},
-		&Application{Name: string256},
-		&Application{Name: "name", Description: string4001},
-	}
+	Describe("OAuthToken", func() {
+		It("should return a OAuth token response if the user auth is valid", func() {
+			account := newTestAccount()
+			app.RegisterAccount(account)
 
-	Describe("Validate", func() {
-		It("should return true if the application is valid", func() {
-			ok, err := NewApplication("test").Validate()
+			response, err := app.GetOAuthToken(account.Username, "1234567z!A89")
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(ok).To(BeTrue())
-		})
-		It("should return false if application is invalid", func() {
-			for _, app := range invalidApps {
-				ok, err := app.Validate()
-
-				Expect(err).To(HaveOccurred())
-				Expect(ok).To(BeFalse())
-			}
+			Expect(response).NotTo(BeNil())
+			Expect(response.AccessToken).NotTo(BeEmpty())
+			Expect(response.RefreshToken).NotTo(BeEmpty())
+			Expect(response.ExpiresIn).To(Equal(3600))
 		})
 	})
 	Describe("JSON", func() {
@@ -45,17 +37,10 @@ var _ = Describe("Application", func() {
 		})
 	})
 
-	Describe("Save", func() {
-		It("should not save if application is invalid", func() {
-			for _, app := range invalidApps {
-				err := app.Save()
-
-				Expect(err).To(HaveOccurred())
-			}
-		})
+	Describe("Update", func() {
 		It("should update an existing application", func() {
 			app.Name = "new-name" + randomName()
-			err := app.Save()
+			err := app.Update()
 
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -105,7 +90,7 @@ var _ = Describe("Application", func() {
 				group := newTestGroup()
 				app.CreateGroup(group)
 
-				groups, err := app.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
+				groups, err := app.GetGroups(MakeGroupCriteria())
 
 				Expect(err).NotTo(HaveOccurred())
 

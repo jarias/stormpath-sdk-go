@@ -1,23 +1,16 @@
 package stormpath
 
-import (
-	"net/url"
-
-	"github.com/asaskevich/govalidator"
-)
-
 //Directory represents a Stormpath directory object
 //
 //See: http://docs.stormpath.com/rest/product-guide/#directories
 type Directory struct {
-	resource
-	Name        string      `json:"name,omitempty" valid:"required,length(1|255)"`
-	Description string      `json:"description,omitempty" valid:"length(0|1000)"`
-	Status      string      `json:"status,omitempty"`
-	CustomData  *CustomData `json:"customData,omitempty"`
-	Accounts    *Accounts   `json:"accounts,omitempty"`
-	Groups      *Groups     `json:"groups,omitempty"`
-	Tenant      *Tenant     `json:"tenant,omitempty"`
+	accountStoreResource
+	Name                  string                 `json:"name,omitempty"`
+	Description           string                 `json:"description,omitempty"`
+	Status                string                 `json:"status,omitempty"`
+	Groups                *Groups                `json:"groups,omitempty"`
+	Tenant                *Tenant                `json:"tenant,omitempty"`
+	AccountCreationPolicy *AccountCreationPolicy `json:"accountCreationPolicy,omitempty"`
 }
 
 //Directories represnets a paged result of directories
@@ -31,54 +24,57 @@ func NewDirectory(name string) *Directory {
 	return &Directory{Name: name}
 }
 
-//Validate validates a directory, returns true if valid and false + error if not
-func (dir *Directory) Validate() (bool, error) {
-	return govalidator.ValidateStruct(dir)
+//GetDirectory loads a directory by href and criteria
+func GetDirectory(href string, criteria Criteria) (*Directory, error) {
+	directory := &Directory{}
+
+	err := client.get(
+		buildAbsoluteURL(href, criteria.ToQueryString()),
+		emptyPayload(),
+		directory,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return directory, nil
 }
 
-//Refresh refreshes the directory resource by doing a GET to the directory href endpoint
+//Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (dir *Directory) Refresh() error {
 	return client.get(dir.Href, emptyPayload(), dir)
 }
 
-//Save saves the directory in Stormpath
-func (dir *Directory) Save() error {
-	ok, err := dir.Validate()
-	if !ok && err != nil {
-		return err
-	}
+//Update updates the given resource, by doing a POST to the resource Href
+func (dir *Directory) Update() error {
 	return client.post(dir.Href, dir, dir)
 }
 
-//Delete deletes the directory
-func (dir *Directory) Delete() error {
-	return client.delete(dir.Href, emptyPayload())
+//GetAccountCreationPolicy loads the directory account creation policy
+func (dir *Directory) GetAccountCreationPolicy() (*AccountCreationPolicy, error) {
+	err := client.get(buildAbsoluteURL(dir.AccountCreationPolicy.Href), emptyPayload(), dir.AccountCreationPolicy)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return dir.AccountCreationPolicy, nil
 }
 
 //GetGroups returns all the groups from a directory
-func (dir *Directory) GetGroups(pageRequest url.Values, filter url.Values) (*Groups, error) {
-	groups := &Groups{}
-
+func (dir *Directory) GetGroups(criteria Criteria) (*Groups, error) {
 	err := client.get(
-		buildAbsoluteURL(dir.Groups.Href, requestParams(pageRequest, filter, url.Values{})),
+		buildAbsoluteURL(dir.Groups.Href, criteria.ToQueryString()),
 		emptyPayload(),
-		groups,
+		dir.Groups,
 	)
 
-	return groups, err
-}
+	if err != nil {
+		return nil, err
+	}
 
-//GetAccounts returns all the accounts from the directory
-func (dir *Directory) GetAccounts(pageRequest url.Values, filter url.Values) (*Accounts, error) {
-	accounts := &Accounts{}
-
-	err := client.get(
-		buildAbsoluteURL(dir.Accounts.Href, requestParams(pageRequest, filter, url.Values{})),
-		emptyPayload(),
-		accounts,
-	)
-
-	return accounts, err
+	return dir.Groups, nil
 }
 
 //CreateGroup creates a new group in the directory
@@ -97,38 +93,13 @@ func (dir *Directory) RegisterAccount(account *Account) error {
 //
 //See: http://docs.stormpath.com/rest/product-guide/#accessing-accounts-with-google-authorization-codes-or-an-access-tokens
 func (dir *Directory) RegisterSocialAccount(socialAccount *SocialAccount) (*Account, error) {
-	account := Account{}
+	account := &Account{}
 
-	err := client.post(dir.Accounts.Href, socialAccount, &account)
+	err := client.post(dir.Accounts.Href, socialAccount, account)
 
-	return &account, err
-}
+	if err != nil {
+		return nil, err
+	}
 
-//UpdateCustomData updates the directory custom data and returns that updated custom data as a map[string]interface
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (dir *Directory) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
-	customData = cleanCustomData(customData)
-
-	err := client.post(buildAbsoluteURL(dir.Href, "customData"), customData, &customData)
-
-	return customData, err
-}
-
-//DeleteCustomData deletes all the directory custom data
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (dir *Directory) DeleteCustomData() error {
-	return client.delete(buildAbsoluteURL(dir.Href, "customData"), emptyPayload())
-}
-
-//GetCustomData gets the directory custom data map
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (dir *Directory) GetCustomData() (map[string]interface{}, error) {
-	customData := map[string]interface{}{}
-
-	err := client.get(buildAbsoluteURL(dir.Href, "customData"), emptyPayload(), &customData)
-
-	return customData, err
+	return account, nil
 }

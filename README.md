@@ -2,7 +2,7 @@ Go SDK for the [Stormpath](http://stormpath.com/) API
 
 Develop:
 
-[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=develop)](https://travis-ci.org/jarias/stormpath-sdk-go) [![codecov.io](http://codecov.io/github/jarias/stormpath-sdk-go/coverage.svg?branch=master)](http://codecov.io/github/jarias/stormpath-sdk-go?branch=develop)
+[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=develop)](https://travis-ci.org/jarias/stormpath-sdk-go) [![codecov.io](http://codecov.io/github/jarias/stormpath-sdk-go/coverage.svg?branch=develop)](http://codecov.io/github/jarias/stormpath-sdk-go?branch=develop)
 
 Master:
 
@@ -27,7 +27,7 @@ stormpath.Init(credentials, nil)
 tenant, _ := stormpath.CurrentTenant()
 
 //Get the tenat applications
-apps, _ := tenant.GetApplications(stormpath.NewDefaultPageRequest(), stormpath.NewEmptyFilter())
+apps, _ := tenant.GetApplications(MakeApplicationCriteria().NameEq("test app"))
 
 //Get the first application
 app := apps.Items[0]
@@ -35,8 +35,6 @@ app := apps.Items[0]
 //Authenticate a user against the app
 account, _ := app.AuthenticateAccount("username", "password")
 
-//Print the account information
-account, _ := account.Load()
 fmt.Println(account)
 ```
 
@@ -60,7 +58,7 @@ Please make sure you add tests ;)
 
 #License
 
-Copyright 2014 Julio Arias
+Copyright 2014, 2015 Julio Arias
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

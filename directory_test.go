@@ -9,28 +9,6 @@ import (
 )
 
 var _ = Describe("Directory", func() {
-	Describe("Validate", func() {
-		It("should return true if the directory is valid", func() {
-			ok, err := NewDirectory("test").Validate()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ok).To(BeTrue())
-		})
-		It("should return false if directory is invalid", func() {
-			invalidDirs := []*Directory{
-				&Directory{},
-				&Directory{Name: string256},
-				&Directory{Name: "name", Description: string1001},
-			}
-
-			for _, dir := range invalidDirs {
-				ok, err := dir.Validate()
-
-				Expect(err).To(HaveOccurred())
-				Expect(ok).To(BeFalse())
-			}
-		})
-	})
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the directory name", func() {
 			directory := NewDirectory("name")
@@ -52,12 +30,27 @@ var _ = Describe("Directory", func() {
 		})
 	})
 
+	Describe("GetAccountCreationPolicy", func() {
+		It("should retrive the directory account creation policy", func() {
+			directory := newTestDirectory()
+			tenant.CreateDirectory(directory)
+
+			policy, err := directory.GetAccountCreationPolicy()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(policy).To(Equal(directory.AccountCreationPolicy))
+			Expect(policy.VerificationEmailStatus).To(Equal("DISABLED"))
+			Expect(policy.VerificationSuccessEmailStatus).To(Equal("DISABLED"))
+			Expect(policy.WelcomeEmailStatus).To(Equal("DISABLED"))
+		})
+	})
+
 	Describe("GetGroups", func() {
 		It("should retrive all directory groups", func() {
 			directory := newTestDirectory()
 			tenant.CreateDirectory(directory)
 
-			groups, err := directory.GetGroups(NewDefaultPageRequest(), NewEmptyFilter())
+			groups, err := directory.GetGroups(MakeGroupCriteria())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(groups.Href).NotTo(BeEmpty())
@@ -73,7 +66,7 @@ var _ = Describe("Directory", func() {
 			directory := newTestDirectory()
 			tenant.CreateDirectory(directory)
 
-			accounts, err := directory.GetAccounts(NewDefaultPageRequest(), NewEmptyFilter())
+			accounts, err := directory.GetAccounts(MakeAccountCriteria())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accounts.Href).NotTo(BeEmpty())

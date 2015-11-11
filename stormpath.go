@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"runtime"
+	"strings"
 	"time"
 
 	uuid "github.com/nu7hatch/gouuid"
@@ -19,7 +20,14 @@ import (
 var BaseURL = "https://api.stormpath.com/v1/"
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.11"
+const version = "0.1.0-beta.12"
+
+const (
+	Enabled                   = "ENABLED"
+	Disabled                  = "DISABLED"
+	ApplicationJson           = "application/json"
+	ApplicationFormURLencoded = "application/x-www-form-urlencoded"
+)
 
 var client *Client
 
@@ -32,31 +40,6 @@ type Client struct {
 	HTTPClient  *http.Client
 	Cache       Cache
 }
-
-//collectionResource represent the basic attributes of collection of resources (Application, Group, Account, etc.)
-type collectionResource struct {
-	resource
-	Offset int `json:"offset"`
-	Limit  int `json:"limit"`
-}
-
-func (r collectionResource) IsCacheable() bool {
-	return false
-}
-
-//resource resprents the basic attributes of any resource (Application, Group, Account, etc.)
-type resource struct {
-	Href       string `json:"href,omitempty"`
-	CreatedAt  string `json:"createdAt,omitempty"`
-	ModifiedAt string `json:"modifiedAt,omitempty"`
-}
-
-func (r resource) IsCacheable() bool {
-	return true
-}
-
-//CustomData represents Stormpath's custom data resouce
-type CustomData map[string]interface{}
 
 //Init initializes the underlying client that communicates with Stormpath
 func Init(credentials Credentials, cache Cache) {
@@ -80,20 +63,24 @@ func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *
 	initLog()
 }
 
+func (client *Client) postURLEncodedForm(urlStr string, body string, result interface{}) error {
+	return client.execute("POST", urlStr, []byte(body), result, ApplicationFormURLencoded)
+}
+
 func (client *Client) post(urlStr string, body interface{}, result interface{}) error {
-	return client.execute("POST", urlStr, body, result)
+	return client.execute("POST", urlStr, body, result, ApplicationJson)
 }
 
 func (client *Client) get(urlStr string, body interface{}, result interface{}) error {
-	return client.execute("GET", urlStr, body, result)
+	return client.execute("GET", urlStr, body, result, ApplicationJson)
 }
 
 func (client *Client) delete(urlStr string, body interface{}) error {
-	return client.do(client.newRequest("DELETE", urlStr, body))
+	return client.do(client.newRequest("DELETE", urlStr, body, ApplicationJson))
 }
 
-func (client *Client) execute(method string, urlStr string, body interface{}, result interface{}) error {
-	return client.doWithResult(client.newRequest(method, urlStr, body), result)
+func (client *Client) execute(method string, urlStr string, body interface{}, result interface{}, contentType string) error {
+	return client.doWithResult(client.newRequest(method, urlStr, body, contentType), result)
 }
 
 func buildRelativeURL(parts ...string) string {
@@ -101,7 +88,7 @@ func buildRelativeURL(parts ...string) string {
 
 	for i, part := range parts {
 		buffer.WriteString(part)
-		if i+1 < len(parts) {
+		if !strings.HasSuffix(part, "/") && i+1 < len(parts) {
 			buffer.WriteString("/")
 		}
 	}
@@ -114,7 +101,7 @@ func buildAbsoluteURL(parts ...string) string {
 
 	for i, part := range parts {
 		buffer.WriteString(part)
-		if i+1 < len(parts) {
+		if !strings.HasSuffix(part, "/") && i+1 < len(parts) {
 			buffer.WriteString("/")
 		}
 	}
@@ -122,26 +109,56 @@ func buildAbsoluteURL(parts ...string) string {
 	return buffer.String()
 }
 
-func (client *Client) newRequest(method string, urlStr string, body interface{}) *http.Request {
-	jsonBody, _ := json.Marshal(body)
-	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(jsonBody))
+func (client *Client) newRequest(method string, urlStr string, body interface{}, contentType string) *http.Request {
+	var encodedBody []byte
+	if contentType == ApplicationJson {
+		encodedBody, _ = json.Marshal(body)
+	} else {
+		//If content type is not application/json then it is application/x-www-form-urlencoded in which case the body should the encoded params as a []byte
+		encodedBody = body.([]byte)
+	}
+	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(encodedBody))
 	req.Header.Set("User-Agent", fmt.Sprintf("jarias/stormpath-sdk-go/%s (%s; %s)", version, runtime.GOOS, runtime.GOARCH))
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", ApplicationJson)
+	req.Header.Set("Content-Type", contentType)
 
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, jsonBody, time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, encodedBody, time.Now().In(time.UTC), client.Credentials, nonce)
 	return req
 }
 
-func requestParams(pageRequest url.Values, filter url.Values, extraParams url.Values) string {
+//buildExpandParam coverts a slice of expand attributes to a url.Values with
+//only one value "expand=attr1,attr2,etc"
+func buildExpandParam(expandAttributes []string) url.Values {
+	stringBuffer := bytes.NewBufferString("")
+
+	first := true
+	for _, expandAttribute := range expandAttributes {
+		if !first {
+			stringBuffer.WriteString(",")
+		}
+		stringBuffer.WriteString(expandAttribute)
+		first = false
+	}
+
+	values := url.Values{}
+	expandValue := stringBuffer.String()
+	//Should not include the expand query param if the value is empty
+	if expandValue != "" {
+		values.Add("expand", expandValue)
+	}
+
+	return values
+}
+
+func requestParams(values ...url.Values) string {
 	params := url.Values{}
 
-	params = appendParams(params, pageRequest)
-	params = appendParams(params, filter)
-	params = appendParams(params, extraParams)
+	for _, v := range values {
+		params = appendParams(params, v)
+	}
 
 	encodedParams := params.Encode()
 	if encodedParams != "" {

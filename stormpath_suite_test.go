@@ -55,6 +55,19 @@ func newTestAccount() *Account {
 	return NewAccount(email, "1234567z!A89", email, "givenName", "surname")
 }
 
+func registerTestAccount() *Account {
+	account := newTestAccount()
+	app.RegisterAccount(account)
+	return account
+}
+
+func addAccountToGroup(account *Account) *Group {
+	group := newTestGroup()
+	app.CreateGroup(group)
+	account.AddToGroup(group)
+	return group
+}
+
 func initLogInTestMode() {
 	Logger = log.New(GinkgoWriter, "", log.Ldate|log.Ltime|log.Lshortfile)
 }

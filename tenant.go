@@ -1,15 +1,12 @@
 package stormpath
 
-import (
-	"net/url"
-)
+import "net/url"
 
 //Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
 type Tenant struct {
-	resource
+	customDataAwareResource
 	Name         string       `json:"name"`
 	Key          string       `json:"key"`
-	CustomData   CustomData   `json:"customData"`
 	Applications Applications `json:"applications"`
 	Directories  Directories  `json:"directories"`
 }
@@ -23,6 +20,7 @@ func CurrentTenant() (*Tenant, error) {
 			"GET",
 			buildRelativeURL("tenants", "current"),
 			emptyPayload(),
+			ApplicationJson,
 		), tenant)
 
 	return tenant, err
@@ -35,7 +33,7 @@ func (tenant *Tenant) CreateApplication(app *Application) error {
 	var extraParams = url.Values{}
 	extraParams.Add("createDirectory", "true")
 
-	return client.post(buildRelativeURL("applications", requestParams(nil, nil, extraParams)), app, app)
+	return client.post(buildRelativeURL("applications", requestParams(extraParams)), app, app)
 }
 
 //CreateDirectory creates a new directory for the given tenant
@@ -48,10 +46,10 @@ func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 //GetApplications returns all the applications for the given tenant
 //
 //See: http://docs.stormpath.com/rest/product-guide/#tenant-applications
-func (tenant *Tenant) GetApplications(pageRequest url.Values, filter url.Values) (*Applications, error) {
+func (tenant *Tenant) GetApplications(criteria Criteria) (*Applications, error) {
 	apps := &Applications{}
 
-	err := client.get(buildAbsoluteURL(tenant.Applications.Href, requestParams(pageRequest, filter, url.Values{})), emptyPayload(), apps)
+	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.ToQueryString()), emptyPayload(), apps)
 
 	return apps, err
 }
@@ -59,39 +57,10 @@ func (tenant *Tenant) GetApplications(pageRequest url.Values, filter url.Values)
 //GetDirectories returns all the directories for the given tenant
 //
 //See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
-func (tenant *Tenant) GetDirectories(pageRequest url.Values, filter url.Values) (*Directories, error) {
+func (tenant *Tenant) GetDirectories(criteria Criteria) (*Directories, error) {
 	directories := &Directories{}
 
-	err := client.get(buildAbsoluteURL(tenant.Directories.Href, requestParams(pageRequest, filter, url.Values{})), emptyPayload(), directories)
+	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.ToQueryString()), emptyPayload(), directories)
 
 	return directories, err
-}
-
-//UpdateCustomData updates the tenant custom data and returns that updated custom data as a map[string]interface
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (tenant *Tenant) UpdateCustomData(customData map[string]interface{}) (map[string]interface{}, error) {
-	customData = cleanCustomData(customData)
-
-	err := client.post(buildAbsoluteURL(tenant.Href, "customData"), customData, &customData)
-
-	return customData, err
-}
-
-//DeleteCustomData deletes all the tenants custom data
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (tenant *Tenant) DeleteCustomData() error {
-	return client.delete(buildAbsoluteURL(tenant.Href, "customData"), emptyPayload())
-}
-
-//GetCustomData gets the tenant custom data map
-//
-//See: http://docs.stormpath.com/rest/product-guide/#custom-data
-func (tenant *Tenant) GetCustomData() (map[string]interface{}, error) {
-	customData := map[string]interface{}{}
-
-	err := client.get(buildAbsoluteURL(tenant.Href, "customData"), emptyPayload(), &customData)
-
-	return customData, err
 }

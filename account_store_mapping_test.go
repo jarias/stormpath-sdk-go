@@ -31,5 +31,25 @@ var _ = Describe("AccountStoreMapping", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(asm.Href).NotTo(BeEmpty())
 		})
+		It("should return a not found error if the application doesn't exists", func() {
+			dir := newTestDirectory()
+
+			tenant.CreateDirectory(dir)
+
+			asm := NewAccountStoreMapping(BaseURL+"applications/7ZSGIObcwO8UosxFGfUaxx", dir.Href)
+			err := asm.Save()
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(400))
+			Expect(err.(Error).Code).To(Equal(2014))
+		})
+		It("should return a not found error if the application doesn't exists", func() {
+			asm := NewAccountStoreMapping(app.Href, BaseURL+"directories/7ZSGIObcwO8UosxFGfUaxx")
+			err := asm.Save()
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.(Error).Status).To(Equal(400))
+			Expect(err.(Error).Code).To(Equal(2014))
+		})
 	})
 })
