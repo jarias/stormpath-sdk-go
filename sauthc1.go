@@ -42,7 +42,7 @@ func Authenticate(req *http.Request, payload []byte, date time.Time, credentials
 			NL +
 			canonicalizeresourcePath(req.URL.Path) +
 			NL +
-			canonicalizeQueryString(req) +
+			canonicalizeQueryString(req.URL.Query()) +
 			NL +
 			canonicalizeHeadersString(req.Header) +
 			NL +
@@ -104,9 +104,8 @@ func encodeURL(value string, path bool, canonical bool) string {
 	return encoded
 }
 
-func canonicalizeQueryString(req *http.Request) string {
+func canonicalizeQueryString(queryValues url.Values) string {
 	stringBuffer := bytes.NewBufferString("")
-	queryValues := req.URL.Query()
 
 	keys := sortedMapKeys(queryValues)
 

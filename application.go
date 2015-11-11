@@ -3,7 +3,6 @@ package stormpath
 import (
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/url"
 	"time"
 
@@ -162,7 +161,12 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
 	response := &OAuthResponse{}
 
-	body := fmt.Sprintf("grant_type=password&password=%s&username=%s", password, username)
+	values := url.Values{
+		"grant_type": {"password"},
+		"username":   {username},
+		"password":   {password},
+	}
+	body := canonicalizeQueryString(values)
 
 	err := client.postURLEncodedForm(
 		buildAbsoluteURL(app.Href, "oauth/token"),
