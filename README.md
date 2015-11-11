@@ -8,7 +8,7 @@ Master:
 
 [![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=master)](https://travis-ci.org/jarias/stormpath-sdk-go) [![codecov.io](http://codecov.io/github/jarias/stormpath-sdk-go/coverage.svg?branch=master)](http://codecov.io/github/jarias/stormpath-sdk-go?branch=master)
 
-#Usage
+# Usage
 
 ```go get github.com/jarias/stormpath-sdk-go```
 
@@ -45,18 +45,42 @@ Features:
 * Load credentials via properties file or env variables
 * Requests are authenticated via Stormpath SAuthc1 algorithm
 
-#Debugging
+# Debugging
 
 If you need to trace all requests done to stormpath you can enable debugging in the logs
 by setting the environment variable STORMPATH_LOG_LEVEL=DEBUG the default level is ERROR.
 
-#Contributing
+# Contributing
 
-Pull request are more than welcome, all pull requests should be from and directed to the develop branch NOT master.
+Pull request are more than welcome, all pull requests should be from and directed to the ```develop``` branch **NOT** ```master```.
 
 Please make sure you add tests ;)
 
-#License
+Development requirements:
+
+- Go 1.4+
+- [Ginkgo](https://onsi.github.io/ginkgo/) ```go get github.com/onsi/ginkgo/ginkgo```
+- [Gomega](http://onsi.github.io/gomega/) ```go get github.com/onsi/gomega```
+- An [StormPath](https://stormpath.com) account (for integration testing)
+- Redis (there is a Docker compose file to easily start up redis)
+
+Running the test suite
+
+Env variables:
+
+```
+export STORMPATH_API_KEY_ID=XXXX
+export STORMPATH_API_KEY_SECRET=XXXX
+export REDIS_SERVER=localhost
+```
+
+```
+ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover
+```
+
+I'm aiming at 85% test coverage not yet met but thats the goal.
+
+# License
 
 Copyright 2014, 2015 Julio Arias
 
