@@ -24,6 +24,7 @@ type Application struct {
 	AccountStoreMappings       *AccountStoreMappings `json:"accountStoreMappings,omitempty"`
 	DefaultAccountStoreMapping *AccountStoreMapping  `json:"defaultAccountStoreMapping,omitempty"`
 	DefaultGroupStoreMapping   *AccountStoreMapping  `json:"defaultGroupStoreMapping,omitempty"`
+	OAuthPolicy                *OAuthPolicy          `json:"oAuthPolicy,omitempty"`
 }
 
 //Applications represents a paged result or applications
@@ -335,4 +336,12 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	result.Status = token.Claims["status"].(string)
 
 	return result, nil
+}
+
+func (app *Application) GetOAuthPolicy() (*OAuthPolicy, error) {
+	oauthPolicy := &OAuthPolicy{}
+
+	err := client.get(app.OAuthPolicy.Href, emptyPayload(), oauthPolicy)
+
+	return oauthPolicy, err
 }
