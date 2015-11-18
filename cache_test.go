@@ -1,39 +1,42 @@
 package stormpath_test
 
 import (
-	"encoding/json"
-	"os"
-
-	"github.com/garyburd/redigo/redis"
 	. "github.com/jarias/stormpath-sdk-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	lediscfg "github.com/siddontang/ledisdb/config"
+	"github.com/siddontang/ledisdb/ledis"
 )
 
 var _ = Describe("Cache", func() {
-	Describe("RedisCache", func() {
+	Describe("LedisCache", func() {
 		key := "key"
-		redisServer := os.Getenv("REDIS_SERVER")
-		redisConn, err := redis.Dial("tcp", redisServer+":6379")
+		cfg := lediscfg.NewConfigDefault()
+		l, err := ledis.Open(cfg)
 		if err != nil {
 			panic(err)
 		}
-		redisCache := RedisCache{redisConn}
+		db, err := l.Select(0)
+		if err != nil {
+			panic(err)
+		}
+
+		ledisCache := LedisCache{db}
 
 		AfterEach(func() {
-			redisConn.Do("FLUSHDB")
+			ledisCache.DB.FlushAll()
 		})
 
 		Describe("Exists", func() {
 			It("should return false if the key doesn't exists", func() {
-				r := redisCache.Exists(key)
+				r := ledisCache.Exists(key)
 
 				Expect(r).To(BeFalse())
 			})
 			It("should return true if the key does exists", func() {
-				redisConn.Do("SET", key, 1)
+				db.Set([]byte(key), []byte("hello"))
 
-				r := redisCache.Exists(key)
+				r := ledisCache.Exists(key)
 
 				Expect(r).To(BeTrue())
 			})
@@ -41,58 +44,56 @@ var _ = Describe("Cache", func() {
 
 		Describe("Set", func() {
 			It("should store a new object in the cache", func() {
-				r := redisCache.Exists(key)
+				r := ledisCache.Exists(key)
 
 				Expect(r).To(BeFalse())
 
-				redisCache.Set(key, 1)
+				ledisCache.Set(key, "hello")
 
-				r = redisCache.Exists(key)
+				r = ledisCache.Exists(key)
 
 				Expect(r).To(BeTrue())
 			})
 			It("should update an existing object in the cache", func() {
-				var r int
+				ledisCache.Set(key, "hello")
+				ledisCache.Set(key, "bye")
 
-				redisCache.Set(key, 1)
-				redisCache.Set(key, 2)
+				var r string
+				ledisCache.Get(key, &r)
 
-				cacheData, err := redisConn.Do("GET", key)
-
-				json.Unmarshal(cacheData.([]byte), &r)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(r).To(Equal(2))
+				Expect(r).To(Equal("bye"))
 			})
 		})
 		Describe("Get", func() {
 			It("should load empty data if the key doesn't exists into the given interface", func() {
-				var r int
+				var r string
 
-				err := redisCache.Get(key, &r)
+				err := ledisCache.Get(key, &r)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(r).To(Equal(0))
+				Expect(r).To(BeEmpty())
 			})
 			It("should load data from the cache into the given interface", func() {
-				var r int
+				var r string
 
-				redisCache.Set(key, 2)
-				err := redisCache.Get(key, &r)
+				ledisCache.Set(key, "hello")
+				err := ledisCache.Get(key, &r)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(r).To(Equal(2))
+				Expect(r).To(Equal("hello"))
 			})
 		})
 		Describe("Del", func() {
 			It("should delete a given key from the cache", func() {
-				redisCache.Set(key, 2)
+				ledisCache.Set(key, []byte("hello"))
 
-				r := redisCache.Exists(key)
+				r := ledisCache.Exists(key)
 				Expect(r).To(BeTrue())
 
-				redisCache.Del(key)
+				ledisCache.Del(key)
 
-				r = redisCache.Exists(key)
+				r = ledisCache.Exists(key)
 				Expect(r).To(BeFalse())
 			})
 		})
