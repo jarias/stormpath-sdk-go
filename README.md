@@ -27,7 +27,7 @@ stormpath.Init(credentials, nil)
 tenant, _ := stormpath.CurrentTenant()
 
 //Get the tenat applications
-apps, _ := tenant.GetApplications(MakeApplicationCriteria().NameEq("test app"))
+apps, _ := tenant.GetApplications(stormpath.MakeApplicationCriteria().NameEq("test app"))
 
 //Get the first application
 app := apps.Items[0]
