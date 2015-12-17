@@ -20,7 +20,7 @@ import (
 var BaseURL = "https://api.stormpath.com/v1/"
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.12"
+const version = "0.1.0-beta.13"
 
 const (
 	Enabled                   = "ENABLED"
