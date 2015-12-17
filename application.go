@@ -154,7 +154,13 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 		return nil, err
 	}
 
-	return accountRef.Account, nil
+	account := accountRef.Account
+	err = account.Refresh()
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
 //GetOAuthToken creates a OAuth2 token response for a given user credentials

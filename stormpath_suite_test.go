@@ -6,11 +6,12 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/garyburd/redigo/redis"
 	. "github.com/jarias/stormpath-sdk-go"
 	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	lediscfg "github.com/siddontang/ledisdb/config"
+	"github.com/siddontang/ledisdb/ledis"
 )
 
 var (
@@ -86,13 +87,17 @@ var _ = BeforeSuite(func() {
 
 	cacheEnabled := os.Getenv("CACHE_ENABLED")
 	if cacheEnabled == "true" {
-		redisServer := os.Getenv("REDIS_SERVER")
-		redisConn, err := redis.Dial("tcp", redisServer+":6379")
+		cfg := lediscfg.NewConfigDefault()
+		l, err := ledis.Open(cfg)
+		if err != nil {
+			panic(err)
+		}
+		db, err := l.Select(0)
 		if err != nil {
 			panic(err)
 		}
 
-		Init(cred, RedisCache{redisConn})
+		Init(cred, LedisCache{db})
 	} else {
 		Init(cred, nil)
 	}

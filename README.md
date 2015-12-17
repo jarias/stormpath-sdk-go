@@ -40,7 +40,7 @@ fmt.Println(account)
 
 Features:
 
-* Cache with a sample Redis implementation
+* Cache with a sample Ledis implementation
 * Almost 100% of the Stormpath API implemented
 * Load credentials via properties file or env variables
 * Requests are authenticated via Stormpath SAuthc1 algorithm
@@ -62,7 +62,6 @@ Development requirements:
 - [Ginkgo](https://onsi.github.io/ginkgo/) ```go get github.com/onsi/ginkgo/ginkgo```
 - [Gomega](http://onsi.github.io/gomega/) ```go get github.com/onsi/gomega```
 - An [Stormpath](https://stormpath.com) account (for integration testing)
-- Redis (there is a Docker compose file to easily start up redis)
 
 Running the test suite
 
@@ -71,7 +70,6 @@ Env variables:
 ```
 export STORMPATH_API_KEY_ID=XXXX
 export STORMPATH_API_KEY_SECRET=XXXX
-export REDIS_SERVER=localhost
 ```
 
 ```
