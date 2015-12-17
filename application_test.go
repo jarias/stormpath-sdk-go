@@ -64,6 +64,9 @@ var _ = Describe("Application", func() {
 			a, err := app.AuthenticateAccount(account.Email, "1234567z!A89")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(a.Href).To(Equal(account.Href))
+			Expect(a.GivenName).To(Equal(account.GivenName))
+			Expect(a.Surname).To(Equal(account.Surname))
+			Expect(a.Email).To(Equal(account.Email))
 		})
 	})
 
