@@ -49,6 +49,15 @@ type OAuthResponse struct {
 	StormpathAccessTokenHref string `json:"stormpath_access_token_href"`
 }
 
+type AccessToken struct {
+	resource
+	Account      *Account               `json:"account,omitempty"`
+	Tenant       *Tenant                `json:"tenant,omitempty"`
+	Application  *Application           `json:"application,omitempty"`
+	JWT          string                 `json:"jwt"`
+	ExpandedJWT  map[string]interface{} `json:"expandedJwt"`
+}
+
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
@@ -177,6 +186,23 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 	err := client.postURLEncodedForm(
 		buildAbsoluteURL(app.Href, "oauth/token"),
 		body,
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//Validate Token against Application
+func (app *Application) ValidateToken(token string) (*AccessToken, error) {
+	response := &AccessToken{}
+
+	err := client.get(
+		buildAbsoluteURL(app.Href, "authTokens", token),
+		emptyPayload(),
 		response,
 	)
 

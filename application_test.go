@@ -26,7 +26,25 @@ var _ = Describe("Application", func() {
 			Expect(response.RefreshToken).NotTo(BeEmpty())
 			Expect(response.ExpiresIn).To(Equal(3600))
 		})
+
+		It("should validate an OAuth AccessToken token response if the token is valid", func() {
+			account := newTestAccount()
+			app.RegisterAccount(account)
+
+			response, err := app.GetOAuthToken(account.Username, "1234567z!A89")
+			token, err := app.ValidateToken(response.AccessToken)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(token).NotTo(BeNil())
+			Expect(token.JWT).NotTo(BeEmpty())
+		})
+
+		It("should validate an OAuth AccessToken token response if the token is valid", func() {
+			_, err := app.ValidateToken("anInvalidToken")
+			Expect(err).To(HaveOccurred())
+		})
 	})
+
 	Describe("JSON", func() {
 		It("should marshal a minimum JSON with only the name", func() {
 			application := NewApplication("name")
