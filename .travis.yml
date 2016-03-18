@@ -7,6 +7,7 @@ install:
 - go get github.com/mattn/goveralls
 - go get github.com/onsi/ginkgo/ginkgo
 - go get github.com/onsi/gomega
+- go get golang.org/x/tools/cmd/cover
 - go get
 script:
   - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race
