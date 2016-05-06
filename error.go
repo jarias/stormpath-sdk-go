@@ -26,9 +26,12 @@ func (e Error) String() string {
 func handleResponseError(resp *http.Response, err error) error {
 	//Error from the request execution
 	if err != nil {
-		Logger.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
+		if resp != nil {
+			Logger.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
+		}
 		return err
 	}
+
 	//Check for Stormpath specific errors
 	if resp.StatusCode != 200 && resp.StatusCode != 204 && resp.StatusCode != 201 && resp.StatusCode != 302 {
 		spError := &Error{}
