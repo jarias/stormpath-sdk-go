@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"time"
+	"bytes"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/nu7hatch/gouuid"
@@ -181,11 +182,12 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 		"username":   {username},
 		"password":   {password},
 	}
-	body := canonicalizeQueryString(values)
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
 
 	err := client.postURLEncodedForm(
 		buildAbsoluteURL(app.Href, "oauth/token"),
-		body,
+		body.String(),
 		response,
 	)
 

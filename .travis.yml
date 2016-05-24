@@ -1,18 +1,15 @@
 language: go
 go:
-- 1.4.3
-- 1.5.3
-- 1.6.2
+- 1.6
+- tip
 install:
-- go get github.com/mattn/goveralls
-- go get github.com/onsi/ginkgo/ginkgo
-- go get github.com/onsi/gomega
 - go get golang.org/x/tools/cmd/cover
+- go get github.com/stretchr/testify/assert
 - go get
 script:
-  - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race
+  - go test . -coverprofile=coverage.txt -covermode=atomic
 after_success:
-  - mv stormpath-sdk-go.coverprofile coverage.txt && bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
 env:
   global:
   - secure: OrnGKr9+VSFNGuJdJvB4WrpS4GNqByEUQn2k9ARJXWtOcqiQUijNZJ5A9oC+4M5PRrvRx6IO4aRELVVc9tH2jbMvpwVyn8r9rHzfHLOomudnU679w3lI8V7K57lOW8V7XunMVTdQSmFno/GT7x7fTZ2HROxd5jKepzlNP6mD1tE=
