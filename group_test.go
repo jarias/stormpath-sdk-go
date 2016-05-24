@@ -2,20 +2,16 @@ package stormpath_test
 
 import (
 	"encoding/json"
+	"testing"
 
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Group", func() {
-	Describe("JSON", func() {
-		It("should marshal a minimum JSON with only the directory name", func() {
-			group := NewGroup("name")
+func TestGroupJsonMarshaling(t *testing.T) {
+	group := NewGroup("name")
 
-			jsonData, _ := json.Marshal(group)
+	jsonData, _ := json.Marshal(group)
 
-			Expect(string(jsonData)).To(Equal("{\"name\":\"name\"}"))
-		})
-	})
-})
+	assert.Equal(t, "{\"name\":\"name\"}", string(jsonData))
+}

@@ -13,6 +13,7 @@ type Error struct {
 	Message          string
 	DeveloperMessage string
 	MoreInfo         string
+	RequestID        string
 }
 
 func (e Error) Error() string {
@@ -20,14 +21,14 @@ func (e Error) Error() string {
 }
 
 func (e Error) String() string {
-	return fmt.Sprintf("Stormpath request error \nCode: [ %d ]\nMessage: [ %s ]\nDeveloper Message: [ %s ]\nMore info [ %s ]", e.Code, e.Message, e.DeveloperMessage, e.MoreInfo)
+	return fmt.Sprintf("Stormpath request error { RequestID: %s Code: %d Message: %s }", e.RequestID, e.Code, e.Message)
 }
 
-func handleResponseError(resp *http.Response, err error) error {
+func handleResponseError(req *http.Request, resp *http.Response, err error) error {
 	//Error from the request execution
 	if err != nil {
-		if resp != nil {
-			Logger.Printf("[ERROR] %s [%s]", err, resp.Request.URL.String())
+		if req != nil {
+			Logger.Printf("[ERROR] %s [%s]", err, req.URL.String())
 		}
 		return err
 	}
@@ -40,6 +41,7 @@ func handleResponseError(resp *http.Response, err error) error {
 		if err != nil {
 			return err
 		}
+		spError.RequestID = resp.Header.Get("Stormpath-Request-Id")
 
 		Logger.Printf("[ERROR] %s", spError)
 		return *spError
