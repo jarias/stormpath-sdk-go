@@ -2,54 +2,62 @@ package stormpath_test
 
 import (
 	"encoding/json"
+	"testing"
 
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("AccountStoreMapping", func() {
-	Describe("JSON", func() {
-		It("should marshall a minimum JSON with only the required fields", func() {
-			accountStoreMapping := NewAccountStoreMapping("http://appurl", "http://storeUrl")
+func TestAccountStoreMappingJsonMarshaling(t *testing.T) {
+	t.Parallel()
 
-			jsonData, _ := json.Marshal(accountStoreMapping)
+	accountStoreMapping := NewAccountStoreMapping("http://appurl", "http://storeUrl")
 
-			Expect(string(jsonData)).To(Equal("{\"application\":{\"href\":\"http://appurl\"},\"accountStore\":{\"href\":\"http://storeUrl\"}}"))
-		})
-	})
+	jsonData, _ := json.Marshal(accountStoreMapping)
 
-	Describe("Save", func() {
-		It("should create a new account store mapping", func() {
-			dir := newTestDirectory()
+	assert.Equal(t, "{\"application\":{\"href\":\"http://appurl\"},\"accountStore\":{\"href\":\"http://storeUrl\"}}", string(jsonData))
+}
 
-			tenant.CreateDirectory(dir)
+func TestSaveAccountStoreMapping(t *testing.T) {
+	t.Parallel()
 
-			asm := NewAccountStoreMapping(app.Href, dir.Href)
-			err := asm.Save()
+	application := createTestApplication()
+	defer application.Purge()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(asm.Href).NotTo(BeEmpty())
-		})
-		It("should return a not found error if the application doesn't exists", func() {
-			dir := newTestDirectory()
+	directory := createTestDirectory()
+	defer directory.Delete()
 
-			tenant.CreateDirectory(dir)
+	asm := NewAccountStoreMapping(application.Href, directory.Href)
+	err := asm.Save()
 
-			asm := NewAccountStoreMapping(BaseURL+"applications/7ZSGIObcwO8UosxFGfUaxx", dir.Href)
-			err := asm.Save()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, asm.Href)
+}
 
-			Expect(err).To(HaveOccurred())
-			Expect(err.(Error).Status).To(Equal(400))
-			Expect(err.(Error).Code).To(Equal(2014))
-		})
-		It("should return a not found error if the application doesn't exists", func() {
-			asm := NewAccountStoreMapping(app.Href, BaseURL+"directories/7ZSGIObcwO8UosxFGfUaxx")
-			err := asm.Save()
+func TestSaveAccountStoreMappingApplicationNoExists(t *testing.T) {
+	t.Parallel()
 
-			Expect(err).To(HaveOccurred())
-			Expect(err.(Error).Status).To(Equal(400))
-			Expect(err.(Error).Code).To(Equal(2014))
-		})
-	})
-})
+	directory := createTestDirectory()
+	defer directory.Delete()
+
+	asm := NewAccountStoreMapping(BaseURL+"applications/XXX", directory.Href)
+	err := asm.Save()
+
+	assert.Error(t, err)
+	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, 2014, err.(Error).Code)
+}
+
+func TestSaveAccountStoreMappingDirectoryNoExists(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	asm := NewAccountStoreMapping(application.Href, BaseURL+"directories/XXX")
+	err := asm.Save()
+
+	assert.Error(t, err)
+	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, 2014, err.(Error).Code)
+}

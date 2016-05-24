@@ -1,5 +1,7 @@
 .envrc
-*.coverprofile
+coverage.txt
 stormpath-sdk-go.test
-gin-bin
-var/
+*.svg
+prof.mem
+prof.cpu
+prof.cov

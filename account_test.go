@@ -2,174 +2,214 @@ package stormpath_test
 
 import (
 	"encoding/json"
+	"testing"
 
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Account", func() {
-	Describe("JSON", func() {
-		It("should marshal a minimum JSON with only the account required fields", func() {
-			acc := NewAccount("test@test.org", "123", "test@test.org", "test", "test")
+func TestAccountJsonMarshaling(t *testing.T) {
+	t.Parallel()
+	account := NewAccount("test@test.org", "123", "test@test.org", "test", "test")
 
-			jsonData, _ := json.Marshal(acc)
+	jsonData, err := json.Marshal(account)
 
-			Expect(string(jsonData)).To(Equal("{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}"))
-		})
-	})
-	Describe("GetAccount", func() {
-		It("should return an error if the account doesn't exists", func() {
-			account, err := GetAccount(BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
+	assert.NoError(t, err)
+	assert.Equal(t, "{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}", string(jsonData))
+}
 
-			Expect(err).To(HaveOccurred())
-			Expect(err.(Error).Status).To(Equal(404))
-			Expect(account).To(BeNil())
-		})
-		It("should return the account for the given href", func() {
-			newAccount := newTestAccount()
-			app.RegisterAccount(newAccount)
+func TestGetAccountNoExists(t *testing.T) {
+	t.Parallel()
 
-			account, err := GetAccount(newAccount.Href, MakeAccountCriteria())
+	account, err := GetAccount(BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(account).To(Equal(newAccount))
-		})
-	})
-	Describe("VerifyEmailToken", func() {
-		It("should return error if the token doesn't exists", func() {
-			account, err := VerifyEmailToken("token")
-			Expect(err).To(HaveOccurred())
-			Expect(err.(Error).Status).To(Equal(404))
-			Expect(account).To(BeNil())
-		})
-		It("should return an account if the token is valid", func() {
-			directory := newTestDirectory()
-			tenant.CreateDirectory(directory)
+	assert.Error(t, err)
+	assert.Equal(t, 404, err.(Error).Status)
+	assert.Nil(t, account)
+}
 
-			policy, _ := directory.GetAccountCreationPolicy()
-			policy.VerificationEmailStatus = Enabled
-			policy.Update()
+func TestGetAccount(t *testing.T) {
+	t.Parallel()
 
-			account := newTestAccount()
-			directory.RegisterAccount(account)
-			a, err := VerifyEmailToken(GetToken(account.EmailVerificationToken.Href))
+	application := createTestApplication()
+	defer application.Purge()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(a.Href).To(Equal(account.Href))
-		})
-	})
-	Describe("Update", func() {
-		It("should update an existing account", func() {
-			account := newTestAccount()
-			app.RegisterAccount(account)
+	newAccount := createTestAccount(application)
 
-			account.GivenName = "julio"
-			err := account.Update()
+	account, err := GetAccount(newAccount.Href, MakeAccountCriteria())
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(account.GivenName).To(Equal("julio"))
-			Expect(account.CreatedAt).NotTo(BeNil())
-			Expect(account.ModifiedAt).NotTo(BeNil())
-		})
-	})
+	assert.NoError(t, err)
+	assert.Equal(t, newAccount, account)
+}
 
-	Describe("Delete", func() {
-		It("should delete an existing account", func() {
-			account := newTestAccount()
-			app.RegisterAccount(account)
+func TestVerifyInvalidEmailToken(t *testing.T) {
+	t.Parallel()
 
-			err := account.Delete()
+	account, err := VerifyEmailToken("token")
 
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
+	assert.Error(t, err)
+	assert.Equal(t, 404, err.(Error).Status)
+	assert.Nil(t, account)
+}
 
-	Describe("AddToGroup", func() {
-		It("should add an account to an existing group", func() {
-			group := newTestGroup()
-			app.CreateGroup(group)
+func TestVerifyValidEmailToken(t *testing.T) {
+	t.Parallel()
 
-			_, err := account.AddToGroup(group)
-			gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
+	directory := createTestDirectory()
+	defer directory.Delete()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(gm.Items).To(HaveLen(1))
-			account.RemoveFromGroup(group)
-			group.Delete()
-		})
-	})
+	policy, _ := directory.GetAccountCreationPolicy()
+	policy.VerificationEmailStatus = Enabled
+	policy.Update()
 
-	Describe("RemoveFromGroup", func() {
-		It("should remove an account from an existing group", func() {
-			account := newTestAccount()
-			app.RegisterAccount(account)
+	account := newTestAccount()
+	directory.RegisterAccount(account)
+	account.Refresh()
 
-			var groupCountBefore int
-			group := newTestGroup()
-			app.CreateGroup(group)
+	assert.Equal(t, Unverified, account.Status)
 
-			gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
-			groupCountBefore = len(gm.Items)
+	verifyAccount, err := VerifyEmailToken(GetToken(account.EmailVerificationToken.Href))
+	verifyAccount.Refresh()
 
-			account.AddToGroup(group)
+	assert.NoError(t, err)
+	assert.Equal(t, account.Href, verifyAccount.Href)
+	assert.Equal(t, Enabled, verifyAccount.Status)
+}
 
-			err := account.RemoveFromGroup(group)
-			gm, _ = account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
+func TestAccountUpdate(t *testing.T) {
+	t.Parallel()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(gm.Items).To(HaveLen(groupCountBefore))
-			group.Delete()
-		})
-	})
+	application := createTestApplication()
+	defer application.Purge()
 
-	Describe("GetGroupMemberships", func() {
-		It("should allow expanding the account", func() {
-			acct := registerTestAccount()
-			group := addAccountToGroup(acct)
+	account := createTestAccount(application)
 
-			groupMemberships, err := acct.GetGroupMemberships(MakeGroupMemershipCriteria().WithAccount().Offset(0).Limit(25))
+	account.GivenName = "julio"
+	err := account.Update()
 
-			Expect(err).NotTo(HaveOccurred())
-			for _, gm := range groupMemberships.Items {
-				Expect(gm.Account).To(BeEquivalentTo(*acct))
-				Expect(gm.Group).NotTo(BeEquivalentTo(*group))
-			}
-		})
-	})
+	assert.NoError(t, err)
 
-	Describe("GetCustomData", func() {
-		It("should retrieve an account custom data", func() {
-			customData, err := account.GetCustomData()
+	updatedAccount, err := GetAccount(account.Href, MakeAccountCriteria())
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(customData).NotTo(BeEmpty())
-		})
-		It("should return error if account doesn't exists", func() {
-			account := &Account{}
-			account.Href = BaseURL + "/accounts/XXXX"
+	assert.NoError(t, err)
+	assert.Equal(t, "julio", updatedAccount.GivenName)
+}
 
-			customData, err := account.GetCustomData()
-			Expect(err).To(HaveOccurred())
-			Expect(err.(Error).Status).To(Equal(404))
-			Expect(customData).To(BeNil())
-		})
-	})
+func TestAccountDelete(t *testing.T) {
+	t.Parallel()
 
-	Describe("UpdateCustomData", func() {
-		It("should set an account custom data", func() {
-			customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
+	application := createTestApplication()
+	defer application.Purge()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(customData["custom"]).To(Equal("data"))
-		})
+	account := createTestAccount(application)
 
-		It("should update an account custom data", func() {
-			account.UpdateCustomData(map[string]interface{}{"custom": "data"})
-			customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "nodata"})
+	err := account.Delete()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(customData["custom"]).To(Equal("nodata"))
-		})
-	})
-})
+	assert.NoError(t, err)
+}
+
+func TestAddAccountToGroup(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	group := createTestGroup(application)
+	defer group.Delete()
+
+	account := createTestAccount(application)
+
+	_, err := account.AddToGroup(group)
+
+	assert.NoError(t, err)
+
+	gm, err := account.GetGroupMemberships(MakeGroupMemershipCriteria().Offset(0).Limit(25))
+
+	assert.NoError(t, err)
+	assert.Len(t, gm.Items, 1)
+}
+
+func TestRemoveAccountFromGroup(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	var groupCountBefore int
+	group := createTestGroup(application)
+	defer group.Delete()
+
+	account := createTestAccount(application)
+
+	gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
+	groupCountBefore = len(gm.Items)
+
+	account.AddToGroup(group)
+
+	err := account.RemoveFromGroup(group)
+	gm, _ = account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
+
+	assert.NoError(t, err)
+	assert.Len(t, gm.Items, groupCountBefore)
+}
+
+func TestExpandGroupMembershipsAccount(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	group := createTestGroup(application)
+	defer group.Delete()
+
+	account := createTestAccount(application)
+
+	groupMemberships, err := account.GetGroupMemberships(MakeGroupMemershipCriteria().WithAccount().Offset(0).Limit(25))
+
+	assert.NoError(t, err)
+	for _, gm := range groupMemberships.Items {
+		assert.Equal(t, account, gm.Account)
+		assert.NotEqual(t, group, gm.Group)
+	}
+}
+
+func TestGetAccountCustomData(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	customData, err := account.GetCustomData()
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, customData)
+}
+
+func TestGetNoExistsAccountCustomData(t *testing.T) {
+	t.Parallel()
+
+	account := newTestAccount()
+	account.Href = BaseURL + "/accounts/XXXX"
+
+	customData, err := account.GetCustomData()
+
+	assert.Error(t, err)
+	assert.Equal(t, 404, err.(Error).Status)
+	assert.Nil(t, customData)
+}
+
+func TestUpdateAccountCustomData(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "data", customData["custom"])
+}

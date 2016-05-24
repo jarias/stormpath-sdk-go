@@ -1,181 +1,214 @@
 package stormpath_test
 
 import (
+	"testing"
+
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Tenant", func() {
-	Describe("CurrentTentant", func() {
-		It("should retrive the current tenant", func() {
-			tenant, err := CurrentTenant()
+func BenchmarkGetCurrentTenant(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := CurrentTenant()
+		if err != nil {
+			panic(err)
+		}
+	}
+}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(tenant.Href).NotTo(BeEmpty())
-			Expect(tenant.Name).NotTo(BeEmpty())
-			Expect(tenant.Key).NotTo(BeEmpty())
-			Expect(tenant.Applications.Href).NotTo(BeEmpty())
-			Expect(tenant.Directories.Href).NotTo(BeEmpty())
-		})
-	})
+func BenchmarkCreateApplication(b *testing.B) {
+	application := newTestApplication()
+	defer application.Purge()
 
-	Describe("CreateApplication", func() {
-		It("should create a new application", func() {
-			application := newTestApplication()
-			err := tenant.CreateApplication(application)
-			application.Purge()
+	for i := 0; i < b.N; i++ {
+		err := tenant.CreateApplication(application)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(application.Href).NotTo(BeEmpty())
-		})
-	})
+func BenchmarkUpdateCustomData(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		customData := map[string]interface{}{
+			"testIntField":    1,
+			"testStringField": "test",
+		}
 
-	Describe("Custom Data", func() {
-		It("UpdateCustomData should update the given tenant custom data", func() {
-			customData := map[string]interface{}{
-				"testIntField":    1,
-				"testStringField": "test",
-			}
+		_, err := tenant.UpdateCustomData(customData)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
 
-			updatedCustomData, err := tenant.UpdateCustomData(customData)
+func TestGetCurrentTenant(t *testing.T) {
+	t.Parallel()
+	
+	currentTenant, err := CurrentTenant()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedCustomData["testIntField"]).To(Equal(float64(1)))
-			tenant.DeleteCustomData()
-		})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, currentTenant.Href)
+	assert.NotEmpty(t, currentTenant.Name)
+	assert.NotEmpty(t, currentTenant.Key)
+	assert.NotEmpty(t, currentTenant.Applications.Href)
+	assert.NotEmpty(t, currentTenant.Directories.Href)
+}
 
-		It("GetCustomData should update the given tenant custom data", func() {
-			customData := map[string]interface{}{
-				"testIntField":    1,
-				"testStringField": "test",
-			}
+func TestTenantCreateApplication(t *testing.T) {
+	t.Parallel()
+	
+	application := newTestApplication()
+	defer application.Purge()
 
-			tenant.UpdateCustomData(customData)
+	err := tenant.CreateApplication(application)
 
-			customData, err := tenant.GetCustomData()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, application.Href)
+}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(customData["testIntField"]).To(Equal(float64(1)))
-		})
+func TestTenantGetApplications(t *testing.T) {
+	t.Parallel()
+	
+	applications, err := tenant.GetApplications(MakeApplicationsCriteria())
 
-		It("DeleteCustomData should update the given tenant custom data", func() {
-			customData := map[string]interface{}{
-				"testIntField":    1,
-				"testStringField": "test",
-			}
+	assert.NoError(t, err)
+	assert.NotEmpty(t, applications.Items)
+	assert.NotEmpty(t, applications.Href)
+	assert.Equal(t, 0, applications.Offset)
+	assert.Equal(t, 25, applications.Limit)
+}
 
-			tenant.UpdateCustomData(customData)
-			err := tenant.DeleteCustomData()
+func TestTenantGetApplicationsByPage(t *testing.T) {
+	t.Parallel()
+	
+	applications, err := tenant.GetApplications(MakeApplicationsCriteria().Limit(1))
 
-			customData, _ = tenant.GetCustomData()
+	assert.NoError(t, err)
+	assert.Len(t, applications.Items, 1)
+	assert.NotEmpty(t, applications.Href)
+	assert.Equal(t, 0, applications.Offset)
+	assert.Equal(t, 1, applications.Limit)
+}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(customData).To(HaveLen(3))
-		})
+func TestTenantGetApplicationsFiltered(t *testing.T) {
+	t.Parallel()
+	
+	applications, err := tenant.GetApplications(MakeApplicationsCriteria().NameEq("stormpath"))
 
-		//Describe("concurrent access", func() {
-		//	It("should allow current access and be consistent at the end", func() {
-		//		for i := 0; i < 8; i++ {
-		//			go func() {
-		//				defer GinkgoRecover()
-		//
-		//				customData := map[string]interface{}{
-		//					"testIntField":    i,
-		//					"testStringField": "test",
-		//				}
-		//
-		//				data, err := tenant.UpdateCustomData(customData)
-		//				Expect(err).NotTo(HaveOccurred())
-		//				Expect(data["testIntField"]).To(Equal(float64(i)))
-		//				tenant.DeleteCustomData()
-		//			}()
-		//		}
-		//	})
-		//})
-	})
+	assert.NoError(t, err)
+	assert.Len(t, applications.Items, 1)
+	assert.NotEmpty(t, applications.Href)
+	assert.Equal(t, 0, applications.Offset)
+	assert.Equal(t, 25, applications.Limit)
 
-	Describe("CreateDirectory", func() {
-		It("should create a new directory", func() {
-			dir := newTestDirectory()
-			err := tenant.CreateDirectory(dir)
-			dir.Delete()
+	err = applications.Items[0].Refresh()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(dir.Href).NotTo(BeEmpty())
-		})
-	})
+	assert.NoError(t, err)
+	assert.Equal(t, "Stormpath", applications.Items[0].Name)
+}
 
-	Describe("GetDirectories", func() {
-		It("should retrive all the tenant directories", func() {
-			tenant, _ := CurrentTenant()
+func TestUpdateTenantCustomData(t *testing.T) {
+	customData := map[string]interface{}{
+		"testIntField":    1,
+		"testStringField": "test",
+	}
 
-			directories, err := tenant.GetDirectories(MakeDirectoriesCriteria())
+	updatedCustomData, err := tenant.UpdateCustomData(customData)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(directories.Href).NotTo(BeEmpty())
-			Expect(directories.Offset).To(Equal(0))
-			Expect(directories.Limit).To(Equal(25))
-			Expect(directories.Items).NotTo(BeEmpty())
-		})
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1), updatedCustomData["testIntField"])
+	assert.Len(t, updatedCustomData, 5)
 
-		It("should retrive all the tenant directories by page", func() {
-			tenant, _ := CurrentTenant()
+	//Clean the tenant custom data
+	tenant.DeleteCustomData()
+}
 
-			directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().Limit(1))
+func TestGetTenantCustomData(t *testing.T) {
+	customData := map[string]interface{}{
+		"testIntField":    1,
+		"testStringField": "test",
+	}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(directories.Href).NotTo(BeEmpty())
-			Expect(directories.Offset).To(Equal(0))
-			Expect(directories.Limit).To(Equal(1))
-			Expect(directories.Items).To(HaveLen(1))
-		})
+	tenant.UpdateCustomData(customData)
 
-		It("should retrive all the tenant directories by page and filter", func() {
-			tenant, _ := CurrentTenant()
+	updatedCustomData, err := tenant.GetCustomData()
 
-			directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().NameEq("Stormpath Administrators"))
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1), updatedCustomData["testIntField"])
+	assert.Len(t, updatedCustomData, 5)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(directories.Href).NotTo(BeEmpty())
-			Expect(directories.Items).To(HaveLen(1))
-		})
+	//Clean the tenant custom data
+	tenant.DeleteCustomData()
+}
 
-	})
+func TestDeleteTenantCustomData(t *testing.T) {
+	customData := map[string]interface{}{
+		"testIntField":    1,
+		"testStringField": "test",
+	}
 
-	Describe("GetApplications", func() {
-		It("should retrive all the tenant applications", func() {
-			tenant, _ := CurrentTenant()
+	tenant.UpdateCustomData(customData)
 
-			apps, err := tenant.GetApplications(MakeApplicationCriteria())
+	err := tenant.DeleteCustomData()
+	assert.NoError(t, err)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(apps.Href).NotTo(BeEmpty())
-			Expect(apps.Offset).To(Equal(0))
-			Expect(apps.Limit).To(Equal(25))
-			Expect(apps.Items).NotTo(BeEmpty())
-		})
+	updatedCustomData, err := tenant.GetCustomData()
 
-		It("should retrive all the tenant applications by page", func() {
-			tenant, _ := CurrentTenant()
+	assert.NoError(t, err)
+	assert.Len(t, updatedCustomData, 3)
+}
 
-			apps, err := tenant.GetApplications(MakeApplicationCriteria().Offset(0).Limit(1))
+func TestTenantCreateDirectory(t *testing.T) {
+	t.Parallel()
+	
+	dir := newTestDirectory()
+	defer dir.Delete()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(apps.Href).NotTo(BeEmpty())
-			Expect(apps.Offset).To(Equal(0))
-			Expect(apps.Limit).To(Equal(1))
-			Expect(apps.Items).To(HaveLen(1))
-		})
+	err := tenant.CreateDirectory(dir)
 
-		It("should retrive all the tenant applications by page and filter", func() {
-			tenant, _ := CurrentTenant()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, dir.Href)
+	assert.NotEmpty(t, dir.Name)
+}
 
-			apps, err := tenant.GetApplications(MakeApplicationCriteria().NameEq("stormpath"))
+func TestTenantGetDirectories(t *testing.T) {
+	t.Parallel()
+	
+	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria())
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(apps.Href).NotTo(BeEmpty())
-			Expect(apps.Items).To(HaveLen(1))
-		})
-	})
-})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directories.Items)
+	assert.NotEmpty(t, directories.Href)
+	assert.Equal(t, 0, directories.Offset)
+	assert.Equal(t, 25, directories.Limit)
+}
+
+func TestTenantGetDirectoriesByPage(t *testing.T) {
+	t.Parallel()
+	
+	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().Limit(1))
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directories.Items)
+	assert.NotEmpty(t, directories.Href)
+	assert.Equal(t, 0, directories.Offset)
+	assert.Equal(t, 1, directories.Limit)
+}
+
+func TestTenantGetDirectoriesFiltered(t *testing.T) {
+	t.Parallel()
+	
+	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().NameEq("Stormpath Administrators"))
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directories.Items)
+	assert.NotEmpty(t, directories.Href)
+	assert.Equal(t, 0, directories.Offset)
+	assert.Equal(t, 25, directories.Limit)
+
+	err = directories.Items[0].Refresh()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Stormpath Administrators", directories.Items[0].Name)
+}

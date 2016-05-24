@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"time"
+	"bytes"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/nu7hatch/gouuid"
@@ -47,6 +48,15 @@ type OAuthResponse struct {
 	TokenType                string `json:"token_type"`
 	ExpiresIn                int    `json:"expires_in"`
 	StormpathAccessTokenHref string `json:"stormpath_access_token_href"`
+}
+
+type AccessToken struct {
+	resource
+	Account      *Account               `json:"account,omitempty"`
+	Tenant       *Tenant                `json:"tenant,omitempty"`
+	Application  *Application           `json:"application,omitempty"`
+	JWT          string                 `json:"jwt"`
+	ExpandedJWT  map[string]interface{} `json:"expandedJwt"`
 }
 
 //NewApplication creates a new application
@@ -172,11 +182,29 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 		"username":   {username},
 		"password":   {password},
 	}
-	body := canonicalizeQueryString(values)
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
 
 	err := client.postURLEncodedForm(
 		buildAbsoluteURL(app.Href, "oauth/token"),
-		body,
+		body.String(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//Validate Token against Application
+func (app *Application) ValidateToken(token string) (*AccessToken, error) {
+	response := &AccessToken{}
+
+	err := client.get(
+		buildAbsoluteURL(app.Href, "authTokens", token),
+		emptyPayload(),
 		response,
 	)
 
