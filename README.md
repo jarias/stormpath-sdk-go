@@ -6,7 +6,7 @@ Develop:
 
 Master:
 
-[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=master)](https://travis-ci.org/jarias/stormpath-sdk-go) [![codecov.io](http://codecov.io/github/jarias/stormpath-sdk-go/coverage.svg?branch=master)](http://codecov.io/github/jarias/stormpath-sdk-go?branch=master) [![Code Climate](https://codeclimate.com/github/jarias/stormpath-sdk-go/badges/gpa.svg)](https://codeclimate.com/github/jarias/stormpath-sdk-go)
+[![Build Status](https://travis-ci.org/jarias/stormpath-sdk-go.svg?branch=master)](https://travis-ci.org/jarias/stormpath-sdk-go) [![codecov.io](http://codecov.io/github/jarias/stormpath-sdk-go/coverage.svg?branch=master)](http://codecov.io/github/jarias/stormpath-sdk-go?branch=master)
 
 # Usage
 
@@ -59,8 +59,7 @@ Please make sure you add tests ;)
 Development requirements:
 
 - Go 1.4+
-- [Ginkgo](https://onsi.github.io/ginkgo/) ```go get github.com/onsi/ginkgo/ginkgo```
-- [Gomega](http://onsi.github.io/gomega/) ```go get github.com/onsi/gomega```
+- [Testify](https://github.com/stretchr/testify) ```go get github.com/stretchr/testify/assert```
 - An [Stormpath](https://stormpath.com) account (for integration testing)
 
 Running the test suite
@@ -73,14 +72,14 @@ export STORMPATH_API_KEY_SECRET=XXXX
 ```
 
 ```
-ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover
+go test . -cover -covermode=atomic
 ```
 
 I'm aiming at 85% test coverage not yet met but thats the goal.
 
 # License
 
-Copyright 2014, 2015 Julio Arias
+Copyright 2014, 2015, 2016 Julio Arias
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
