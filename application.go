@@ -78,7 +78,7 @@ func (app *Application) Purge() error {
 		return err
 	}
 	for _, m := range accountStoreMappings.Items {
-		client.delete(m.AccountStore.Href, emptyPayload())
+		client.delete(m.AccountStore.Href)
 	}
 
 	return app.Delete()

@@ -60,5 +60,5 @@ func MakeOAuthTokensCriteria() OAuthTokenCriteria {
 
 //Delete deletes the given OAuthToken
 func (t *OAuthToken) Delete() error {
-	return client.delete(t.Href, emptyPayload())
+	return client.delete(t.Href)
 }

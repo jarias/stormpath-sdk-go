@@ -42,5 +42,5 @@ func (r *customDataAwareResource) UpdateCustomData(customData CustomData) (Custo
 //
 //See: http://docs.stormpath.com/rest/product-guide/#custom-data
 func (r *customDataAwareResource) DeleteCustomData() error {
-	return client.delete(buildAbsoluteURL(r.Href, "customData"), emptyPayload())
+	return client.delete(buildAbsoluteURL(r.Href, "customData"))
 }
