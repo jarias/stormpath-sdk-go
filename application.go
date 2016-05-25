@@ -1,11 +1,11 @@
 package stormpath
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"net/url"
 	"time"
-	"bytes"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/nu7hatch/gouuid"
@@ -25,6 +25,7 @@ type Application struct {
 	AccountStoreMappings       *AccountStoreMappings `json:"accountStoreMappings,omitempty"`
 	DefaultAccountStoreMapping *AccountStoreMapping  `json:"defaultAccountStoreMapping,omitempty"`
 	DefaultGroupStoreMapping   *AccountStoreMapping  `json:"defaultGroupStoreMapping,omitempty"`
+	OAuthPolicy                *OAuthPolicy          `json:"oAuthPolicy,omitempty"`
 }
 
 //Applications represents a paged result or applications
@@ -41,24 +42,6 @@ type IDSiteCallbackResult struct {
 	Status  string
 }
 
-//OAuthResponse represents an OAuth2 response from StormPath
-type OAuthResponse struct {
-	AccessToken              string `json:"access_token"`
-	RefreshToken             string `json:"refresh_token"`
-	TokenType                string `json:"token_type"`
-	ExpiresIn                int    `json:"expires_in"`
-	StormpathAccessTokenHref string `json:"stormpath_access_token_href"`
-}
-
-type AccessToken struct {
-	resource
-	Account      *Account               `json:"account,omitempty"`
-	Tenant       *Tenant                `json:"tenant,omitempty"`
-	Application  *Application           `json:"application,omitempty"`
-	JWT          string                 `json:"jwt"`
-	ExpandedJWT  map[string]interface{} `json:"expandedJwt"`
-}
-
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
@@ -70,7 +53,6 @@ func GetApplication(href string, criteria Criteria) (*Application, error) {
 
 	err := client.get(
 		buildAbsoluteURL(href, criteria.ToQueryString()),
-		emptyPayload(),
 		application,
 	)
 
@@ -79,7 +61,7 @@ func GetApplication(href string, criteria Criteria) (*Application, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (app *Application) Refresh() error {
-	return client.get(app.Href, emptyPayload(), app)
+	return client.get(app.Href, app)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -96,7 +78,7 @@ func (app *Application) Purge() error {
 		return err
 	}
 	for _, m := range accountStoreMappings.Items {
-		client.delete(m.AccountStore.Href, emptyPayload())
+		client.delete(m.AccountStore.Href)
 	}
 
 	return app.Delete()
@@ -110,7 +92,6 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStor
 
 	err := client.get(
 		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		accountStoreMappings,
 	)
 
@@ -173,48 +154,6 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	return account, nil
 }
 
-//GetOAuthToken creates a OAuth2 token response for a given user credentials
-func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
-	response := &OAuthResponse{}
-
-	values := url.Values{
-		"grant_type": {"password"},
-		"username":   {username},
-		"password":   {password},
-	}
-	body := &bytes.Buffer{}
-	canonicalizeQueryString(body, values)
-
-	err := client.postURLEncodedForm(
-		buildAbsoluteURL(app.Href, "oauth/token"),
-		body.String(),
-		response,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-//Validate Token against Application
-func (app *Application) ValidateToken(token string) (*AccessToken, error) {
-	response := &AccessToken{}
-
-	err := client.get(
-		buildAbsoluteURL(app.Href, "authTokens", token),
-		emptyPayload(),
-		response,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
 //SendPasswordResetEmail sends a password reset email to the given user
 //
 //See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
@@ -239,7 +178,7 @@ func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordRe
 func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
-	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), emptyPayload(), passwordResetToken)
+	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), passwordResetToken)
 
 	if err != nil {
 		return nil, err
@@ -283,7 +222,6 @@ func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 
 	err := client.get(
 		buildAbsoluteURL(app.Groups.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		groups,
 	)
 
@@ -369,4 +307,69 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	result.Status = token.Claims["status"].(string)
 
 	return result, nil
+}
+
+//GetOAuthToken creates a OAuth2 token response for a given user credentials
+func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
+
+	values := url.Values{
+		"grant_type": {"password"},
+		"username":   {username},
+		"password":   {password},
+	}
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
+
+	err := client.postURLEncodedForm(
+		buildAbsoluteURL(app.Href, "oauth/token"),
+		body.String(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//RefreshOAuthToken refreshes an OAuth2 token using the provided refresh_token and returns a new OAuth reponse
+func (app *Application) RefreshOAuthToken(refreshToken string) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
+
+	values := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {refreshToken},
+	}
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
+
+	err := client.postURLEncodedForm(
+		buildAbsoluteURL(app.Href, "oauth/token"),
+		body.String(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//ValidateToken against the application
+func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
+	response := &OAuthToken{}
+
+	err := client.get(
+		buildAbsoluteURL(app.Href, "authTokens", token),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

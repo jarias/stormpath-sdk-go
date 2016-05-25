@@ -75,26 +75,106 @@ func TestGetDirectoryEmptyAccountsCollection(t *testing.T) {
 
 func TestDirectoryCreateGroup(t *testing.T) {
 	t.Parallel()
-	
+
 	directory := createTestDirectory()
 	defer directory.Delete()
-	
+
 	group := newTestGroup()
 	err := directory.CreateGroup(group)
-	
+
 	assert.NoError(t, err)
 	assert.NotEmpty(t, group.Href)
 }
 
 func TestDirectoryRegisterAccount(t *testing.T) {
 	t.Parallel()
-	
+
 	directory := createTestDirectory()
 	defer directory.Delete()
-	
+
 	account := newTestAccount()
 	err := directory.RegisterAccount(account)
-	
+
 	assert.NoError(t, err)
 	assert.NotEmpty(t, account.Href)
+}
+
+func TestCreateGoogleDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewGoogleDirectory("google-"+randomName(), "ClientID", "ClientSercret", "http://localhost:8080")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, Google, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Equal(t, directory.Provider.RedirectURI, d.Provider.RedirectURI)
+}
+
+func TestCreateLinkedInDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewLinkedInDirectory("linkedin-"+randomName(), "ClientID", "ClientSercret", "http://localhost:8080")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, LinkedIn, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Equal(t, directory.Provider.RedirectURI, d.Provider.RedirectURI)
+}
+
+func TestCreateFacebookDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewFacebookDirectory("facebook-"+randomName(), "ClientID", "ClientSercret")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, Facebook, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Empty(t, d.Provider.RedirectURI)
+}
+
+func TestCreateGithubDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewGithubDirectory("github-"+randomName(), "ClientID", "ClientSercret")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, GitHub, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Empty(t, d.Provider.RedirectURI)
 }

@@ -72,3 +72,13 @@ func (c ApplicationCriteria) WithDefaultGroupStoreMapping() ApplicationCriteria 
 	c.expandedAttributes = append(c.expandedAttributes, "defaultGroupStoreMapping")
 	return c
 }
+
+func (c ApplicationCriteria) WithRefreshTokens() ApplicationCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "refreshTokens")
+	return c
+}
+
+func (c ApplicationCriteria) WithAccessTokens() ApplicationCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "accessTokens")
+	return c
+}

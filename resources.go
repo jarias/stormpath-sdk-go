@@ -31,7 +31,7 @@ func (r resource) IsCacheable() bool {
 
 //Delete deletes the given account, it wont modify the calling account
 func (r *resource) Delete() error {
-	return client.delete(r.Href, emptyPayload())
+	return client.delete(r.Href)
 }
 
 type accountStoreResource struct {
@@ -47,7 +47,6 @@ func (r *accountStoreResource) GetAccounts(criteria Criteria) (*Accounts, error)
 
 	err := client.get(
 		buildAbsoluteURL(r.Accounts.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		accounts,
 	)
 

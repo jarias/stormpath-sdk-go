@@ -44,7 +44,7 @@ func BenchmarkUpdateCustomData(b *testing.B) {
 
 func TestGetCurrentTenant(t *testing.T) {
 	t.Parallel()
-	
+
 	currentTenant, err := CurrentTenant()
 
 	assert.NoError(t, err)
@@ -57,7 +57,7 @@ func TestGetCurrentTenant(t *testing.T) {
 
 func TestTenantCreateApplication(t *testing.T) {
 	t.Parallel()
-	
+
 	application := newTestApplication()
 	defer application.Purge()
 
@@ -69,7 +69,7 @@ func TestTenantCreateApplication(t *testing.T) {
 
 func TestTenantGetApplications(t *testing.T) {
 	t.Parallel()
-	
+
 	applications, err := tenant.GetApplications(MakeApplicationsCriteria())
 
 	assert.NoError(t, err)
@@ -81,7 +81,7 @@ func TestTenantGetApplications(t *testing.T) {
 
 func TestTenantGetApplicationsByPage(t *testing.T) {
 	t.Parallel()
-	
+
 	applications, err := tenant.GetApplications(MakeApplicationsCriteria().Limit(1))
 
 	assert.NoError(t, err)
@@ -93,7 +93,7 @@ func TestTenantGetApplicationsByPage(t *testing.T) {
 
 func TestTenantGetApplicationsFiltered(t *testing.T) {
 	t.Parallel()
-	
+
 	applications, err := tenant.GetApplications(MakeApplicationsCriteria().NameEq("stormpath"))
 
 	assert.NoError(t, err)
@@ -161,7 +161,7 @@ func TestDeleteTenantCustomData(t *testing.T) {
 
 func TestTenantCreateDirectory(t *testing.T) {
 	t.Parallel()
-	
+
 	dir := newTestDirectory()
 	defer dir.Delete()
 
@@ -174,7 +174,7 @@ func TestTenantCreateDirectory(t *testing.T) {
 
 func TestTenantGetDirectories(t *testing.T) {
 	t.Parallel()
-	
+
 	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria())
 
 	assert.NoError(t, err)
@@ -186,7 +186,7 @@ func TestTenantGetDirectories(t *testing.T) {
 
 func TestTenantGetDirectoriesByPage(t *testing.T) {
 	t.Parallel()
-	
+
 	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().Limit(1))
 
 	assert.NoError(t, err)
@@ -198,7 +198,7 @@ func TestTenantGetDirectoriesByPage(t *testing.T) {
 
 func TestTenantGetDirectoriesFiltered(t *testing.T) {
 	t.Parallel()
-	
+
 	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria().NameEq("Stormpath Administrators"))
 
 	assert.NoError(t, err)

@@ -59,3 +59,8 @@ func (c DirectoryCriteria) WithTenant() DirectoryCriteria {
 	c.expandedAttributes = append(c.expandedAttributes, "tenant")
 	return c
 }
+
+func (c DirectoryCriteria) WithProvider() DirectoryCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "provider")
+	return c
+}

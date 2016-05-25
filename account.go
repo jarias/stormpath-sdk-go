@@ -18,6 +18,8 @@ type Account struct {
 	Directory              *Directory        `json:"directory,omitempty"`
 	Tenant                 *Tenant           `json:"tenant,omitempty"`
 	EmailVerificationToken *resource         `json:"emailVerificationToken,omitempty"`
+	AccessTokens           *OAuthTokens      `json:"accessTokens,omitempty"`
+	RefreshTokens          *OAuthTokens      `json:"refreshTokens,omitempty"`
 }
 
 //Accounts represents a paged result of Account objects
@@ -51,6 +53,7 @@ type SocialAccount struct {
 type ProviderData struct {
 	ProviderID  string `json:"providerId"`
 	AccessToken string `json:"accessToken,omitempty"`
+	Code        string `json:"code,omitempty"`
 }
 
 //NewAccount returns a pointer to an Account with the minimum data required
@@ -64,7 +67,6 @@ func GetAccount(href string, criteria Criteria) (*Account, error) {
 
 	err := client.get(
 		buildAbsoluteURL(href, criteria.ToQueryString()),
-		emptyPayload(),
 		account,
 	)
 
@@ -77,7 +79,7 @@ func GetAccount(href string, criteria Criteria) (*Account, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (account *Account) Refresh() error {
-	return client.get(account.Href, emptyPayload(), account)
+	return client.get(account.Href, account)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -135,7 +137,6 @@ func (account *Account) GetGroupMemberships(criteria Criteria) (*GroupMembership
 			account.GroupMemberships.Href,
 			criteria.ToQueryString(),
 		),
-		emptyPayload(),
 		groupMemberships,
 	)
 
@@ -158,4 +159,36 @@ func VerifyEmailToken(token string) (*Account, error) {
 	}
 
 	return account, nil
+}
+
+//GetRefreshTokens returns the account's refreshToken collection
+func (account *Account) GetRefreshTokens(criteria OAuthTokenCriteria) (*OAuthTokens, error) {
+	refreshTokens := &OAuthTokens{}
+
+	err := client.get(
+		buildAbsoluteURL(account.RefreshTokens.Href, criteria.ToQueryString()),
+		refreshTokens,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return refreshTokens, nil
+}
+
+//GetAccessTokens returns the acounts's accessToken collection
+func (account *Account) GetAccessTokens(criteria OAuthTokenCriteria) (*OAuthTokens, error) {
+	accessTokens := &OAuthTokens{}
+
+	err := client.get(
+		buildAbsoluteURL(account.AccessTokens.Href, criteria.ToQueryString()),
+		accessTokens,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return accessTokens, nil
 }

@@ -139,7 +139,7 @@ func TestCacheableResources(t *testing.T) {
 		&AccountStoreMapping{},
 		&Tenant{},
 	}
-	
+
 	for _, resource := range resources {
 		c, ok := resource.(Cacheable)
 

@@ -14,7 +14,7 @@ type CustomData map[string]interface{}
 func (r *customDataAwareResource) GetCustomData() (CustomData, error) {
 	customData := make(CustomData)
 
-	err := client.get(buildAbsoluteURL(r.Href, "customData"), emptyPayload(), &customData)
+	err := client.get(buildAbsoluteURL(r.Href, "customData"), &customData)
 
 	if err != nil {
 		return nil, err
@@ -42,5 +42,5 @@ func (r *customDataAwareResource) UpdateCustomData(customData CustomData) (Custo
 //
 //See: http://docs.stormpath.com/rest/product-guide/#custom-data
 func (r *customDataAwareResource) DeleteCustomData() error {
-	return client.delete(buildAbsoluteURL(r.Href, "customData"), emptyPayload())
+	return client.delete(buildAbsoluteURL(r.Href, "customData"))
 }
