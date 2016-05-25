@@ -9,7 +9,7 @@ import (
 
 func TestLoadCredentialsFromValidFile(t *testing.T) {
 	t.Parallel()
-	
+
 	credentials, err := NewCredentialsFromFile("./test_files/apiKeys.properties")
 
 	assert.NoError(t, err)
@@ -19,7 +19,7 @@ func TestLoadCredentialsFromValidFile(t *testing.T) {
 
 func TestLoadCredentialsFromNoExistsFile(t *testing.T) {
 	t.Parallel()
-	
+
 	credentials, err := NewCredentialsFromFile("./test_files/doesntexist.properties")
 
 	assert.Error(t, err)
@@ -28,7 +28,7 @@ func TestLoadCredentialsFromNoExistsFile(t *testing.T) {
 
 func TestLoadCredentialsFromEmptyFile(t *testing.T) {
 	t.Parallel()
-	
+
 	credentials, err := NewCredentialsFromFile("./test_files/empty.properties")
 
 	assert.NoError(t, err)

@@ -75,26 +75,26 @@ func TestGetDirectoryEmptyAccountsCollection(t *testing.T) {
 
 func TestDirectoryCreateGroup(t *testing.T) {
 	t.Parallel()
-	
+
 	directory := createTestDirectory()
 	defer directory.Delete()
-	
+
 	group := newTestGroup()
 	err := directory.CreateGroup(group)
-	
+
 	assert.NoError(t, err)
 	assert.NotEmpty(t, group.Href)
 }
 
 func TestDirectoryRegisterAccount(t *testing.T) {
 	t.Parallel()
-	
+
 	directory := createTestDirectory()
 	defer directory.Delete()
-	
+
 	account := newTestAccount()
 	err := directory.RegisterAccount(account)
-	
+
 	assert.NoError(t, err)
 	assert.NotEmpty(t, account.Href)
 }

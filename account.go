@@ -64,7 +64,6 @@ func GetAccount(href string, criteria Criteria) (*Account, error) {
 
 	err := client.get(
 		buildAbsoluteURL(href, criteria.ToQueryString()),
-		emptyPayload(),
 		account,
 	)
 
@@ -77,7 +76,7 @@ func GetAccount(href string, criteria Criteria) (*Account, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (account *Account) Refresh() error {
-	return client.get(account.Href, emptyPayload(), account)
+	return client.get(account.Href, account)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -135,7 +134,6 @@ func (account *Account) GetGroupMemberships(criteria Criteria) (*GroupMembership
 			account.GroupMemberships.Href,
 			criteria.ToQueryString(),
 		),
-		emptyPayload(),
 		groupMemberships,
 	)
 

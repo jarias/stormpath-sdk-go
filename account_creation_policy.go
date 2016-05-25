@@ -15,7 +15,7 @@ type AccountCreationPolicy struct {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (policy *AccountCreationPolicy) Refresh() error {
-	return client.get(policy.Href, emptyPayload(), policy)
+	return client.get(policy.Href, policy)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -25,7 +25,7 @@ func (policy *AccountCreationPolicy) Update() error {
 
 //GetVerificationEmailTemplates loads the policy VerificationEmailTemplates collection and returns it
 func (policy *AccountCreationPolicy) GetVerificationEmailTemplates() (*EmailTemplates, error) {
-	err := client.get(policy.VerificationEmailTemplates.Href, emptyPayload(), policy.VerificationEmailTemplates)
+	err := client.get(policy.VerificationEmailTemplates.Href, policy.VerificationEmailTemplates)
 
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (policy *AccountCreationPolicy) GetVerificationEmailTemplates() (*EmailTemp
 
 //GetVerificationSuccessEmailTemplates loads the policy VerificationSuccessEmailTemplates collection and returns it
 func (policy *AccountCreationPolicy) GetVerificationSuccessEmailTemplates() (*EmailTemplates, error) {
-	err := client.get(policy.VerificationSuccessEmailTemplates.Href, emptyPayload(), policy.VerificationSuccessEmailTemplates)
+	err := client.get(policy.VerificationSuccessEmailTemplates.Href, policy.VerificationSuccessEmailTemplates)
 
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (policy *AccountCreationPolicy) GetVerificationSuccessEmailTemplates() (*Em
 
 //GetWelcomeEmailTemplates loads the policy WelcomeEmailTemplates collection and returns it
 func (policy *AccountCreationPolicy) GetWelcomeEmailTemplates() (*EmailTemplates, error) {
-	err := client.get(policy.WelcomeEmailTemplates.Href, emptyPayload(), policy.WelcomeEmailTemplates)
+	err := client.get(policy.WelcomeEmailTemplates.Href, policy.WelcomeEmailTemplates)
 
 	if err != nil {
 		return nil, err

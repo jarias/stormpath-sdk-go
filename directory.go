@@ -30,7 +30,6 @@ func GetDirectory(href string, criteria Criteria) (*Directory, error) {
 
 	err := client.get(
 		buildAbsoluteURL(href, criteria.ToQueryString()),
-		emptyPayload(),
 		directory,
 	)
 
@@ -43,7 +42,7 @@ func GetDirectory(href string, criteria Criteria) (*Directory, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (dir *Directory) Refresh() error {
-	return client.get(dir.Href, emptyPayload(), dir)
+	return client.get(dir.Href, dir)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -53,7 +52,7 @@ func (dir *Directory) Update() error {
 
 //GetAccountCreationPolicy loads the directory account creation policy
 func (dir *Directory) GetAccountCreationPolicy() (*AccountCreationPolicy, error) {
-	err := client.get(buildAbsoluteURL(dir.AccountCreationPolicy.Href), emptyPayload(), dir.AccountCreationPolicy)
+	err := client.get(buildAbsoluteURL(dir.AccountCreationPolicy.Href), dir.AccountCreationPolicy)
 
 	if err != nil {
 		return nil, err
@@ -66,7 +65,6 @@ func (dir *Directory) GetAccountCreationPolicy() (*AccountCreationPolicy, error)
 func (dir *Directory) GetGroups(criteria Criteria) (*Groups, error) {
 	err := client.get(
 		buildAbsoluteURL(dir.Groups.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		dir.Groups,
 	)
 

@@ -29,7 +29,6 @@ func GetGroup(href string, criteria Criteria) (*Group, error) {
 
 	err := client.get(
 		buildAbsoluteURL(href, criteria.ToQueryString()),
-		emptyPayload(),
 		group,
 	)
 
@@ -42,7 +41,7 @@ func GetGroup(href string, criteria Criteria) (*Group, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (group *Group) Refresh() error {
-	return client.get(group.Href, emptyPayload(), group)
+	return client.get(group.Href, group)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -56,7 +55,6 @@ func (group *Group) GetGroupMemberships(criteria Criteria) (*GroupMemberships, e
 
 	err := client.get(
 		buildAbsoluteURL(group.Href, "accountMemberships", criteria.ToQueryString()),
-		emptyPayload(),
 		groupMemberships,
 	)
 

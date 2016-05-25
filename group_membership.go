@@ -27,7 +27,6 @@ func (groupmembership *GroupMembership) GetAccount(criteria Criteria) (*Account,
 
 	err := client.get(
 		buildAbsoluteURL(groupmembership.Account.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		account,
 	)
 
@@ -43,7 +42,6 @@ func (groupmembership *GroupMembership) GetGroup(criteria Criteria) (*Group, err
 
 	err := client.get(
 		buildAbsoluteURL(groupmembership.Group.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		group,
 	)
 
