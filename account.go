@@ -18,6 +18,8 @@ type Account struct {
 	Directory              *Directory        `json:"directory,omitempty"`
 	Tenant                 *Tenant           `json:"tenant,omitempty"`
 	EmailVerificationToken *resource         `json:"emailVerificationToken,omitempty"`
+	AccessTokens           *OAuthTokens      `json:"accessTokens,omitempty"`
+	RefreshTokens          *OAuthTokens      `json:"refreshTokens,omitempty"`
 }
 
 //Accounts represents a paged result of Account objects
@@ -157,4 +159,36 @@ func VerifyEmailToken(token string) (*Account, error) {
 	}
 
 	return account, nil
+}
+
+//GetRefreshTokens returns the account's refreshToken collection
+func (account *Account) GetRefreshTokens(criteria OAuthTokenCriteria) (*OAuthTokens, error) {
+	refreshTokens := &OAuthTokens{}
+
+	err := client.get(
+		buildAbsoluteURL(account.RefreshTokens.Href, criteria.ToQueryString()),
+		refreshTokens,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return refreshTokens, nil
+}
+
+//GetAccessTokens returns the acounts's accessToken collection
+func (account *Account) GetAccessTokens(criteria OAuthTokenCriteria) (*OAuthTokens, error) {
+	accessTokens := &OAuthTokens{}
+
+	err := client.get(
+		buildAbsoluteURL(account.AccessTokens.Href, criteria.ToQueryString()),
+		accessTokens,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return accessTokens, nil
 }

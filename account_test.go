@@ -8,6 +8,63 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetAccountRefreshTokens(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	application.GetOAuthToken(account.Username, "1234567z!A89")
+
+	tokens, err := account.GetRefreshTokens(MakeOAuthTokensCriteria())
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, tokens.Href)
+	assert.Equal(t, 0, tokens.Offset)
+	assert.Equal(t, 25, tokens.Limit)
+	assert.NotEmpty(t, tokens.Items)
+}
+
+func TestGetAccountAccessTokens(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	application.GetOAuthToken(account.Username, "1234567z!A89")
+
+	tokens, err := account.GetAccessTokens(MakeOAuthTokensCriteria())
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, tokens.Href)
+	assert.Equal(t, 0, tokens.Offset)
+	assert.Equal(t, 25, tokens.Limit)
+	assert.NotEmpty(t, tokens.Items)
+}
+
+func TestRevokeAccountAccessToken(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	application.GetOAuthToken(account.Username, "1234567z!A89")
+
+	tokens, _ := account.GetAccessTokens(MakeOAuthTokensCriteria())
+	
+	token := tokens.Items[0]
+	
+	err := token.Delete()
+	
+	assert.NoError(t, err)
+}
+
 func TestAccountJsonMarshaling(t *testing.T) {
 	t.Parallel()
 	account := NewAccount("test@test.org", "123", "test@test.org", "test", "test")

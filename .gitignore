@@ -1,3 +1,4 @@
+.idea
 .envrc
 coverage.txt
 stormpath-sdk-go.test
