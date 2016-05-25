@@ -16,8 +16,8 @@ func TestGetApplicationOAuthPolicy(t *testing.T) {
 	policy, err := application.GetOAuthPolicy()
 
 	assert.NoError(t, err)
-	assert.Equal(t, "PT1H", policy.AccessTokenTtl)
-	assert.Equal(t, "P60D", policy.RefreshTokenTtl)
+	assert.Equal(t, "PT1H", policy.AccessTokenTTL)
+	assert.Equal(t, "P60D", policy.RefreshTokenTTL)
 }
 
 func TestUpdateApplicationOAuthPolicy(t *testing.T) {
@@ -28,16 +28,16 @@ func TestUpdateApplicationOAuthPolicy(t *testing.T) {
 
 	policy, _ := application.GetOAuthPolicy()
 
-	policy.AccessTokenTtl = "PT2H"
-	policy.RefreshTokenTtl = "P50D"
+	policy.AccessTokenTTL = "PT2H"
+	policy.RefreshTokenTTL = "P50D"
 	err := policy.Update()
 
 	assert.NoError(t, err)
 
 	updatedPolicy, _ := application.GetOAuthPolicy()
 
-	assert.Equal(t, "PT2H", updatedPolicy.AccessTokenTtl)
-	assert.Equal(t, "P50D", updatedPolicy.RefreshTokenTtl)
+	assert.Equal(t, "PT2H", updatedPolicy.AccessTokenTTL)
+	assert.Equal(t, "P50D", updatedPolicy.RefreshTokenTTL)
 }
 
 func TestUpdateApplicationOAuthPolicyInvalidTTL(t *testing.T) {
@@ -48,15 +48,15 @@ func TestUpdateApplicationOAuthPolicyInvalidTTL(t *testing.T) {
 
 	policy, _ := application.GetOAuthPolicy()
 
-	policy.AccessTokenTtl = "hello i'm not a valid value deal with me"
+	policy.AccessTokenTTL = "hello i'm not a valid value deal with me"
 	err := policy.Update()
 	
 	assert.Error(t, err)
 	assert.Equal(t, 400, err.(Error).Status)
 	assert.Equal(t, 2002, err.(Error).Code)
 	
-	policy.AccessTokenTtl = "PT2H"
-	policy.RefreshTokenTtl = "hello i'm not a valid value deal with me"
+	policy.AccessTokenTTL = "PT2H"
+	policy.RefreshTokenTTL = "hello i'm not a valid value deal with me"
 	err = policy.Update()
 	
 	assert.Error(t, err)

@@ -42,24 +42,6 @@ type IDSiteCallbackResult struct {
 	Status  string
 }
 
-//OAuthResponse represents an OAuth2 response from StormPath
-type OAuthResponse struct {
-	AccessToken              string `json:"access_token"`
-	RefreshToken             string `json:"refresh_token"`
-	TokenType                string `json:"token_type"`
-	ExpiresIn                int    `json:"expires_in"`
-	StormpathAccessTokenHref string `json:"stormpath_access_token_href"`
-}
-
-type AccessToken struct {
-	resource
-	Account     *Account               `json:"account,omitempty"`
-	Tenant      *Tenant                `json:"tenant,omitempty"`
-	Application *Application           `json:"application,omitempty"`
-	JWT         string                 `json:"jwt"`
-	ExpandedJWT map[string]interface{} `json:"expandedJwt"`
-}
-
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
@@ -170,71 +152,6 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	}
 
 	return account, nil
-}
-
-//GetOAuthToken creates a OAuth2 token response for a given user credentials
-func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
-	response := &OAuthResponse{}
-
-	values := url.Values{
-		"grant_type": {"password"},
-		"username":   {username},
-		"password":   {password},
-	}
-	body := &bytes.Buffer{}
-	canonicalizeQueryString(body, values)
-
-	err := client.postURLEncodedForm(
-		buildAbsoluteURL(app.Href, "oauth/token"),
-		body.String(),
-		response,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-//RefreshOAuthToken refreshes an OAuth2 token using the provided refresh_token and returns a new OAuth reponse
-func (app *Application) RefreshOAuthToken(refreshToken string) (*OAuthResponse, error) {
-	response := &OAuthResponse{}
-
-	values := url.Values{
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {refreshToken},
-	}
-	body := &bytes.Buffer{}
-	canonicalizeQueryString(body, values)
-
-	err := client.postURLEncodedForm(
-		buildAbsoluteURL(app.Href, "oauth/token"),
-		body.String(),
-		response,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-//ValidateToken against the application
-func (app *Application) ValidateToken(token string) (*AccessToken, error) {
-	response := &AccessToken{}
-
-	err := client.get(
-		buildAbsoluteURL(app.Href, "authTokens", token),
-		response,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
 }
 
 //SendPasswordResetEmail sends a password reset email to the given user
@@ -392,11 +309,67 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	return result, nil
 }
 
-//GetOAuthPolicy return the application OAuthPolicy
-func (app *Application) GetOAuthPolicy() (*OAuthPolicy, error) {
-	oauthPolicy := &OAuthPolicy{}
+//GetOAuthToken creates a OAuth2 token response for a given user credentials
+func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
 
-	err := client.get(app.OAuthPolicy.Href, oauthPolicy)
+	values := url.Values{
+		"grant_type": {"password"},
+		"username":   {username},
+		"password":   {password},
+	}
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
 
-	return oauthPolicy, err
+	err := client.postURLEncodedForm(
+		buildAbsoluteURL(app.Href, "oauth/token"),
+		body.String(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//RefreshOAuthToken refreshes an OAuth2 token using the provided refresh_token and returns a new OAuth reponse
+func (app *Application) RefreshOAuthToken(refreshToken string) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
+
+	values := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {refreshToken},
+	}
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
+
+	err := client.postURLEncodedForm(
+		buildAbsoluteURL(app.Href, "oauth/token"),
+		body.String(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//ValidateToken against the application
+func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
+	response := &OAuthToken{}
+
+	err := client.get(
+		buildAbsoluteURL(app.Href, "authTokens", token),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

@@ -44,15 +44,15 @@ func TestRefreshOAuthTokenValidAccount(t *testing.T) {
 	assert.NotEmpty(t, oauthResponse.AccessToken)
 	assert.NotEmpty(t, oauthResponse.RefreshToken)
 	assert.Equal(t, 3600, oauthResponse.ExpiresIn)
-	
+
 	refreshOauthResponse, err := application.RefreshOAuthToken(oauthResponse.RefreshToken)
-	
+
 	assert.NoError(t, err)
 	assert.NotNil(t, refreshOauthResponse)
 	assert.NotEmpty(t, refreshOauthResponse.AccessToken)
 	assert.NotEmpty(t, refreshOauthResponse.RefreshToken)
 	assert.Equal(t, 3600, refreshOauthResponse.ExpiresIn)
-	
+
 	assert.NotEqual(t, oauthResponse.AccessToken, refreshOauthResponse.AccessToken)
 }
 
