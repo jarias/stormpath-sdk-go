@@ -51,6 +51,7 @@ type SocialAccount struct {
 type ProviderData struct {
 	ProviderID  string `json:"providerId"`
 	AccessToken string `json:"accessToken,omitempty"`
+	Code        string `json:"code,omitempty"`
 }
 
 //NewAccount returns a pointer to an Account with the minimum data required
