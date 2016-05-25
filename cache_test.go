@@ -1,139 +1,149 @@
 package stormpath_test
 
 import (
-	"encoding/json"
+	"testing"
+
 	"os"
 
-	"github.com/garyburd/redigo/redis"
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	lediscfg "github.com/siddontang/ledisdb/config"
+	"github.com/siddontang/ledisdb/ledis"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Cache", func() {
-	Describe("RedisCache", func() {
-		key := "key"
-		redisServer := os.Getenv("REDIS_SERVER")
-		redisConn, err := redis.Dial("tcp", redisServer+":6379")
-		if err != nil {
-			panic(err)
-		}
-		redisCache := RedisCache{redisConn}
+const key = "key"
 
-		AfterEach(func() {
-			redisConn.Do("FLUSHDB")
-		})
+func createTestLedisCache() LedisCache {
+	cfg := lediscfg.NewConfigDefault()
+	cfg.DataDir = os.TempDir() + "/stormpath-go-sdk-ledisCache/var/" + randomName()
+	l, err := ledis.Open(cfg)
+	if err != nil {
+		panic(err)
+	}
+	db, err := l.Select(0)
+	if err != nil {
+		panic(err)
+	}
 
-		Describe("Exists", func() {
-			It("should return false if the key doesn't exists", func() {
-				r := redisCache.Exists(key)
+	return LedisCache{db}
+}
 
-				Expect(r).To(BeFalse())
-			})
-			It("should return true if the key does exists", func() {
-				redisConn.Do("SET", key, 1)
+func TestLedisCacheKeyNoExists(t *testing.T) {
+	t.Parallel()
+	cache := createTestLedisCache()
 
-				r := redisCache.Exists(key)
+	r := cache.Exists(key)
 
-				Expect(r).To(BeTrue())
-			})
-		})
+	assert.False(t, r)
+}
 
-		Describe("Set", func() {
-			It("should store a new object in the cache", func() {
-				r := redisCache.Exists(key)
+func TestLedisCacheKeyExists(t *testing.T) {
+	t.Parallel()
+	cache := createTestLedisCache()
 
-				Expect(r).To(BeFalse())
+	cache.DB.Set([]byte(key), []byte("hello"))
 
-				redisCache.Set(key, 1)
+	r := cache.Exists(key)
 
-				r = redisCache.Exists(key)
+	assert.True(t, r)
+}
 
-				Expect(r).To(BeTrue())
-			})
-			It("should update an existing object in the cache", func() {
-				var r int
+func TestLedisCacheSetObject(t *testing.T) {
+	t.Parallel()
+	cache := createTestLedisCache()
 
-				redisCache.Set(key, 1)
-				redisCache.Set(key, 2)
+	assert.False(t, cache.Exists(key))
 
-				cacheData, err := redisConn.Do("GET", key)
+	cache.Set(key, "hello")
 
-				json.Unmarshal(cacheData.([]byte), &r)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(r).To(Equal(2))
-			})
-		})
-		Describe("Get", func() {
-			It("should load empty data if the key doesn't exists into the given interface", func() {
-				var r int
+	assert.True(t, cache.Exists(key))
+}
 
-				err := redisCache.Get(key, &r)
+func TestLedisCacheUpdateObject(t *testing.T) {
+	t.Parallel()
+	cache := createTestLedisCache()
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(r).To(Equal(0))
-			})
-			It("should load data from the cache into the given interface", func() {
-				var r int
+	assert.False(t, cache.Exists(key))
 
-				redisCache.Set(key, 2)
-				err := redisCache.Get(key, &r)
+	cache.Set(key, "hello")
+	cache.Set(key, "bye")
 
-				Expect(err).NotTo(HaveOccurred())
-				Expect(r).To(Equal(2))
-			})
-		})
-		Describe("Del", func() {
-			It("should delete a given key from the cache", func() {
-				redisCache.Set(key, 2)
+	var r string
+	err := cache.Get(key, &r)
 
-				r := redisCache.Exists(key)
-				Expect(r).To(BeTrue())
+	assert.NoError(t, err)
+	assert.Equal(t, "bye", r)
+}
 
-				redisCache.Del(key)
+func TestLedisCacheGetObjectNoExists(t *testing.T) {
+	t.Parallel()
+	cache := createTestLedisCache()
 
-				r = redisCache.Exists(key)
-				Expect(r).To(BeFalse())
-			})
-		})
-	})
-})
+	var r string
 
-var _ = Describe("Cacheable", func() {
-	Describe("Collection resource", func() {
-		It("should not be cacheable", func() {
-			var resources = []interface{}{
-				&Applications{},
-				&Accounts{},
-				&Groups{},
-				&Directories{},
-				&AccountStoreMappings{},
-			}
-			for _, resource := range resources {
-				c, ok := resource.(Cacheable)
+	err := cache.Get(key, &r)
 
-				Expect(ok).To(BeTrue())
-				Expect(c.IsCacheable()).To(BeFalse())
-			}
-		})
-	})
+	assert.NoError(t, err)
+	assert.Empty(t, r)
+}
 
-	Describe("Single resource", func() {
-		It("should be cacheable", func() {
-			var resources = []interface{}{
-				&Application{},
-				&Account{},
-				&Group{},
-				&Directory{},
-				&AccountStoreMapping{},
-				&Tenant{},
-			}
-			for _, resource := range resources {
-				c, ok := resource.(Cacheable)
+func TestLedisCacheGetObject(t *testing.T) {
+	t.Parallel()
+	cache := createTestLedisCache()
 
-				Expect(ok).To(BeTrue())
-				Expect(c.IsCacheable()).To(BeTrue())
-			}
-		})
-	})
-})
+	cache.Set(key, "hello")
+
+	var r string
+
+	err := cache.Get(key, &r)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", r)
+}
+
+func TestLedisCacheDeleteObject(t *testing.T) {
+	t.Parallel()
+	cache := createTestLedisCache()
+
+	cache.Set(key, "hello")
+
+	assert.True(t, cache.Exists(key))
+
+	cache.Del(key)
+
+	assert.False(t, cache.Exists(key))
+}
+
+func TestNonCacheableResources(t *testing.T) {
+	var resources = []interface{}{
+		&Applications{},
+		&Accounts{},
+		&Groups{},
+		&Directories{},
+		&AccountStoreMappings{},
+	}
+	for _, resource := range resources {
+		c, ok := resource.(Cacheable)
+
+		assert.True(t, ok)
+		assert.False(t, c.IsCacheable())
+	}
+}
+
+func TestCacheableResources(t *testing.T) {
+	var resources = []interface{}{
+		&Application{},
+		&Account{},
+		&Group{},
+		&Directory{},
+		&AccountStoreMapping{},
+		&Tenant{},
+	}
+
+	for _, resource := range resources {
+		c, ok := resource.(Cacheable)
+
+		assert.True(t, ok)
+		assert.True(t, c.IsCacheable())
+	}
+}

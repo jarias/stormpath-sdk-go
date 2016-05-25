@@ -1,36 +1,37 @@
 package stormpath_test
 
 import (
+	"testing"
+
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Credentials", func() {
-	It("should load the API credentials from a valid file", func() {
-		credentials, err := NewCredentialsFromFile("./test_files/apiKeys.properties")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(credentials.ID).To(Equal("APIKEY"))
-		Expect(credentials.Secret).To(Equal("APISECRET"))
-	})
+func TestLoadCredentialsFromValidFile(t *testing.T) {
+	t.Parallel()
 
-	It("should return an error loading credentials from a unexisting file", func() {
-		credentials, err := NewCredentialsFromFile("./test_files/doesntexist.properties")
-		Expect(err).To(HaveOccurred())
-		Expect(credentials).To(Equal(Credentials{}))
-	})
+	credentials, err := NewCredentialsFromFile("./test_files/apiKeys.properties")
 
-	It("should load empty credentials from an empty properties file", func() {
-		credentials, err := NewCredentialsFromFile("./test_files/empty.properties")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(credentials.ID).To(BeEmpty())
-		Expect(credentials.Secret).To(BeEmpty())
-	})
+	assert.NoError(t, err)
+	assert.Equal(t, "APIKEY", credentials.ID)
+	assert.Equal(t, "APISECRET", credentials.Secret)
+}
 
-	It("should load the API credentials from a default file location", func() {
-		credentials, err := NewDefaultCredentials()
-		Expect(err).NotTo(HaveOccurred())
-		Expect(credentials.ID).NotTo(BeEmpty())
-		Expect(credentials.Secret).NotTo(BeEmpty())
-	})
-})
+func TestLoadCredentialsFromNoExistsFile(t *testing.T) {
+	t.Parallel()
+
+	credentials, err := NewCredentialsFromFile("./test_files/doesntexist.properties")
+
+	assert.Error(t, err)
+	assert.Equal(t, Credentials{}, credentials)
+}
+
+func TestLoadCredentialsFromEmptyFile(t *testing.T) {
+	t.Parallel()
+
+	credentials, err := NewCredentialsFromFile("./test_files/empty.properties")
+
+	assert.NoError(t, err)
+	assert.Empty(t, credentials.ID)
+	assert.Empty(t, credentials.Secret)
+}

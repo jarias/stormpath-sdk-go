@@ -20,7 +20,7 @@ func CurrentTenant() (*Tenant, error) {
 			"GET",
 			buildRelativeURL("tenants", "current"),
 			emptyPayload(),
-			ApplicationJson,
+			ApplicationJSON,
 		), tenant)
 
 	return tenant, err
@@ -49,7 +49,7 @@ func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 func (tenant *Tenant) GetApplications(criteria Criteria) (*Applications, error) {
 	apps := &Applications{}
 
-	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.ToQueryString()), emptyPayload(), apps)
+	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.ToQueryString()), apps)
 
 	return apps, err
 }
@@ -60,7 +60,7 @@ func (tenant *Tenant) GetApplications(criteria Criteria) (*Applications, error) 
 func (tenant *Tenant) GetDirectories(criteria Criteria) (*Directories, error) {
 	directories := &Directories{}
 
-	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.ToQueryString()), emptyPayload(), directories)
+	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.ToQueryString()), directories)
 
 	return directories, err
 }

@@ -1,6 +1,7 @@
 package stormpath
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"net/url"
@@ -50,6 +51,15 @@ type OAuthResponse struct {
 	StormpathAccessTokenHref string `json:"stormpath_access_token_href"`
 }
 
+type AccessToken struct {
+	resource
+	Account     *Account               `json:"account,omitempty"`
+	Tenant      *Tenant                `json:"tenant,omitempty"`
+	Application *Application           `json:"application,omitempty"`
+	JWT         string                 `json:"jwt"`
+	ExpandedJWT map[string]interface{} `json:"expandedJwt"`
+}
+
 //NewApplication creates a new application
 func NewApplication(name string) *Application {
 	return &Application{Name: name}
@@ -61,7 +71,6 @@ func GetApplication(href string, criteria Criteria) (*Application, error) {
 
 	err := client.get(
 		buildAbsoluteURL(href, criteria.ToQueryString()),
-		emptyPayload(),
 		application,
 	)
 
@@ -70,7 +79,7 @@ func GetApplication(href string, criteria Criteria) (*Application, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (app *Application) Refresh() error {
-	return client.get(app.Href, emptyPayload(), app)
+	return client.get(app.Href, app)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -101,7 +110,6 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStor
 
 	err := client.get(
 		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		accountStoreMappings,
 	)
 
@@ -155,7 +163,13 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 		return nil, err
 	}
 
-	return accountRef.Account, nil
+	account := accountRef.Account
+	err = account.Refresh()
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
 //GetOAuthToken creates a OAuth2 token response for a given user credentials
@@ -167,11 +181,28 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 		"username":   {username},
 		"password":   {password},
 	}
-	body := canonicalizeQueryString(values)
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
 
 	err := client.postURLEncodedForm(
 		buildAbsoluteURL(app.Href, "oauth/token"),
-		body,
+		body.String(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//Validate Token against Application
+func (app *Application) ValidateToken(token string) (*AccessToken, error) {
+	response := &AccessToken{}
+
+	err := client.get(
+		buildAbsoluteURL(app.Href, "authTokens", token),
 		response,
 	)
 
@@ -206,7 +237,7 @@ func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordRe
 func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
-	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), emptyPayload(), passwordResetToken)
+	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), passwordResetToken)
 
 	if err != nil {
 		return nil, err
@@ -250,7 +281,6 @@ func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 
 	err := client.get(
 		buildAbsoluteURL(app.Groups.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		groups,
 	)
 

@@ -31,7 +31,6 @@ func GetEmailTemplate(href string) (*EmailTemplate, error) {
 
 	err := client.get(
 		href,
-		emptyPayload(),
 		emailTemplate,
 	)
 
@@ -44,7 +43,7 @@ func GetEmailTemplate(href string) (*EmailTemplate, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (template *EmailTemplate) Refresh() error {
-	return client.get(template.Href, emptyPayload(), template)
+	return client.get(template.Href, template)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href

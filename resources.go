@@ -47,7 +47,6 @@ func (r *accountStoreResource) GetAccounts(criteria Criteria) (*Accounts, error)
 
 	err := client.get(
 		buildAbsoluteURL(r.Accounts.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		accounts,
 	)
 

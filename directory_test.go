@@ -2,105 +2,179 @@ package stormpath_test
 
 import (
 	"encoding/json"
+	"testing"
 
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Directory", func() {
-	Describe("JSON", func() {
-		It("should marshal a minimum JSON with only the directory name", func() {
-			directory := NewDirectory("name")
+func TestDirectoryJsonMarshaling(t *testing.T) {
+	t.Parallel()
 
-			jsonData, _ := json.Marshal(directory)
+	directory := NewDirectory("name")
 
-			Expect(string(jsonData)).To(Equal("{\"name\":\"name\"}"))
-		})
-	})
+	jsonData, _ := json.Marshal(directory)
 
-	Describe("Delete", func() {
-		It("should delete an existing directory", func() {
-			directory := newTestDirectory()
+	assert.Equal(t, "{\"name\":\"name\"}", string(jsonData))
+}
 
-			tenant.CreateDirectory(directory)
-			err := directory.Delete()
+func TestDeleteDirectory(t *testing.T) {
+	t.Parallel()
 
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
+	directory := createTestDirectory()
 
-	Describe("GetAccountCreationPolicy", func() {
-		It("should retrive the directory account creation policy", func() {
-			directory := newTestDirectory()
-			tenant.CreateDirectory(directory)
+	err := directory.Delete()
 
-			policy, err := directory.GetAccountCreationPolicy()
+	assert.NoError(t, err)
+}
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(policy).To(Equal(directory.AccountCreationPolicy))
-			Expect(policy.VerificationEmailStatus).To(Equal("DISABLED"))
-			Expect(policy.VerificationSuccessEmailStatus).To(Equal("DISABLED"))
-			Expect(policy.WelcomeEmailStatus).To(Equal("DISABLED"))
-		})
-	})
+func TestGetAccountCreationPolicy(t *testing.T) {
+	t.Parallel()
 
-	Describe("GetGroups", func() {
-		It("should retrive all directory groups", func() {
-			directory := newTestDirectory()
-			tenant.CreateDirectory(directory)
+	directory := createTestDirectory()
+	defer directory.Delete()
 
-			groups, err := directory.GetGroups(MakeGroupCriteria())
+	policy, err := directory.GetAccountCreationPolicy()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(groups.Href).NotTo(BeEmpty())
-			Expect(groups.Offset).To(Equal(0))
-			Expect(groups.Limit).To(Equal(25))
-			Expect(groups.Items).To(BeEmpty())
-			directory.Delete()
-		})
-	})
+	assert.NoError(t, err)
+	assert.Equal(t, directory.AccountCreationPolicy, policy)
+	assert.Equal(t, Disabled, policy.VerificationEmailStatus)
+	assert.Equal(t, Disabled, policy.VerificationSuccessEmailStatus)
+	assert.Equal(t, Disabled, policy.WelcomeEmailStatus)
+}
 
-	Describe("GetAccounts", func() {
-		It("should retrieve all directory accounts", func() {
-			directory := newTestDirectory()
-			tenant.CreateDirectory(directory)
+func TestGetDirectoryEmptyGroupsCollection(t *testing.T) {
+	t.Parallel()
 
-			accounts, err := directory.GetAccounts(MakeAccountCriteria())
+	directory := createTestDirectory()
+	defer directory.Delete()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(accounts.Href).NotTo(BeEmpty())
-			Expect(accounts.Offset).To(Equal(0))
-			Expect(accounts.Limit).To(Equal(25))
-			Expect(accounts.Items).To(BeEmpty())
-			directory.Delete()
-		})
-	})
+	groups, err := directory.GetGroups(MakeGroupsCriteria())
 
-	Describe("CreateGroup", func() {
-		It("should create new group", func() {
-			directory := newTestDirectory()
-			tenant.CreateDirectory(directory)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, groups.Href)
+	assert.Equal(t, 0, groups.Offset)
+	assert.Equal(t, 25, groups.Limit)
+	assert.Empty(t, groups.Items)
+}
 
-			group := NewGroup("new-group")
-			err := directory.CreateGroup(group)
+func TestGetDirectoryEmptyAccountsCollection(t *testing.T) {
+	t.Parallel()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(group.Href).NotTo(BeEmpty())
-			directory.Delete()
-		})
-	})
+	directory := createTestDirectory()
+	defer directory.Delete()
 
-	Describe("RegisterAccount", func() {
-		It("should create a new accout for the group", func() {
-			directory := newTestDirectory()
-			tenant.CreateDirectory(directory)
+	accounts, err := directory.GetAccounts(MakeAccountsCriteria())
 
-			account := newTestAccount()
-			err := directory.RegisterAccount(account)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(account.Href).NotTo(BeEmpty())
-			directory.Delete()
-		})
-	})
-})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, accounts.Href)
+	assert.Equal(t, 0, accounts.Offset)
+	assert.Equal(t, 25, accounts.Limit)
+	assert.Empty(t, accounts.Items)
+}
+
+func TestDirectoryCreateGroup(t *testing.T) {
+	t.Parallel()
+
+	directory := createTestDirectory()
+	defer directory.Delete()
+
+	group := newTestGroup()
+	err := directory.CreateGroup(group)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, group.Href)
+}
+
+func TestDirectoryRegisterAccount(t *testing.T) {
+	t.Parallel()
+
+	directory := createTestDirectory()
+	defer directory.Delete()
+
+	account := newTestAccount()
+	err := directory.RegisterAccount(account)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, account.Href)
+}
+
+func TestCreateGoogleDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewGoogleDirectory("google-"+randomName(), "ClientID", "ClientSercret", "http://localhost:8080")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, Google, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Equal(t, directory.Provider.RedirectURI, d.Provider.RedirectURI)
+}
+
+func TestCreateLinkedInDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewLinkedInDirectory("linkedin-"+randomName(), "ClientID", "ClientSercret", "http://localhost:8080")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, LinkedIn, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Equal(t, directory.Provider.RedirectURI, d.Provider.RedirectURI)
+}
+
+func TestCreateFacebookDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewFacebookDirectory("facebook-"+randomName(), "ClientID", "ClientSercret")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, Facebook, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Empty(t, d.Provider.RedirectURI)
+}
+
+func TestCreateGithubDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := NewGithubDirectory("github-"+randomName(), "ClientID", "ClientSercret")
+	defer directory.Delete()
+
+	err := tenant.CreateDirectory(directory)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, directory.Href)
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria().WithProvider())
+
+	assert.NoError(t, err)
+	assert.Equal(t, GitHub, d.Provider.ProviderID)
+	assert.Equal(t, directory.Provider.ClientID, d.Provider.ClientID)
+	assert.Equal(t, directory.Provider.ClientSecret, d.Provider.ClientSecret)
+	assert.Empty(t, d.Provider.RedirectURI)
+}
