@@ -14,7 +14,7 @@ type CustomData map[string]interface{}
 func (r *customDataAwareResource) GetCustomData() (CustomData, error) {
 	customData := make(CustomData)
 
-	err := client.get(buildAbsoluteURL(r.Href, "customData"), emptyPayload(), &customData)
+	err := client.get(buildAbsoluteURL(r.Href, "customData"), &customData)
 
 	if err != nil {
 		return nil, err

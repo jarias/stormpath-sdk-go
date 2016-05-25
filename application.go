@@ -1,11 +1,11 @@
 package stormpath
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"net/url"
 	"time"
-	"bytes"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/nu7hatch/gouuid"
@@ -52,11 +52,11 @@ type OAuthResponse struct {
 
 type AccessToken struct {
 	resource
-	Account      *Account               `json:"account,omitempty"`
-	Tenant       *Tenant                `json:"tenant,omitempty"`
-	Application  *Application           `json:"application,omitempty"`
-	JWT          string                 `json:"jwt"`
-	ExpandedJWT  map[string]interface{} `json:"expandedJwt"`
+	Account     *Account               `json:"account,omitempty"`
+	Tenant      *Tenant                `json:"tenant,omitempty"`
+	Application *Application           `json:"application,omitempty"`
+	JWT         string                 `json:"jwt"`
+	ExpandedJWT map[string]interface{} `json:"expandedJwt"`
 }
 
 //NewApplication creates a new application
@@ -70,7 +70,6 @@ func GetApplication(href string, criteria Criteria) (*Application, error) {
 
 	err := client.get(
 		buildAbsoluteURL(href, criteria.ToQueryString()),
-		emptyPayload(),
 		application,
 	)
 
@@ -79,7 +78,7 @@ func GetApplication(href string, criteria Criteria) (*Application, error) {
 
 //Refresh refreshes the resource by doing a GET to the resource href endpoint
 func (app *Application) Refresh() error {
-	return client.get(app.Href, emptyPayload(), app)
+	return client.get(app.Href, app)
 }
 
 //Update updates the given resource, by doing a POST to the resource Href
@@ -110,7 +109,6 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStor
 
 	err := client.get(
 		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		accountStoreMappings,
 	)
 
@@ -204,7 +202,6 @@ func (app *Application) ValidateToken(token string) (*AccessToken, error) {
 
 	err := client.get(
 		buildAbsoluteURL(app.Href, "authTokens", token),
-		emptyPayload(),
 		response,
 	)
 
@@ -239,7 +236,7 @@ func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordRe
 func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
-	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), emptyPayload(), passwordResetToken)
+	err := client.get(buildAbsoluteURL(app.Href, "passwordResetTokens", token), passwordResetToken)
 
 	if err != nil {
 		return nil, err
@@ -283,7 +280,6 @@ func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 
 	err := client.get(
 		buildAbsoluteURL(app.Groups.Href, criteria.ToQueryString()),
-		emptyPayload(),
 		groups,
 	)
 
