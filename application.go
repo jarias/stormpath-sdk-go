@@ -197,7 +197,31 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 	return response, nil
 }
 
-//Validate Token against Application
+//RefreshOAuthToken refreshes an OAuth2 token using the provided refresh_token and returns a new OAuth reponse
+func (app *Application) RefreshOAuthToken(refreshToken string) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
+
+	values := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {refreshToken},
+	}
+	body := &bytes.Buffer{}
+	canonicalizeQueryString(body, values)
+
+	err := client.postURLEncodedForm(
+		buildAbsoluteURL(app.Href, "oauth/token"),
+		body.String(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//ValidateToken against the application
 func (app *Application) ValidateToken(token string) (*AccessToken, error) {
 	response := &AccessToken{}
 
@@ -368,10 +392,11 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	return result, nil
 }
 
+//GetOAuthPolicy return the application OAuthPolicy
 func (app *Application) GetOAuthPolicy() (*OAuthPolicy, error) {
 	oauthPolicy := &OAuthPolicy{}
 
-	err := client.get(app.OAuthPolicy.Href, emptyPayload(), oauthPolicy)
+	err := client.get(app.OAuthPolicy.Href, oauthPolicy)
 
 	return oauthPolicy, err
 }

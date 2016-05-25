@@ -1,63 +1,65 @@
 package stormpath_test
 
 import (
+	"testing"
+
 	. "github.com/jarias/stormpath-sdk-go"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("OAuthPolicy", func() {
-	Describe("Application.GetOAuthPolicy", func() {
-		It("Should return the given policy", func() {
-			application := newTestApplication()
-			tenant.CreateApplication(application)
+func TestGetApplicationOAuthPolicy(t *testing.T) {
+	t.Parallel()
 
-			policy, err := application.GetOAuthPolicy()
+	application := createTestApplication()
+	defer application.Purge()
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(policy.AccessTokenTtl).To(Equal("PT1H"))
-			Expect(policy.RefreshTokenTtl).To(Equal("P60D"))
-		})
-	})
-	Describe("Update", func() {
-		It("should update the policy if the new TTL values are valid", func() {
-			application := newTestApplication()
-			tenant.CreateApplication(application)
+	policy, err := application.GetOAuthPolicy()
 
-			policy, _ := application.GetOAuthPolicy()
+	assert.NoError(t, err)
+	assert.Equal(t, "PT1H", policy.AccessTokenTtl)
+	assert.Equal(t, "P60D", policy.RefreshTokenTtl)
+}
 
-			policy.AccessTokenTtl = "PT2H"
-			policy.RefreshTokenTtl = "P50D"
-			err := policy.Update()
-			Expect(err).ToNot(HaveOccurred())
+func TestUpdateApplicationOAuthPolicy(t *testing.T) {
+	t.Parallel()
 
-			policy, _ = application.GetOAuthPolicy()
-			Expect("PT2H").To(Equal(policy.AccessTokenTtl))
-			Expect("P50D").To(Equal(policy.RefreshTokenTtl))
-		})
-		It("should return an error if the access token TTL is invalid", func() {
-			application := newTestApplication()
-			tenant.CreateApplication(application)
+	application := createTestApplication()
+	defer application.Purge()
 
-			policy, _ := application.GetOAuthPolicy()
+	policy, _ := application.GetOAuthPolicy()
 
-			policy.AccessTokenTtl = "hello i'm not a valid value deal with me"
-			err := policy.Update()
-			Expect(err).To(HaveOccurred())
-			Expect(err.(Error).Status).To(Equal(400))
-			Expect(err.(Error).Code).To(Equal(2002))
-		})
-		It("should return an error if the refresh token TTL is invalid", func() {
-			application := newTestApplication()
-			tenant.CreateApplication(application)
+	policy.AccessTokenTtl = "PT2H"
+	policy.RefreshTokenTtl = "P50D"
+	err := policy.Update()
 
-			policy, _ := application.GetOAuthPolicy()
+	assert.NoError(t, err)
 
-			policy.RefreshTokenTtl = "hello i'm not a valid value deal with me"
-			err := policy.Update()
-			Expect(err).To(HaveOccurred())
-			Expect(err.(Error).Status).To(Equal(400))
-			Expect(err.(Error).Code).To(Equal(2002))
-		})
-	})
-})
+	updatedPolicy, _ := application.GetOAuthPolicy()
+
+	assert.Equal(t, "PT2H", updatedPolicy.AccessTokenTtl)
+	assert.Equal(t, "P50D", updatedPolicy.RefreshTokenTtl)
+}
+
+func TestUpdateApplicationOAuthPolicyInvalidTTL(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	policy, _ := application.GetOAuthPolicy()
+
+	policy.AccessTokenTtl = "hello i'm not a valid value deal with me"
+	err := policy.Update()
+	
+	assert.Error(t, err)
+	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, 2002, err.(Error).Code)
+	
+	policy.AccessTokenTtl = "PT2H"
+	policy.RefreshTokenTtl = "hello i'm not a valid value deal with me"
+	err = policy.Update()
+	
+	assert.Error(t, err)
+	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, 2002, err.(Error).Code)
+}
