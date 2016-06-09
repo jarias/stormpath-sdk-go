@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"reflect"
-
 	"github.com/jarias/stormpath-sdk-go"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
@@ -452,7 +450,6 @@ func accountModel(account *stormpath.Account) map[string]stormpath.Account {
 			"account": stormpath.Account{},
 		}
 	}
-	//TODO take care of expansions
 	accountModel := stormpath.Account{
 		Username:   account.Username,
 		Email:      account.Email,
@@ -517,27 +514,6 @@ func accountModel(account *stormpath.Account) map[string]stormpath.Account {
 	return map[string]stormpath.Account{
 		"account": accountModel,
 	}
-}
-
-func clean(src interface{}, dest interface{}) interface{} {
-	srcElem := reflect.ValueOf(src).Elem()
-	destElem := reflect.ValueOf(dest).Elem()
-
-	for i := 0; i < srcElem.NumField(); i++ {
-		srcField := srcElem.Field(i)
-		destField := destElem.Field(i)
-
-		if srcField.Type().Kind() == reflect.Ptr {
-			if destField.CanSet() {
-				destField.Set(reflect.Zero(srcField.Type()))
-			}
-			continue
-		}
-		if destField.CanSet() {
-			destField.Set(srcField)
-		}
-	}
-	return dest
 }
 
 func baseURL(r *http.Request) string {
