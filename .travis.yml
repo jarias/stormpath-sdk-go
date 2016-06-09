@@ -12,6 +12,8 @@ script:
   - cat coverage-core.txt coverage-web.txt > coverage.txt
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+after_failure:
+  - cat web/stormpath-framework-tck/target/failsafe-reports/*.txt
 env:
   global:
   - secure: OrnGKr9+VSFNGuJdJvB4WrpS4GNqByEUQn2k9ARJXWtOcqiQUijNZJ5A9oC+4M5PRrvRx6IO4aRELVVc9tH2jbMvpwVyn8r9rHzfHLOomudnU679w3lI8V7K57lOW8V7XunMVTdQSmFno/GT7x7fTZ2HROxd5jKepzlNP6mD1tE=

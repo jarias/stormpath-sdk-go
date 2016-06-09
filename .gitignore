@@ -9,3 +9,5 @@ prof.cpu
 prof.cov
 stormpath-framework-tck
 coverage.txt
+coverage-web.txt
+coverage-core.txt
