@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Verify Email</title>
+
+    <!-- Bootstrap -->
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="/stormpath/assets/css/stormpath.css">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="https://use.fontawesome.com/bdf5fa2b07.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-offset-4 col-sm-4 panel panel-default">
+                <div class="panel-body">
+                    <div class="col-sm-12">
+                        <h4>Resend Email Verification</h4>
+                        <h6>Didn't receive your account verification email?</h6>
+                        <h6>Enter your email address below and we'll resend your account verification email. You will be sent an email which you will need to open to continue. You may need to check your spam folder.</h6> {{ if .status }}
+                        <div class="alert alert-dismissable alert-info" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <p>{{ .status }}</p>
+                        </div>
+                        {{ end }} {{ if .error }}
+                        <div class="alert alert-dismissable alert-danger" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <p>{{ .error.Message }}</p>
+                        </div>
+                        {{ end }}
+                        <form method="post" role="form">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input class="form-control" required="required" name="email" type="email" placeholder="you@yourdomain.com">
+                            </div>
+                            <button type="submit" class="btn btn-success pull-right">Send Email</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-offset-4 col-sm-4">
+                <a href="{{ .loginURI }}" class="pull-right">Back to Login</a>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

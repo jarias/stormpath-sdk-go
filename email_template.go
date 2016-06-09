@@ -1,12 +1,5 @@
 package stormpath
 
-const (
-	//TextPlain "text/plain" mime type
-	TextPlain = "text/plain"
-	//TextHTML "text/html" mime type
-	TextHTML = "text/html"
-)
-
 //EmailTemplate represents an account creation policy email template
 type EmailTemplate struct {
 	resource
@@ -22,7 +15,7 @@ type EmailTemplate struct {
 //EmailTemplates represents a collection of EmailTemplate
 type EmailTemplates struct {
 	collectionResource
-	Items []EmailTemplate `json:"items"`
+	Items []EmailTemplate `json:"items,omitempty"`
 }
 
 //GetEmailTemplate loads an email template by href

@@ -80,3 +80,18 @@ func (c AccountCriteria) WithGroupMemberships(pageRequest PageRequest) AccountCr
 	c.expandedAttributes = append(c.expandedAttributes, pageRequest.toExpansion("groupMemberships"))
 	return c
 }
+
+func (c AccountCriteria) WithProviderData() AccountCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "providerData")
+	return c
+}
+
+func (c AccountCriteria) WithAPIKeys() AccountCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "apiKeys")
+	return c
+}
+
+func (c AccountCriteria) WithApplications() AccountCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "applications")
+	return c
+}

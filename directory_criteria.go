@@ -64,3 +64,13 @@ func (c DirectoryCriteria) WithProvider() DirectoryCriteria {
 	c.expandedAttributes = append(c.expandedAttributes, "provider")
 	return c
 }
+
+func (c DirectoryCriteria) WithAccountCreationPolicy() DirectoryCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "accountCreationPolicy")
+	return c
+}
+
+func (c DirectoryCriteria) WithPasswordPolicy() DirectoryCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "passwordPolicy")
+	return c
+}

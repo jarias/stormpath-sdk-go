@@ -8,7 +8,7 @@ type GroupMembership struct {
 
 type GroupMemberships struct {
 	collectionResource
-	Items []GroupMembership `json:"items"`
+	Items []GroupMembership `json:"items,omitempty"`
 }
 
 func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {

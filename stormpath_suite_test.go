@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	cred   Credentials
 	tenant *Tenant
 )
 
@@ -51,17 +50,12 @@ func setup() {
 
 		var err error
 
-		cred, err = NewDefaultCredentials()
+		clientConfig, err := LoadConfiguration()
 		if err != nil {
 			panic(err)
 		}
-
-		stormpathBaseURL := os.Getenv("STORMPATH_BASE_URL")
-		if stormpathBaseURL != "" {
-			BaseURL = stormpathBaseURL
-		}
-
-		Init(cred, nil)
+		Init(clientConfig, nil)
+		GetClient().Cache = nil
 
 		tenant, err = CurrentTenant()
 		if err != nil {

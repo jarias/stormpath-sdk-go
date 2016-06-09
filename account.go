@@ -5,21 +5,24 @@ package stormpath
 //See: http://docs.stormpath.com/rest/product-guide/#accounts
 type Account struct {
 	customDataAwareResource
-	Username               string            `json:"username"`
-	Email                  string            `json:"email"`
+	Username               string            `json:"username,omitempty"`
+	Email                  string            `json:"email,omitempty"`
 	Password               string            `json:"password,omitempty"`
 	FullName               string            `json:"fullName,omitempty"`
-	GivenName              string            `json:"givenName"`
+	GivenName              string            `json:"givenName,omitempty"`
 	MiddleName             string            `json:"middleName,omitempty"`
-	Surname                string            `json:"surname"`
+	Surname                string            `json:"surname,omitempty"`
 	Status                 string            `json:"status,omitempty"`
 	Groups                 *Groups           `json:"groups,omitempty"`
 	GroupMemberships       *GroupMemberships `json:"groupMemberships,omitempty"`
 	Directory              *Directory        `json:"directory,omitempty"`
 	Tenant                 *Tenant           `json:"tenant,omitempty"`
-	EmailVerificationToken *resource         `json:"emailVerificationToken,omitempty"`
+	EmailVerificationToken *resource         `json:"emailVerificationToken"`
 	AccessTokens           *OAuthTokens      `json:"accessTokens,omitempty"`
 	RefreshTokens          *OAuthTokens      `json:"refreshTokens,omitempty"`
+	ProviderData           *ProviderData     `json:"providerData,omitempty"`
+	APIKeys                *APIKeys          `json:"apiKeys,omitempty"`
+	Applications           *Applications     `json:"applications,omitempty"`
 }
 
 //Accounts represents a paged result of Account objects
@@ -27,7 +30,7 @@ type Account struct {
 //See: http://docs.stormpath.com/rest/product-guide/#accounts-collectionResource
 type Accounts struct {
 	collectionResource
-	Items []Account `json:"items"`
+	Items []Account `json:"items,omitempty"`
 }
 
 //AccountPasswordResetToken represents an password reset token for a given account
@@ -152,7 +155,7 @@ func (account *Account) GetGroupMemberships(criteria Criteria) (*GroupMembership
 //See: http://docs.stormpath.com/rest/product-guide/#account-verify-email
 func VerifyEmailToken(token string) (*Account, error) {
 	account := &Account{}
-	err := client.post(buildAbsoluteURL(BaseURL, "accounts/emailVerificationTokens", token), emptyPayload(), account)
+	err := client.post(buildRelativeURL("accounts/emailVerificationTokens", token), emptyPayload(), account)
 
 	if err != nil {
 		return nil, err
@@ -191,4 +194,15 @@ func (account *Account) GetAccessTokens(criteria OAuthTokenCriteria) (*OAuthToke
 	}
 
 	return accessTokens, nil
+}
+
+func (account *Account) CreateAPIKey() (*APIKey, error) {
+	apiKey := &APIKey{}
+
+	err := client.post(account.APIKeys.Href, emptyPayload(), apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiKey, nil
 }

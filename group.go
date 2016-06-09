@@ -15,7 +15,7 @@ type Group struct {
 //Groups represent a paged result of groups
 type Groups struct {
 	collectionResource
-	Items []Group `json:"items"`
+	Items []Group `json:"items,omitempty"`
 }
 
 //NewGroup creates a new Group with the given name

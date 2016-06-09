@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Login</title>
+
+    <!-- Bootstrap -->
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="/stormpath/assets/css/stormpath.css">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="https://use.fontawesome.com/bdf5fa2b07.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="{{ if .accountStores }}col-sm-offset-3 col-sm-6{{ else }}col-sm-offset-4 col-sm-4{{ end }} panel panel-default">
+                <div class="panel-body">
+                    <div class="{{ if .accountStores }}col-sm-8{{ else }}col-sm-12{{ end }}">
+                        <!-- TODO Remove this useless div once https://github.com/stormpath/stormpath-framework-tck/pull/272 gets a resolution -->
+                        <div class="header">
+                            <h4>Login or <a href="{{ .registerURI }}">Create Account</a></h4>
+                        </div> {{ if .status }}
+                        <div class="alert alert-dismissable alert-info" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <p><span id="status">{{ .status }}</span></p>
+                        </div>
+                        {{ end }} {{ if .error }}
+                        <div class="alert alert-dismissable alert-danger bad-login" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <p><span id="status">{{ .error.Message }}</span></p>
+                        </div>
+                        {{ end }}
+                        <form method="post" role="form">
+                            {{ range $field := .form.Fields }}
+                            <div class="form-group">
+                                <label for="{{ $field.Name }}">{{ $field.Label }}</label>
+                                <input class="form-control" {{ if $.postedData }}value="{{ index $.postedData $field.Name }}"{{ end }} {{ if $field.Required }}required="required" {{ end }} name="{{ $field.Name }}" type="{{ $field.Type }}"
+                                    placeholder="{{ $field.PlaceHolder }}">
+                            </div>
+                            {{ end }}
+                            <button type="submit" class="btn btn-success pull-right">Login</button>
+                        </form>
+                    </div>
+                    {{ if .accountStores }}
+                    <div class="col-sm-4 easy-login">
+                        <h4>Easy 1-click login</h4> {{ range $store := .accountStores }}
+                        <a class="btn btn-block btn-social btn-{{ $store.Provider.ProviderID }}" id="{{ $store.Provider.ClientID }}">
+                            <span class="fa fa-{{ $store.Provider.ProviderID }}"></span><span class="social-provider">{{ $store.Provider.ProviderID }}</span>
+                        </a>
+                        {{ end }}
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="{{ if .accountStores }}col-sm-offset-3 col-sm-6{{ else }}col-sm-offset-4 col-sm-4{{ end }}">
+                {{ if .verifyURI }}
+                <a href="{{ .verifyURI }}" class="pull-right">Resend Verification Email?</a>
+                {{ end }}
+                {{ if .forgotURI }}
+                <a href="{{ .forgotURI }}" class="pull-left">Forgot Password?</a>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+    <input type="hidden" value="{{ .baseURL }}" id="baseUrl">
+    <!-- Social -->
+    <input type="hidden" value="{{ .googleCallbackUri }}"  id="googleCallbackUri">
+    <input type="hidden" value="{{ .googleScope }}"  id="googleScope">
+    <input type="hidden" value="{{ .facebookCallbackUri }}"  id="facebookCallbackUri">
+    <input type="hidden" value="{{ .facebookScope }}"  id="facebookScope">
+    <input type="hidden" value="{{ .githubCallbackUri }}"  id="githubCallbackUri">
+    <input type="hidden" value="{{ .githubScope }}"  id="githubScope">
+    <input type="hidden" value="{{ .linkedinCallbackUri }}"  id="linkedinCallbackUri">
+    <input type="hidden" value="{{ .linkedinScope }}"  id="linkedinScope">
+    <!-- End Social -->
+    
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+        crossorigin="anonymous"></script>
+    <script src="/stormpath/assets/js/social-login.js"></script>
+</body>
+
+</html>

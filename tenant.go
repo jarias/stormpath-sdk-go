@@ -5,10 +5,10 @@ import "net/url"
 //Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
 type Tenant struct {
 	customDataAwareResource
-	Name         string       `json:"name"`
-	Key          string       `json:"key"`
-	Applications Applications `json:"applications"`
-	Directories  Directories  `json:"directories"`
+	Name         string        `json:"name,omitempty"`
+	Key          string        `json:"key,omitempty"`
+	Applications *Applications `json:"applications,omitempty"`
+	Directories  *Directories  `json:"directories,omitempty"`
 }
 
 //CurrentTenant returns the current tenant see http://docs.stormpath.com/rest/product-guide/#retrieve-the-current-tenant

@@ -1,11 +1,11 @@
 package stormpath_test
 
 import (
+	"encoding/json"
+	"net/http"
 	"net/url"
 	"regexp"
 	"testing"
-
-	"encoding/json"
 
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/jarias/stormpath-sdk-go"
@@ -81,7 +81,7 @@ func TestValidateOAuthInvalidAccessToken(t *testing.T) {
 	_, err := application.ValidateToken("anInvalidToken")
 
 	assert.Error(t, err)
-	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, http.StatusBadRequest, err.(Error).Status)
 }
 
 func TestApplicationJsonMarshaling(t *testing.T) {
@@ -150,7 +150,7 @@ func TestApplicationCreateInvalidGroup(t *testing.T) {
 	err := application.CreateGroup(&Group{})
 
 	assert.Error(t, err)
-	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, http.StatusBadRequest, err.(Error).Status)
 }
 
 func TestApplicationCreateGroup(t *testing.T) {
@@ -182,8 +182,8 @@ func TestGetApplicationGroups(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, groups.Href)
-	assert.Equal(t, 0, groups.Offset)
-	assert.Equal(t, 25, groups.Limit)
+	assert.Equal(t, 0, groups.GetOffset())
+	assert.Equal(t, 25, groups.GetLimit())
 	assert.NotEmpty(t, groups.Items)
 }
 
@@ -254,7 +254,11 @@ func TestCreateIDSiteURL(t *testing.T) {
 	application := createTestApplication()
 	defer application.Purge()
 
-	idSiteURL, err := application.CreateIDSiteURL(map[string]string{"callbackURI": "http://localhost:8080"})
+	idSiteOptions := IDSiteOptions{
+		CallbackURL: "http://localhost:8080",
+	}
+
+	idSiteURL, err := application.CreateIDSiteURL(idSiteOptions)
 
 	u, _ := url.Parse(idSiteURL)
 
@@ -266,7 +270,7 @@ func TestCreateIDSiteURL(t *testing.T) {
 	jwtRequest := u.Query().Get("jwtRequest")
 
 	token, _ := jwt.Parse(jwtRequest, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cred.Secret), nil
+		return []byte(GetClient().ClientConfiguration.APIKeySecret), nil
 	})
 
 	assert.True(t, token.Valid)
@@ -274,7 +278,7 @@ func TestCreateIDSiteURL(t *testing.T) {
 	assert.Equal(t, "http://localhost:8080", token.Claims["cb_uri"])
 	assert.Equal(t, "", token.Claims["state"])
 	assert.Equal(t, "/", token.Claims["path"])
-	assert.Equal(t, cred.ID, token.Claims["iss"])
+	assert.Equal(t, GetClient().ClientConfiguration.APIKeyID, token.Claims["iss"])
 	assert.Equal(t, application.Href, token.Claims["sub"])
 	assert.NotEmpty(t, token.Claims["jti"])
 	assert.NotEmpty(t, token.Claims["iat"])
@@ -286,12 +290,12 @@ func TestCreateIDSiteLogoutURL(t *testing.T) {
 	application := createTestApplication()
 	defer application.Purge()
 
-	idSiteURL, err := application.CreateIDSiteURL(
-		map[string]string{
-			"callbackURI": "http://localhost:8080",
-			"logout":      "true",
-		},
-	)
+	idSiteOptions := IDSiteOptions{
+		CallbackURL: "http://localhost:8080",
+		Logout:      true,
+	}
+
+	idSiteURL, err := application.CreateIDSiteURL(idSiteOptions)
 
 	u, _ := url.Parse(idSiteURL)
 
@@ -303,7 +307,7 @@ func TestCreateIDSiteLogoutURL(t *testing.T) {
 	jwtRequest := u.Query().Get("jwtRequest")
 
 	token, _ := jwt.Parse(jwtRequest, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cred.Secret), nil
+		return []byte(GetClient().ClientConfiguration.APIKeySecret), nil
 	})
 
 	assert.True(t, token.Valid)
@@ -311,7 +315,7 @@ func TestCreateIDSiteLogoutURL(t *testing.T) {
 	assert.Equal(t, "http://localhost:8080", token.Claims["cb_uri"])
 	assert.Equal(t, "", token.Claims["state"])
 	assert.Equal(t, "/", token.Claims["path"])
-	assert.Equal(t, cred.ID, token.Claims["iss"])
+	assert.Equal(t, GetClient().ClientConfiguration.APIKeyID, token.Claims["iss"])
 	assert.Equal(t, application.Href, token.Claims["sub"])
 	assert.NotEmpty(t, token.Claims["jti"])
 	assert.NotEmpty(t, token.Claims["iat"])

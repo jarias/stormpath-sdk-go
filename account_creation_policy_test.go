@@ -106,7 +106,7 @@ func TestUpdateAccountCreationPolicyNoExists(t *testing.T) {
 	t.Parallel()
 
 	policy := AccountCreationPolicy{}
-	policy.Href = BaseURL + "accountCreationPolicies/XXXX"
+	policy.Href = GetClient().ClientConfiguration.BaseURL + "accountCreationPolicies/XXXX"
 
 	err := policy.Update()
 

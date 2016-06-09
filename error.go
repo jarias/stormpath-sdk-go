@@ -14,6 +14,7 @@ type Error struct {
 	DeveloperMessage string
 	MoreInfo         string
 	RequestID        string
+	OAuth2Error      string `json:"error"`
 }
 
 func (e Error) Error() string {
@@ -34,7 +35,11 @@ func handleResponseError(req *http.Request, resp *http.Response, err error) erro
 	}
 
 	//Check for Stormpath specific errors
-	if resp.StatusCode != 200 && resp.StatusCode != 204 && resp.StatusCode != 201 && resp.StatusCode != 302 {
+	if resp.StatusCode != http.StatusOK &&
+		resp.StatusCode != http.StatusAccepted &&
+		resp.StatusCode != http.StatusNoContent &&
+		resp.StatusCode != http.StatusCreated &&
+		resp.StatusCode != http.StatusFound {
 		spError := &Error{}
 
 		err := json.NewDecoder(resp.Body).Decode(spError)

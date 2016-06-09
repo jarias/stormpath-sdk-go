@@ -1,8 +1,11 @@
 .idea
+.vscode
 .envrc
-coverage.txt
 stormpath-sdk-go.test
 *.svg
+debug
 prof.mem
 prof.cpu
 prof.cov
+stormpath-framework-tck
+coverage.txt

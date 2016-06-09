@@ -2,110 +2,111 @@ package stormpath_test
 
 import (
 	"testing"
-
-	"os"
+	"time"
 
 	. "github.com/jarias/stormpath-sdk-go"
-	lediscfg "github.com/siddontang/ledisdb/config"
-	"github.com/siddontang/ledisdb/ledis"
 	"github.com/stretchr/testify/assert"
 )
 
 const key = "key"
 
-func createTestLedisCache() LedisCache {
-	cfg := lediscfg.NewConfigDefault()
-	cfg.DataDir = os.TempDir() + "/stormpath-go-sdk-ledisCache/var/" + randomName()
-	l, err := ledis.Open(cfg)
-	if err != nil {
-		panic(err)
-	}
-	db, err := l.Select(0)
-	if err != nil {
-		panic(err)
-	}
-
-	return LedisCache{db}
+func createTestLocalCache() *LocalCache {
+	return NewLocalCache(5*time.Second, 2*time.Second)
 }
 
-func TestLedisCacheKeyNoExists(t *testing.T) {
+func TestLocalCacheKeyTTL(t *testing.T) {
 	t.Parallel()
-	cache := createTestLedisCache()
+	cache := createTestLocalCache()
+
+	cache.Set(key, []byte("hello"))
+
+	time.Sleep(6 * time.Second)
+
+	assert.False(t, cache.Exists(key))
+}
+
+func TestLocalCacheKeyTTI(t *testing.T) {
+	t.Parallel()
+	cache := createTestLocalCache()
+
+	cache.Set(key, []byte("hello"))
+
+	cache.Get(key)
+	time.Sleep(3 * time.Second)
+
+	assert.False(t, cache.Exists(key))
+}
+
+func TestLocalCacheKeyNoExists(t *testing.T) {
+	t.Parallel()
+	cache := createTestLocalCache()
 
 	r := cache.Exists(key)
 
 	assert.False(t, r)
 }
 
-func TestLedisCacheKeyExists(t *testing.T) {
+func TestLocalCacheKeyExists(t *testing.T) {
 	t.Parallel()
-	cache := createTestLedisCache()
+	cache := createTestLocalCache()
 
-	cache.DB.Set([]byte(key), []byte("hello"))
+	cache.Set(key, []byte("hello"))
 
 	r := cache.Exists(key)
 
 	assert.True(t, r)
 }
 
-func TestLedisCacheSetObject(t *testing.T) {
+func TestLocalCacheSetObject(t *testing.T) {
 	t.Parallel()
-	cache := createTestLedisCache()
+	cache := createTestLocalCache()
 
 	assert.False(t, cache.Exists(key))
 
-	cache.Set(key, "hello")
+	cache.Set(key, []byte("hello"))
 
 	assert.True(t, cache.Exists(key))
 }
 
-func TestLedisCacheUpdateObject(t *testing.T) {
+func TestLocalCacheUpdateObject(t *testing.T) {
 	t.Parallel()
-	cache := createTestLedisCache()
+	cache := createTestLocalCache()
 
 	assert.False(t, cache.Exists(key))
 
-	cache.Set(key, "hello")
-	cache.Set(key, "bye")
+	cache.Set(key, []byte("hello"))
+	cache.Set(key, []byte("bye"))
 
-	var r string
-	err := cache.Get(key, &r)
+	r := cache.Get(key)
 
-	assert.NoError(t, err)
-	assert.Equal(t, "bye", r)
+	assert.Equal(t, []byte("bye"), r)
 }
 
-func TestLedisCacheGetObjectNoExists(t *testing.T) {
+func TestLocalCacheGetObjectNoExists(t *testing.T) {
 	t.Parallel()
-	cache := createTestLedisCache()
+	cache := createTestLocalCache()
 
-	var r string
+	r := cache.Get(key)
 
-	err := cache.Get(key, &r)
-
-	assert.NoError(t, err)
 	assert.Empty(t, r)
 }
 
-func TestLedisCacheGetObject(t *testing.T) {
+func TestLocalCacheGetObject(t *testing.T) {
 	t.Parallel()
-	cache := createTestLedisCache()
+	cache := createTestLocalCache()
 
-	cache.Set(key, "hello")
+	cache.Set(key, []byte("hello"))
 
-	var r string
+	r := cache.Get(key)
 
-	err := cache.Get(key, &r)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "hello", r)
+	assert.Equal(t, []byte("hello"), r)
 }
 
-func TestLedisCacheDeleteObject(t *testing.T) {
+func TestLocalCacheDeleteObject(t *testing.T) {
 	t.Parallel()
-	cache := createTestLedisCache()
+	cache := createTestLocalCache()
 
-	cache.Set(key, "hello")
+	cache.Set(key, []byte("hello"))
 
 	assert.True(t, cache.Exists(key))
 

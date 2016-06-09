@@ -1,6 +1,7 @@
 package stormpath_test
 
 import (
+	"net/http"
 	"testing"
 
 	. "github.com/jarias/stormpath-sdk-go"
@@ -50,16 +51,16 @@ func TestUpdateApplicationOAuthPolicyInvalidTTL(t *testing.T) {
 
 	policy.AccessTokenTTL = "hello i'm not a valid value deal with me"
 	err := policy.Update()
-	
+
 	assert.Error(t, err)
-	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, http.StatusBadRequest, err.(Error).Status)
 	assert.Equal(t, 2002, err.(Error).Code)
-	
+
 	policy.AccessTokenTTL = "PT2H"
 	policy.RefreshTokenTTL = "hello i'm not a valid value deal with me"
 	err = policy.Update()
-	
+
 	assert.Error(t, err)
-	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, http.StatusBadRequest, err.(Error).Status)
 	assert.Equal(t, 2002, err.(Error).Code)
 }

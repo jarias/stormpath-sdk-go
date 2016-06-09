@@ -7,7 +7,9 @@ install:
 - go get github.com/stretchr/testify/assert
 - go get
 script:
-  - go test . -coverprofile=coverage.txt -covermode=atomic
+  - go test . -coverprofile=coverage-core.txt -covermode=atomic
+  - go test ./web -coverprofile=coverage-web.txt -covermode=atomic
+  - cat coverage-core.txt coverage-web.txt > coverage.txt
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 env:

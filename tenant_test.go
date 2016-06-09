@@ -75,8 +75,8 @@ func TestTenantGetApplications(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, applications.Items)
 	assert.NotEmpty(t, applications.Href)
-	assert.Equal(t, 0, applications.Offset)
-	assert.Equal(t, 25, applications.Limit)
+	assert.Equal(t, 0, applications.GetOffset())
+	assert.Equal(t, 25, applications.GetLimit())
 }
 
 func TestTenantGetApplicationsByPage(t *testing.T) {
@@ -87,8 +87,8 @@ func TestTenantGetApplicationsByPage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, applications.Items, 1)
 	assert.NotEmpty(t, applications.Href)
-	assert.Equal(t, 0, applications.Offset)
-	assert.Equal(t, 1, applications.Limit)
+	assert.Equal(t, 0, applications.GetOffset())
+	assert.Equal(t, 1, applications.GetLimit())
 }
 
 func TestTenantGetApplicationsFiltered(t *testing.T) {
@@ -99,8 +99,8 @@ func TestTenantGetApplicationsFiltered(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, applications.Items, 1)
 	assert.NotEmpty(t, applications.Href)
-	assert.Equal(t, 0, applications.Offset)
-	assert.Equal(t, 25, applications.Limit)
+	assert.Equal(t, 0, applications.GetOffset())
+	assert.Equal(t, 25, applications.GetLimit())
 
 	err = applications.Items[0].Refresh()
 
@@ -180,8 +180,8 @@ func TestTenantGetDirectories(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, directories.Items)
 	assert.NotEmpty(t, directories.Href)
-	assert.Equal(t, 0, directories.Offset)
-	assert.Equal(t, 25, directories.Limit)
+	assert.Equal(t, 0, directories.GetOffset())
+	assert.Equal(t, 25, directories.GetLimit())
 }
 
 func TestTenantGetDirectoriesByPage(t *testing.T) {
@@ -192,8 +192,8 @@ func TestTenantGetDirectoriesByPage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, directories.Items)
 	assert.NotEmpty(t, directories.Href)
-	assert.Equal(t, 0, directories.Offset)
-	assert.Equal(t, 1, directories.Limit)
+	assert.Equal(t, 0, directories.GetOffset())
+	assert.Equal(t, 1, directories.GetLimit())
 }
 
 func TestTenantGetDirectoriesFiltered(t *testing.T) {
@@ -204,8 +204,8 @@ func TestTenantGetDirectoriesFiltered(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, directories.Items)
 	assert.NotEmpty(t, directories.Href)
-	assert.Equal(t, 0, directories.Offset)
-	assert.Equal(t, 25, directories.Limit)
+	assert.Equal(t, 0, directories.GetOffset())
+	assert.Equal(t, 25, directories.GetLimit())
 
 	err = directories.Items[0].Refresh()
 

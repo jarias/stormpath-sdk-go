@@ -53,8 +53,8 @@ func TestGetDirectoryEmptyGroupsCollection(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, groups.Href)
-	assert.Equal(t, 0, groups.Offset)
-	assert.Equal(t, 25, groups.Limit)
+	assert.Equal(t, 0, groups.GetOffset())
+	assert.Equal(t, 25, groups.GetLimit())
 	assert.Empty(t, groups.Items)
 }
 
@@ -68,8 +68,8 @@ func TestGetDirectoryEmptyAccountsCollection(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, accounts.Href)
-	assert.Equal(t, 0, accounts.Offset)
-	assert.Equal(t, 25, accounts.Limit)
+	assert.Equal(t, 0, accounts.GetOffset())
+	assert.Equal(t, 25, accounts.GetLimit())
 	assert.Empty(t, accounts.Items)
 }
 
