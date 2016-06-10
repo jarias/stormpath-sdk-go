@@ -17,11 +17,10 @@ func BenchmarkGetCurrentTenant(b *testing.B) {
 }
 
 func BenchmarkCreateApplication(b *testing.B) {
-	application := newTestApplication()
-	defer application.Purge()
-
 	for i := 0; i < b.N; i++ {
+		application := newTestApplication()
 		err := tenant.CreateApplication(application)
+		defer application.Purge()
 		if err != nil {
 			panic(err)
 		}
