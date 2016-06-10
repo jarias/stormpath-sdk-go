@@ -5,11 +5,12 @@ package stormpath
 //See: http://docs.stormpath.com/rest/product-guide/#groups
 type Group struct {
 	accountStoreResource
-	Name        string     `json:"name,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Status      string     `json:"status,omitempty"`
-	Tenant      *Tenant    `json:"tenant,omitempty"`
-	Directory   *Directory `json:"directory,omitempty"`
+	Name               string            `json:"name,omitempty"`
+	Description        string            `json:"description,omitempty"`
+	Status             string            `json:"status,omitempty"`
+	Tenant             *Tenant           `json:"tenant,omitempty"`
+	Directory          *Directory        `json:"directory,omitempty"`
+	AccountMemberships *GroupMemberships `json:"accountMemberships,omitempty"`
 }
 
 //Groups represent a paged result of groups
@@ -49,18 +50,16 @@ func (group *Group) Update() error {
 	return client.post(group.Href, group, group)
 }
 
-//GetGroupMemberships loads the given group memeberships
-func (group *Group) GetGroupMemberships(criteria Criteria) (*GroupMemberships, error) {
-	groupMemberships := &GroupMemberships{}
-
+//GetGroupAccountMemberships loads the given group memeberships
+func (group *Group) GetGroupAccountMemberships(criteria Criteria) (*GroupMemberships, error) {
 	err := client.get(
-		buildAbsoluteURL(group.Href, "accountMemberships", criteria.ToQueryString()),
-		groupMemberships,
+		buildAbsoluteURL(group.AccountMemberships.Href, criteria.ToQueryString()),
+		group.AccountMemberships,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return groupMemberships, nil
+	return group.AccountMemberships, nil
 }
