@@ -9,10 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jarias/stormpath-sdk-go"
 	"github.com/jarias/stormpath-sdk-go/web"
 )
 
-func TestTCK(t *testing.T) {
+func GetTestServer() (*httptest.Server, string) {
 	mux := http.NewServeMux()
 
 	stormpathFilter := stormpathweb.NewStormpathHandler(mux, []string{"/"})
@@ -23,12 +24,44 @@ func TestTCK(t *testing.T) {
 		fmt.Fprintf(w, "hello")
 	}))
 
-	ts := httptest.NewServer(stormpathFilter)
+	return httptest.NewServer(stormpathFilter), stormpathFilter.Application.Href
+}
+
+func BenchmarkGETLoginHTML(b *testing.B) {
+	ts, _ := GetTestServer()
+	defer ts.Close()
+
+	for i := 0; i < b.N; i++ {
+		req, _ := http.NewRequest(http.MethodGet, ts.URL+"/login", nil)
+		req.Header.Set(stormpath.AcceptHeader, stormpath.TextHTML)
+		_, err := http.DefaultClient.Do(req)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func BenchmarkGETLoginJSON(b *testing.B) {
+	ts, _ := GetTestServer()
+	defer ts.Close()
+
+	for i := 0; i < b.N; i++ {
+		req, _ := http.NewRequest(http.MethodGet, ts.URL+"/login", nil)
+		req.Header.Set(stormpath.AcceptHeader, stormpath.ApplicationJSON)
+		_, err := http.DefaultClient.Do(req)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func TestTCK(t *testing.T) {
+	ts, applicationHref := GetTestServer()
 	defer ts.Close()
 
 	url, _ := url.Parse(ts.URL)
 
-	cmd := exec.Command("./tck.sh", url.Host[strings.Index(url.Host, ":")+1:], stormpathFilter.Application.Href)
+	cmd := exec.Command("./tck.sh", url.Host[strings.Index(url.Host, ":")+1:], applicationHref)
 
 	err := cmd.Start()
 	if err != nil {
