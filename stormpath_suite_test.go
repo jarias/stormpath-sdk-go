@@ -27,8 +27,15 @@ var isSetup = false
 
 func TestMain(m *testing.M) {
 	setup()
-	r := m.Run()
 
+	cleanApps()
+	r := m.Run()
+	cleanApps()
+
+	os.Exit(r)
+}
+
+func cleanApps() {
 	//Clean any leftover apps
 	applications, _ := tenant.GetApplications(MakeApplicationsCriteria().Limit(100))
 
@@ -37,8 +44,6 @@ func TestMain(m *testing.M) {
 			application.Purge()
 		}
 	}
-
-	os.Exit(r)
 }
 
 func setup() {
