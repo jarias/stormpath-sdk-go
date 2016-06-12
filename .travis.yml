@@ -8,7 +8,7 @@ install:
 - go get ./...
 script:
   - go test . -coverprofile=coverage-core.txt -covermode=atomic
-  - go test ./web -coverprofile=coverage-web.txt -covermode=atomic
+  - go test ./web -coverprofile=coverage-web.txt -covermode=atomic -coverpkg=github.com/jarias/stormpath-sdk-go,-coverpkg=github.com/jarias/stormpath-sdk-go
   - cat coverage-core.txt coverage-web.txt > coverage.txt
   - sed -i '/github\.com\/jarias\/stormpath-sdk-go\/web\/assets\.go.*/d' coverage.txt
 after_success:
