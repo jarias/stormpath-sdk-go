@@ -2,6 +2,12 @@ package stormpath
 
 import "net/url"
 
+const (
+	Name        = "name"
+	Description = "description"
+	Status      = "status"
+)
+
 type Criteria interface {
 	ToQueryString() string
 	Offset(offset int) Criteria
@@ -17,9 +23,9 @@ type baseCriteria struct {
 
 func (c baseCriteria) ToQueryString() string {
 	return requestParams(
-		NewPageRequest(c.limit, c.offset),
-		c.filter,
 		buildExpandParam(c.expandedAttributes),
+		c.filter,
+		NewPageRequest(c.limit, c.offset),
 	)
 }
 

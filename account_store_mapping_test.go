@@ -62,3 +62,20 @@ func TestSaveAccountStoreMappingDirectoryNoExists(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, err.(Error).Status)
 	assert.Equal(t, 2014, err.(Error).Code)
 }
+
+func TestIsAccountStoreDirectory(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		url         string
+		isDirectory bool
+	}{
+		{GetClient().ClientConfiguration.BaseURL + "directories/XXX", true},
+		{GetClient().ClientConfiguration.BaseURL + "other/XXX", false},
+	}
+
+	for _, c := range cases {
+		accountStoreMapping := NewAccountStoreMapping("", c.url)
+		assert.Equal(t, accountStoreMapping.IsAccountStoreDirectory(), c.isDirectory)
+	}
+}

@@ -55,7 +55,12 @@ func (c APIKeyCriteria) WithAccount() APIKeyCriteria {
 	return c
 }
 
-func (c APIKeyCriteria) WithTenat() APIKeyCriteria {
-	c.expandedAttributes = append(c.expandedAttributes, "tenataccount")
+func (c APIKeyCriteria) WithTenant() APIKeyCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "tenant")
+	return c
+}
+
+func (c APIKeyCriteria) idEq(id string) APIKeyCriteria {
+	c.filter.Add("id", id)
 	return c
 }

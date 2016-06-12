@@ -1,0 +1,166 @@
+package stormpath_test
+
+import (
+	"testing"
+
+	. "github.com/jarias/stormpath-sdk-go"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestBasicAuthenticator(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+	apiKey, _ := account.CreateAPIKey()
+
+	authenticator := NewBasicAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(apiKey.ID, apiKey.Secret)
+
+	assert.NoError(t, err)
+	assert.Equal(t, account.Href, authResult.Account.Href)
+}
+
+func TestBasicAuthenticatorInvalidCredentials(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	authenticator := NewBasicAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate("foo", "bar")
+
+	assert.Error(t, err)
+	assert.Nil(t, authResult)
+}
+
+func TestBasicAuthenticatorDisabledCredentials(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+	apiKey, _ := account.CreateAPIKey()
+	apiKey.Status = Disabled
+	apiKey.Update()
+
+	authenticator := NewBasicAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(apiKey.ID, apiKey.Secret)
+
+	assert.Error(t, err)
+	assert.Equal(t, "API Key disabled", err.Error())
+	assert.Nil(t, authResult)
+}
+
+func TestBasicAuthenticatorDisabledAccount(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+	apiKey, _ := account.CreateAPIKey()
+	account.Status = Disabled
+	account.Update()
+
+	authenticator := NewBasicAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(apiKey.ID, apiKey.Secret)
+
+	assert.Error(t, err)
+	assert.Equal(t, "Account is disable", err.Error())
+	assert.Nil(t, authResult)
+}
+
+func TestBasicAuthenticatorInvalidSecret(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+	apiKey, _ := account.CreateAPIKey()
+
+	authenticator := NewBasicAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(apiKey.ID, "foo")
+
+	assert.Error(t, err)
+	assert.Equal(t, "Invalid API Key Secret", err.Error())
+	assert.Nil(t, authResult)
+}
+
+func TestOAuthPasswordAuthenticator(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	authenticator := NewOAuthPasswordAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(account.Username, "1234567z!A89")
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, authResult.AccessToken)
+	assert.NotEmpty(t, authResult.RefreshToken)
+	assert.Equal(t, account.Href, authResult.GetAccount().Href)
+}
+
+func TestOAuthPasswordAuthenticatorInvalidCredentials(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	authenticator := NewOAuthPasswordAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(account.Username, "foo")
+
+	assert.Error(t, err)
+	assert.Equal(t, "Invalid username or password.", err.Error())
+	assert.Nil(t, authResult)
+}
+
+func TestOAuthRefreshTokenAuthenticator(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+	oauthResponse, _ := application.GetOAuthToken(account.Username, "1234567z!A89")
+
+	authenticator := NewOAuthRefreshTokenAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(oauthResponse.RefreshToken)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, authResult.AccessToken)
+	assert.NotEmpty(t, authResult.RefreshToken)
+	assert.Equal(t, account.Href, authResult.GetAccount().Href)
+}
+
+func TestOAuthRefreshTokenAuthenticatorInvalidToken(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	authenticator := NewOAuthRefreshTokenAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate("foo")
+
+	assert.Error(t, err)
+	assert.Equal(t, "Token is invalid", err.Error())
+	assert.Nil(t, authResult)
+}

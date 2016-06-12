@@ -112,18 +112,16 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStor
 }
 
 func (app *Application) GetDefaultAccountStoreMapping(criteria Criteria) (*AccountStoreMapping, error) {
-	accountStoreMapping := &AccountStoreMapping{}
-
 	err := client.get(
 		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.ToQueryString()),
-		accountStoreMapping,
+		app.DefaultAccountStoreMapping,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return accountStoreMapping, nil
+	return app.DefaultAccountStoreMapping, nil
 }
 
 //RegisterAccount registers a new account into the application
@@ -427,10 +425,10 @@ func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
 	return response, nil
 }
 
-func (app *Application) GetAPIKey(apiKeyID string, criteria Criteria) (*APIKey, error) {
+func (app *Application) GetAPIKey(apiKeyID string, criteria APIKeyCriteria) (*APIKey, error) {
 	apiKeys := &APIKeys{}
 
-	err := client.get(app.APIKeys.Href+"?id="+apiKeyID, apiKeys)
+	err := client.get(buildAbsoluteURL(app.APIKeys.Href, criteria.idEq(apiKeyID).ToQueryString()), apiKeys)
 	if err != nil {
 		return nil, err
 	}

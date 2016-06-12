@@ -83,7 +83,7 @@ func NewBasicAuthenticator(application *Application) BasicAuthenticator {
 
 //Authenticate authenticates the given account APIKey and APISecret
 func (a BasicAuthenticator) Authenticate(accountAPIKey, accountAPISecret string) (*AuthenticationResult, error) {
-	apiKey, err := a.Application.GetAPIKey(accountAPIKey, MakeAPIKeyCriteria().WithAccount())
+	apiKey, err := a.Application.GetAPIKey(accountAPIKey, MakeAPIKeysCriteria().WithAccount())
 	if err != nil {
 		return nil, err
 	}

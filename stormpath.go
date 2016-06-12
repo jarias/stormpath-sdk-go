@@ -129,7 +129,9 @@ func (client *Client) newRequest(method string, urlStr string, body interface{},
 		//Fixes issue #23 if the method is GET then body should also be just the bytes instead of doing a JSON marshaling
 		encodedBody = body.([]byte)
 	} else {
-		encodedBody, _ = json.Marshal(body)
+		if _, ok := body.([]byte); !ok {
+			encodedBody, _ = json.Marshal(body)
+		}
 	}
 	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(encodedBody))
 
@@ -169,24 +171,26 @@ func buildExpandParam(expandAttributes []string) url.Values {
 }
 
 func requestParams(values ...url.Values) string {
-	params := url.Values{}
+	buff := buffPool.Get().(*bytes.Buffer)
+	buff.Reset()
+	defer buffPool.Put(buff)
 
+	first := true
 	for _, v := range values {
-		params = appendParams(params, v)
+		encodedValues := v.Encode()
+
+		if buff.Len() > 0 && !first && encodedValues != "" {
+			buff.WriteByte('&')
+		}
+		buff.WriteString(encodedValues)
+		first = false
 	}
 
-	encodedParams := params.Encode()
+	encodedParams := buff.String()
 	if encodedParams != "" {
 		return "?" + encodedParams
 	}
 	return ""
-}
-
-func appendParams(params url.Values, toAppend url.Values) url.Values {
-	for k, v := range toAppend {
-		params[k] = v
-	}
-	return params
 }
 
 func emptyPayload() []byte {

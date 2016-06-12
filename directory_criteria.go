@@ -24,17 +24,17 @@ func MakeDirectoriesCriteria() DirectoryCriteria {
 //* status
 
 func (c DirectoryCriteria) NameEq(name string) DirectoryCriteria {
-	c.filter.Add("name", name)
+	c.filter.Add(Name, name)
 	return c
 }
 
 func (c DirectoryCriteria) DescriptionEq(description string) DirectoryCriteria {
-	c.filter.Add("description", description)
+	c.filter.Add(Description, description)
 	return c
 }
 
 func (c DirectoryCriteria) StatusEq(status string) DirectoryCriteria {
-	c.filter.Add("statu", status)
+	c.filter.Add(Status, status)
 	return c
 }
 

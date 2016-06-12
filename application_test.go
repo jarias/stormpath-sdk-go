@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/jarias/stormpath-sdk-go"
@@ -319,4 +320,64 @@ func TestCreateIDSiteLogoutURL(t *testing.T) {
 	assert.Equal(t, application.Href, token.Claims["sub"])
 	assert.NotEmpty(t, token.Claims["jti"])
 	assert.NotEmpty(t, token.Claims["iat"])
+}
+
+func TestGetApplicationDefaultAccountStoreMapping(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	directory := createTestDirectory()
+	defer directory.Delete()
+
+	defaultMapping, err := application.GetDefaultAccountStoreMapping(MakeAccountStoreMappingCriteria())
+
+	assert.NoError(t, err)
+	assert.Equal(t, application.Href, defaultMapping.Application.Href)
+	assert.NotEmpty(t, directory.Href)
+}
+
+func TestGetOAuthTokenStormpathGrantType(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	token.Claims["iat"] = time.Now().Unix()
+	token.Claims["iss"] = application.Href
+	token.Claims["sub"] = account.Href
+	token.Claims["exp"] = time.Now().Add(1 * time.Minute).Unix()
+	token.Claims["status"] = "AUTHENTICATED"
+	token.Claims["aud"] = GetClient().ClientConfiguration.APIKeyID
+	token.Header["kid"] = GetClient().ClientConfiguration.APIKeyID
+
+	tokenString, _ := token.SignedString([]byte(GetClient().ClientConfiguration.APIKeySecret))
+
+	oauthResponse, err := application.GetOAuthTokenStormpathGrantType(tokenString)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, oauthResponse)
+}
+
+func TestApplicationGetAPIKey(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	apiKey, err := account.CreateAPIKey()
+	assert.NoError(t, err)
+	assert.NotNil(t, apiKey)
+
+	accountAPIKey, err := application.GetAPIKey(apiKey.ID, MakeAPIKeyCriteria())
+
+	assert.NoError(t, err)
+	assert.Equal(t, apiKey, accountAPIKey)
 }
