@@ -7,6 +7,80 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestOAuthClientCredentialsAuthenticator(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+	apiKey, _ := account.CreateAPIKey()
+
+	authenticator := NewOAuthClientCredentialsAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(apiKey.ID, apiKey.Secret, "")
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, authResult.AccessToken)
+	assert.Empty(t, authResult.RefreshToken)
+	assert.Equal(t, account.Href, authResult.GetAccount().Href)
+}
+
+func TestOAuthClientCredentialsAuthenticatorInvalidCredentials(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	authenticator := NewOAuthClientCredentialsAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate("foo", "bar", "")
+
+	assert.Error(t, err)
+	assert.Equal(t, "invalid_client", err.Error())
+	assert.Nil(t, authResult)
+}
+
+func TestOAuthClientCredentialsAuthenticatorScopeFactory(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	authenticator := NewOAuthClientCredentialsAuthenticator(application)
+	authenticator.ScopeFactory = ScopeFactoryFunc(func(scope string) bool {
+		return false
+	})
+
+	authResult, err := authenticator.Authenticate("foo", "bar", "bar")
+
+	assert.Error(t, err)
+	assert.Equal(t, "invalid_scope", err.Error())
+	assert.Nil(t, authResult)
+}
+
+func TestOAuthClientCredentialsAuthenticatorScopeFactoryValidScope(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+	apiKey, _ := account.CreateAPIKey()
+
+	authenticator := NewOAuthClientCredentialsAuthenticator(application)
+	authenticator.ScopeFactory = ScopeFactoryFunc(func(scope string) bool {
+		return true
+	})
+
+	authResult, err := authenticator.Authenticate(apiKey.ID, apiKey.Secret, "bar")
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, authResult.AccessToken)
+	assert.Empty(t, authResult.RefreshToken)
+	assert.Equal(t, account.Href, authResult.GetAccount().Href)
+}
+
 func TestBasicAuthenticator(t *testing.T) {
 	t.Parallel()
 

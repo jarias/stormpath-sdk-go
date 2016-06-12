@@ -58,7 +58,7 @@ type OAuthClientCredentialsAuthenticator struct {
 	TTL          time.Duration
 }
 
-type ScopeFactoryFunc func(string) error
+type ScopeFactoryFunc func(string) bool
 
 //OAuthPasswordAuthenticator this authenticator accepts an account's username and password, and returns an access token response that is obtained by posting the username and password to the application's /oauth/token endpoint with the grant_type=password parameter.
 type OAuthPasswordAuthenticator Authenticator
@@ -155,9 +155,8 @@ func NewOAuthClientCredentialsAuthenticator(application *Application) OAuthClien
 
 func (a OAuthClientCredentialsAuthenticator) Authenticate(accountAPIKeyID, accountAPIKeySecret, scope string) (*OAuthClientCredentialsAuthenticationResult, error) {
 	if a.ScopeFactory != nil {
-		err := a.ScopeFactory(scope)
-		if err != nil {
-			return nil, err
+		if !a.ScopeFactory(scope) {
+			return nil, fmt.Errorf("invalid_scope")
 		}
 	}
 
@@ -292,7 +291,12 @@ func (ar *OAuthClientCredentialsAuthenticationResult) GetAccount() *Account {
 		return nil
 	}
 
-	apiKey, err := GetAPIKey(token.Claims["sub"].(string), MakeAPIKeyCriteria())
+	application, err := GetApplication(token.Claims["iss"].(string), MakeApplicationCriteria())
+	if err != nil {
+		return nil
+	}
+
+	apiKey, err := application.GetAPIKey(token.Claims["sub"].(string), MakeAPIKeysCriteria())
 	if err != nil {
 		return nil
 	}
