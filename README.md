@@ -10,18 +10,25 @@ Master:
 
 # Usage
 
+## Core
+
 ```go get github.com/jarias/stormpath-sdk-go```
 
 ```go
 import "github.com/jarias/stormpath-sdk-go"
 import "fmt"
 
-//This would look for env variables first STORMPATH_API_KEY_ID and STORMPATH_API_KEY_SECRET if empty
-//then it would look for os.Getenv("HOME") + "/.config/stormpath/apiKey.properties" for the credentials
-credentials, _ := stormpath.NewDefaultCredentials()
+//Load the configuration according to the StormPath framework spec 
+//See: https://github.com/stormpath/stormpath-sdk-spec/blob/master/specifications/config.md
+clientConfig, err := stormpath.LoadConfiguration()
 
-//Init Whithout cache
-stormpath.Init(credentials, nil)
+if err != nil {
+    stormpath.Logger.Panicf("[ERROR] Couldn't load Stormpath client configuration: %s", err)
+}
+
+//Init the client with the loaded config and no specific cache, 
+//note that if the cache is enabled via config the default local cache would be used
+stormpath.Init(clientConfig, nil)
 
 //Get the current tenant
 tenant, _ := stormpath.CurrentTenant()
@@ -38,12 +45,18 @@ account, _ := app.AuthenticateAccount("username", "password")
 fmt.Println(account)
 ```
 
+## Web
+
+See `web/example/example.go`
+
 Features:
 
-* Cache with a sample Ledis implementation
+* Cache with a sample local in-memory implementation
 * Almost 100% of the Stormpath API implemented
 * Load credentials via properties file or env variables
-* Requests are authenticated via Stormpath SAuthc1 algorithm
+* Load client configuration according to Stormpath framework spec
+* Requests are authenticated via Stormpath SAuthc1 algorithm only
+* Web extension according to the [Stormpath Spec](https://github.com/stormpath/stormpath-framework-spec)
 
 # Debugging
 
@@ -58,7 +71,7 @@ Please make sure you add tests ;)
 
 Development requirements:
 
-- Go 1.4+
+- Go 1.6+
 - [Testify](https://github.com/stretchr/testify) ```go get github.com/stretchr/testify/assert```
 - An [Stormpath](https://stormpath.com) account (for integration testing)
 

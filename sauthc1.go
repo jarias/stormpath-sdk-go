@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -39,14 +38,9 @@ const (
 )
 
 var sha256Hash = sha256.New()
-var buffPool = sync.Pool{
-	New: func() interface{} {
-		return &bytes.Buffer{}
-	},
-}
 
 //Authenticate generates the proper authentication header for the SAuthc1 algorithm use by Stormpath
-func Authenticate(req *http.Request, payload []byte, date time.Time, credentials Credentials, nonce string) {
+func Authenticate(req *http.Request, payload []byte, date time.Time, apiKeyID string, apiKeySecret string, nonce string) {
 	timestamp := date.Format(TimestampFormat)
 	dateStamp := date.Format(DateFormat)
 	req.Header.Set(HostHeader, req.URL.Host)
@@ -58,11 +52,11 @@ func Authenticate(req *http.Request, payload []byte, date time.Time, credentials
 
 	canonicalRequest := buildCanonicalRequest(req, payload, signedHeadersString, sortedHeaderKeys)
 
-	id := buildID(nonce, dateStamp, credentials)
+	id := buildID(nonce, dateStamp, apiKeyID)
 
 	stringToSign := buildStringToSign(timestamp, id, canonicalRequest)
 
-	secret := []byte(AuthenticationScheme + credentials.Secret)
+	secret := []byte(AuthenticationScheme + apiKeySecret)
 	singDate := sing(dateStamp, secret)
 	singNonce := sing(nonce, singDate)
 	signing := sing(IDTerminator, singNonce)
@@ -92,12 +86,12 @@ func buildCanonicalRequest(req *http.Request, payload []byte, signedHeadersStrin
 	return buffer.String()
 }
 
-func buildID(nonce string, dateStamp string, credentials Credentials) string {
+func buildID(nonce string, dateStamp string, apiKeyID string) string {
 	buffer := buffPool.Get().(*bytes.Buffer)
 	buffer.Reset()
 	defer buffPool.Put(buffer)
 
-	buffer.WriteString(credentials.ID)
+	buffer.WriteString(apiKeyID)
 	buffer.WriteByte(SLASH)
 	buffer.WriteString(dateStamp)
 	buffer.WriteByte(SLASH)

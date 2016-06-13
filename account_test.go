@@ -1,10 +1,9 @@
-package stormpath_test
+package stormpath
 
 import (
 	"encoding/json"
 	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,8 +21,8 @@ func TestGetAccountRefreshTokens(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tokens.Href)
-	assert.Equal(t, 0, tokens.Offset)
-	assert.Equal(t, 25, tokens.Limit)
+	assert.Equal(t, 0, tokens.GetOffset())
+	assert.Equal(t, 25, tokens.GetLimit())
 	assert.NotEmpty(t, tokens.Items)
 }
 
@@ -41,8 +40,8 @@ func TestGetAccountAccessTokens(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tokens.Href)
-	assert.Equal(t, 0, tokens.Offset)
-	assert.Equal(t, 25, tokens.Limit)
+	assert.Equal(t, 0, tokens.GetOffset())
+	assert.Equal(t, 25, tokens.GetLimit())
 	assert.NotEmpty(t, tokens.Items)
 }
 
@@ -57,11 +56,11 @@ func TestRevokeAccountAccessToken(t *testing.T) {
 	application.GetOAuthToken(account.Username, "1234567z!A89")
 
 	tokens, _ := account.GetAccessTokens(MakeOAuthTokensCriteria())
-	
+
 	token := tokens.Items[0]
-	
+
 	err := token.Delete()
-	
+
 	assert.NoError(t, err)
 }
 
@@ -72,13 +71,13 @@ func TestAccountJsonMarshaling(t *testing.T) {
 	jsonData, err := json.Marshal(account)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\"}", string(jsonData))
+	assert.Equal(t, "{\"username\":\"test@test.org\",\"email\":\"test@test.org\",\"password\":\"123\",\"givenName\":\"test\",\"surname\":\"test\",\"emailVerificationToken\":null}", string(jsonData))
 }
 
 func TestGetAccountNoExists(t *testing.T) {
 	t.Parallel()
 
-	account, err := GetAccount(BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
+	account, err := GetAccount(GetClient().ClientConfiguration.BaseURL+"/accounts/xxxxxx", MakeAccountCriteria())
 
 	assert.Error(t, err)
 	assert.Equal(t, 404, err.(Error).Status)
@@ -248,7 +247,7 @@ func TestGetNoExistsAccountCustomData(t *testing.T) {
 	t.Parallel()
 
 	account := newTestAccount()
-	account.Href = BaseURL + "/accounts/XXXX"
+	account.Href = GetClient().ClientConfiguration.BaseURL + "/accounts/XXXX"
 
 	customData, err := account.GetCustomData()
 

@@ -2,18 +2,18 @@ package stormpath
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
 //Error maps a Stormpath API JSON error object which implements Go error interface
 type Error struct {
-	Status           int
-	Code             int
-	Message          string
-	DeveloperMessage string
-	MoreInfo         string
 	RequestID        string
+	Status           int    `json:"status"`
+	Code             int    `json:"code"`
+	Message          string `json:"message"`
+	DeveloperMessage string `json:"developerMessage"`
+	MoreInfo         string `json:"moreInfo"`
+	OAuth2Error      string `json:"error"`
 }
 
 func (e Error) Error() string {
@@ -21,7 +21,7 @@ func (e Error) Error() string {
 }
 
 func (e Error) String() string {
-	return fmt.Sprintf("Stormpath request error { RequestID: %s Code: %d Message: %s }", e.RequestID, e.Code, e.Message)
+	return e.Message
 }
 
 func handleResponseError(req *http.Request, resp *http.Response, err error) error {
@@ -34,7 +34,11 @@ func handleResponseError(req *http.Request, resp *http.Response, err error) erro
 	}
 
 	//Check for Stormpath specific errors
-	if resp.StatusCode != 200 && resp.StatusCode != 204 && resp.StatusCode != 201 && resp.StatusCode != 302 {
+	if resp.StatusCode != http.StatusOK &&
+		resp.StatusCode != http.StatusAccepted &&
+		resp.StatusCode != http.StatusNoContent &&
+		resp.StatusCode != http.StatusCreated &&
+		resp.StatusCode != http.StatusFound {
 		spError := &Error{}
 
 		err := json.NewDecoder(resp.Body).Decode(spError)
@@ -43,7 +47,6 @@ func handleResponseError(req *http.Request, resp *http.Response, err error) erro
 		}
 		spError.RequestID = resp.Header.Get("Stormpath-Request-Id")
 
-		Logger.Printf("[ERROR] %s", spError)
 		return *spError
 	}
 	//No errors from the request execution

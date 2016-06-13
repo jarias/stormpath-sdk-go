@@ -19,12 +19,13 @@ type Directory struct {
 	Tenant                *Tenant                `json:"tenant,omitempty"`
 	Provider              *Provider              `json:"provider,omitempty"`
 	AccountCreationPolicy *AccountCreationPolicy `json:"accountCreationPolicy,omitempty"`
+	PasswordPolicy        *PasswordPolicy        `json:"passwordPolicy,omitempty"`
 }
 
 //Directories represnets a paged result of directories
 type Directories struct {
 	collectionResource
-	Items []Directory `json:"items"`
+	Items []Directory `json:"items,omitempty"`
 }
 
 //Provider represents the directory provider (cloud, google, github, facebook or linkedin)

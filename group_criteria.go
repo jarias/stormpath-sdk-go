@@ -22,17 +22,17 @@ func MakeGroupsCriteria() GroupCriteria {
 //* status
 
 func (c GroupCriteria) NameEq(name string) GroupCriteria {
-	c.filter.Add("name", name)
+	c.filter.Add(Name, name)
 	return c
 }
 
 func (c GroupCriteria) DescriptionEq(description string) GroupCriteria {
-	c.filter.Add("description", description)
+	c.filter.Add(Description, description)
 	return c
 }
 
 func (c GroupCriteria) StatusEq(status string) GroupCriteria {
-	c.filter.Add("statu", status)
+	c.filter.Add(Status, status)
 	return c
 }
 

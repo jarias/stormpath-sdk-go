@@ -10,19 +10,23 @@ import (
 //Logger library wide logger
 var Logger *log.Logger
 var logLevel string
+var configured = false
 
-func initLog() {
-	logLevel = os.Getenv("STORMPATH_LOG_LEVEL")
+func InitLog() {
+	if !configured {
+		logLevel = os.Getenv("STORMPATH_LOG_LEVEL")
 
-	if logLevel == "" {
-		logLevel = "ERROR"
+		if logLevel == "" {
+			logLevel = "ERROR"
+		}
+
+		filter := &logutils.LevelFilter{
+			Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERROR", "NONE"},
+			MinLevel: logutils.LogLevel(logLevel),
+			Writer:   os.Stderr,
+		}
+
+		Logger = log.New(filter, "", log.Ldate|log.Ltime|log.Lshortfile)
+		configured = true
 	}
-
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERROR", "NONE"},
-		MinLevel: logutils.LogLevel(logLevel),
-		Writer:   os.Stderr,
-	}
-
-	Logger = log.New(filter, "", log.Ldate|log.Ltime|log.Lshortfile)
 }

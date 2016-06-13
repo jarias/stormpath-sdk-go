@@ -3,8 +3,8 @@ package stormpath
 //OAuthPolicy holds the application related OAuth configuration
 type OAuthPolicy struct {
 	resource
-	AccessTokenTTL  string `json:"accessTokenTtl"`
-	RefreshTokenTTL string `json:"refreshTokenTtl"`
+	AccessTokenTTL  string `json:"accessTokenTtl,omitempty"`
+	RefreshTokenTTL string `json:"refreshTokenTtl,omitempty"`
 }
 
 //GetOAuthPolicy return the application OAuthPolicy

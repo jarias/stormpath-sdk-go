@@ -1,20 +1,16 @@
-package stormpath_test
+package stormpath
 
 import (
-	"os"
-	"testing"
-
-	"strings"
-
 	"io/ioutil"
 	"log"
+	"os"
+	"strings"
+	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	uuid "github.com/nu7hatch/gouuid"
 )
 
 var (
-	cred   Credentials
 	tenant *Tenant
 )
 
@@ -28,8 +24,15 @@ var isSetup = false
 
 func TestMain(m *testing.M) {
 	setup()
-	r := m.Run()
 
+	cleanApps()
+	r := m.Run()
+	cleanApps()
+
+	os.Exit(r)
+}
+
+func cleanApps() {
 	//Clean any leftover apps
 	applications, _ := tenant.GetApplications(MakeApplicationsCriteria().Limit(100))
 
@@ -38,8 +41,6 @@ func TestMain(m *testing.M) {
 			application.Purge()
 		}
 	}
-
-	os.Exit(r)
 }
 
 func setup() {
@@ -51,17 +52,12 @@ func setup() {
 
 		var err error
 
-		cred, err = NewDefaultCredentials()
+		clientConfig, err := LoadConfiguration()
 		if err != nil {
 			panic(err)
 		}
-
-		stormpathBaseURL := os.Getenv("STORMPATH_BASE_URL")
-		if stormpathBaseURL != "" {
-			BaseURL = stormpathBaseURL
-		}
-
-		Init(cred, nil)
+		Init(clientConfig, nil)
+		GetClient().Cache = nil
 
 		tenant, err = CurrentTenant()
 		if err != nil {

@@ -1,17 +1,22 @@
 language: go
 go:
 - 1.6
-- tip
 install:
 - go get golang.org/x/tools/cmd/cover
 - go get github.com/stretchr/testify/assert
-- go get
+- go get ./...
 script:
-  - go test . -coverprofile=coverage.txt -covermode=atomic
+  - go test . -coverprofile=coverage-core.txt -covermode=atomic
+  - go test ./web -coverprofile=coverage-web.txt -covermode=atomic -coverpkg=github.com/jarias/stormpath-sdk-go,github.com/jarias/stormpath-sdk-go/web
+  - cat coverage-core.txt coverage-web.txt > coverage.txt
+  - sed -i '/github\.com\/jarias\/stormpath-sdk-go\/web\/assets\.go.*/d' coverage.txt
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+after_failure:
+  - cat web/stormpath-framework-tck/mvn.out web/stormpath-framework-tck/target/failsafe-reports/*.txt
 env:
   global:
   - secure: OrnGKr9+VSFNGuJdJvB4WrpS4GNqByEUQn2k9ARJXWtOcqiQUijNZJ5A9oC+4M5PRrvRx6IO4aRELVVc9tH2jbMvpwVyn8r9rHzfHLOomudnU679w3lI8V7K57lOW8V7XunMVTdQSmFno/GT7x7fTZ2HROxd5jKepzlNP6mD1tE=
   - secure: UROmCN9+1it3/zP9R7IZhyshATvNbIt6pG40N00vVGTUNxsoEmLyiHPum9J4XLBS9Nol+E0kXjujapSI/8ZgW7zCZ0jS8AMZ1pGzeU3m6BLX5yaZsMXd613g2p7j23gbFFj6uWLsLZ0BrkBbBJ+hArx9qUO+TNQFl4pCxFmtUjA=
   - secure: QNuYXlO9HMelWfeV5lRsCSaMD+r4Rkh/7WWl0DRQC3B+5QTPXbPO0oXjKLVsyFr+cXi7JdUED7Z/LcYgqxIh16tiaqry4WCoy9PypzHZ4IKErPQK3LUET4abqk3YMfVsnuocNGLc67rpMr4UYUwAwS0GmSoAsd34OBc1VkCIFuQ=
+  - secure: Zkih+PWDsyMacezxQ96sgEZZW1t7w2bvIdN3pIjcMGtOg2up6TI9jjRQlZRGt6//krQLD9mnyJgxcCzswdtjNqCqoNa4AXutOQ9Wx83yuQAq9VNuayFapMeJi2c6WHwItAo96o4O+3eT0UFVrbCNbytI6J48R+SkRwrCBzOcumU=

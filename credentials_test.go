@@ -1,37 +1,31 @@
-package stormpath_test
+package stormpath
 
 import (
 	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLoadCredentialsFromValidFile(t *testing.T) {
-	t.Parallel()
-
-	credentials, err := NewCredentialsFromFile("./test_files/apiKeys.properties")
+func TestLoadCredentialsFromFile(t *testing.T) {
+	id, secret, err := loadCredentialsFromFile("./test_files/apiKeys.properties")
 
 	assert.NoError(t, err)
-	assert.Equal(t, "APIKEY", credentials.ID)
-	assert.Equal(t, "APISECRET", credentials.Secret)
-}
-
-func TestLoadCredentialsFromNoExistsFile(t *testing.T) {
-	t.Parallel()
-
-	credentials, err := NewCredentialsFromFile("./test_files/doesntexist.properties")
-
-	assert.Error(t, err)
-	assert.Equal(t, Credentials{}, credentials)
+	assert.Equal(t, "APIKEY", id)
+	assert.Equal(t, "APISECRET", secret)
 }
 
 func TestLoadCredentialsFromEmptyFile(t *testing.T) {
-	t.Parallel()
-
-	credentials, err := NewCredentialsFromFile("./test_files/empty.properties")
+	id, secret, err := loadCredentialsFromFile("./test_files/empty.properties")
 
 	assert.NoError(t, err)
-	assert.Empty(t, credentials.ID)
-	assert.Empty(t, credentials.Secret)
+	assert.Equal(t, "", id)
+	assert.Equal(t, "", secret)
+}
+
+func TestLoadCredentialsFromNoExistingFile(t *testing.T) {
+	id, secret, err := loadCredentialsFromFile("./test_files/bla.properties")
+
+	assert.Error(t, err)
+	assert.Equal(t, "", id)
+	assert.Equal(t, "", secret)
 }
