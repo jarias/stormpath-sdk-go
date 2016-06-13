@@ -15,13 +15,7 @@ type Tenant struct {
 func CurrentTenant() (*Tenant, error) {
 	tenant := &Tenant{}
 
-	err := client.doWithResult(
-		client.newRequest(
-			"GET",
-			buildRelativeURL("tenants", "current"),
-			emptyPayload(),
-			ApplicationJSON,
-		), tenant)
+	err := client.get(buildRelativeURL("tenants", "current"), tenant)
 
 	return tenant, err
 }
