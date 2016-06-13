@@ -138,6 +138,7 @@ func TestCacheableResources(t *testing.T) {
 		&Directory{},
 		&AccountStoreMapping{},
 		&Tenant{},
+		&CustomData{},
 	}
 
 	for _, resource := range resources {

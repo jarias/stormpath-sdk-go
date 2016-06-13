@@ -8,6 +8,10 @@ type customDataAwareResource struct {
 //CustomData represents Stormpath's custom data resouce
 type CustomData map[string]interface{}
 
+func (customData CustomData) IsCacheable() bool {
+	return true
+}
+
 //GetCustomData returns the given resource custom data
 //
 //See: http://docs.stormpath.com/rest/product-guide/#custom-data
