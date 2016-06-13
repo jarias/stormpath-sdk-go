@@ -67,6 +67,8 @@ func Init(clientConfiguration ClientConfiguration, cache Cache) {
 
 	if clientConfiguration.CacheManagerEnabled && cache == nil {
 		client.Cache = NewLocalCache(clientConfiguration.CacheTTL, clientConfiguration.CacheTTI)
+	} else if clientConfiguration.CacheManagerEnabled && cache != nil {
+		client.Cache = cache
 	}
 }
 
