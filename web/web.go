@@ -23,8 +23,8 @@ const (
 
 var templates = make(map[string]*template.Template, 3)
 
-//StormpathHandler the base http.Handler as the base Stormpath web integration
-type StormpathHandler struct {
+//StormpathMiddleware the base http.Handler as the base Stormpath web integration
+type StormpathMiddleware struct {
 	//User configured handler and public paths define by user
 	Next        http.Handler
 	PublicPaths []string
@@ -62,8 +62,8 @@ func EmptyUserHandler() UserHandler {
 	return UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context { return nil })
 }
 
-//NewStormpathHandler initialize the StormpathHandler with the actual user application as a http.Handler
-func NewStormpathHandler(next http.Handler, publicPaths []string) *StormpathHandler {
+//NewStormpathMiddleware initialize the StormpathMiddleware with the actual user application as a http.Handler
+func NewStormpathMiddleware(next http.Handler, publicPaths []string) *StormpathMiddleware {
 	loadConfig()
 	clientConfig, err := stormpath.LoadConfiguration()
 
@@ -76,7 +76,7 @@ func NewStormpathHandler(next http.Handler, publicPaths []string) *StormpathHand
 	application := resolveApplication()
 	resolveAccountStores(application)
 
-	h := &StormpathHandler{
+	h := &StormpathMiddleware{
 		Next:                  next,
 		PublicPaths:           publicPaths,
 		Application:           application,
@@ -162,7 +162,7 @@ func resolveApplication() *stormpath.Application {
 	return application
 }
 
-func (h *StormpathHandler) configureFilterChainHandler() {
+func (h *StormpathMiddleware) configureFilterChainHandler() {
 	h.FilterChainHandler = handlerFunc(func(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 		xStormpathAgent := r.Header.Get("X-Stormpath-Agent")
 
@@ -259,7 +259,7 @@ func (h *StormpathHandler) configureFilterChainHandler() {
 	})
 }
 
-func (h *StormpathHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	resolvedContentType := h.resolveContentType(r)
 	if resolvedContentType == "" {
 		h.Next.ServeHTTP(w, r)
@@ -271,7 +271,7 @@ func (h *StormpathHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.FilterChainHandler(w, r, ctx)
 }
 
-func (h *StormpathHandler) handleAssets(w http.ResponseWriter, r *http.Request) {
+func (h *StormpathMiddleware) handleAssets(w http.ResponseWriter, r *http.Request) {
 	location := r.URL.Path[11:]
 
 	data, err := Asset(location)
@@ -376,7 +376,7 @@ func isCookieAuthenticated(r *http.Request, application *stormpath.Application) 
 	return authenticationResult, true
 }
 
-func (h *StormpathHandler) GetAuthenticatedAccount(w http.ResponseWriter, r *http.Request) *stormpath.Account {
+func (h *StormpathMiddleware) GetAuthenticatedAccount(w http.ResponseWriter, r *http.Request) *stormpath.Account {
 	ctx, ok := isAuthenticated(w, r, context.WithValue(context.Background(), ApplicationKey, h.Application))
 	if ok {
 		return ctx.Value(AccountKey).(*stormpath.Account)
@@ -384,7 +384,7 @@ func (h *StormpathHandler) GetAuthenticatedAccount(w http.ResponseWriter, r *htt
 	return nil
 }
 
-func (h *StormpathHandler) resolveContentType(r *http.Request) string {
+func (h *StormpathMiddleware) resolveContentType(r *http.Request) string {
 	produces := Config.Produces
 
 	accept := r.Header.Get(stormpath.AcceptHeader)

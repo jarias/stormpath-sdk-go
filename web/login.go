@@ -13,7 +13,7 @@ import (
 )
 
 type loginHandler struct {
-	Parent      *StormpathHandler
+	Parent      *StormpathMiddleware
 	Application *stormpath.Application
 	Form        form
 }

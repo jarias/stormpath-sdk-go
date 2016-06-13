@@ -8,7 +8,7 @@ import (
 )
 
 type callbackHandler struct {
-	Parent      *StormpathHandler
+	Parent      *StormpathMiddleware
 	Application *stormpath.Application
 }
 

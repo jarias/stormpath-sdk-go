@@ -57,7 +57,7 @@ var helloTemplate = `
 func main() {
 	mux := http.NewServeMux()
 
-	stormpath := stormpathweb.NewStormpathHandler(mux, []string{"/"})
+	stormpath := stormpathweb.NewStormpathMiddleware(mux, []string{"/"})
 
 	stormpath.PreLoginHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
 		fmt.Println("--> Pre Login")

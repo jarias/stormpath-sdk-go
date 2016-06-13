@@ -15,7 +15,7 @@ import (
 func GetTestServer() (*httptest.Server, string) {
 	mux := http.NewServeMux()
 
-	stormpathFilter := NewStormpathHandler(mux, []string{"/"})
+	stormpathFilter := NewStormpathMiddleware(mux, []string{"/"})
 
 	mux.Handle("/hello", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/html")
