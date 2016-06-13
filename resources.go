@@ -10,12 +10,20 @@ type collectionResource struct {
 	Href       string     `json:"href,omitempty"`
 	CreatedAt  *time.Time `json:"createdAt,omitempty"`
 	ModifiedAt *time.Time `json:"modifiedAt,omitempty"`
-	Offset     int        `json:"offset"`
-	Limit      int        `json:"limit"`
+	Offset     *int       `json:"offset,omitempty"`
+	Limit      *int       `json:"limit,omitempty"`
 }
 
 func (r collectionResource) IsCacheable() bool {
 	return false
+}
+
+func (r collectionResource) GetOffset() int {
+	return *r.Offset
+}
+
+func (r collectionResource) GetLimit() int {
+	return *r.Limit
 }
 
 //resource resprents the basic attributes of any resource (Application, Group, Account, etc.)

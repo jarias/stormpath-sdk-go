@@ -1,10 +1,10 @@
-package stormpath_test
+package stormpath
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,11 +40,11 @@ func TestSaveAccountStoreMappingApplicationNoExists(t *testing.T) {
 	directory := createTestDirectory()
 	defer directory.Delete()
 
-	asm := NewAccountStoreMapping(BaseURL+"applications/XXX", directory.Href)
+	asm := NewAccountStoreMapping(GetClient().ClientConfiguration.BaseURL+"applications/XXX", directory.Href)
 	err := asm.Save()
 
 	assert.Error(t, err)
-	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, http.StatusBadRequest, err.(Error).Status)
 	assert.Equal(t, 2014, err.(Error).Code)
 }
 
@@ -54,10 +54,27 @@ func TestSaveAccountStoreMappingDirectoryNoExists(t *testing.T) {
 	application := createTestApplication()
 	defer application.Purge()
 
-	asm := NewAccountStoreMapping(application.Href, BaseURL+"directories/XXX")
+	asm := NewAccountStoreMapping(application.Href, GetClient().ClientConfiguration.BaseURL+"directories/XXX")
 	err := asm.Save()
 
 	assert.Error(t, err)
-	assert.Equal(t, 400, err.(Error).Status)
+	assert.Equal(t, http.StatusBadRequest, err.(Error).Status)
 	assert.Equal(t, 2014, err.(Error).Code)
+}
+
+func TestIsAccountStoreDirectory(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		url         string
+		isDirectory bool
+	}{
+		{GetClient().ClientConfiguration.BaseURL + "directories/XXX", true},
+		{GetClient().ClientConfiguration.BaseURL + "other/XXX", false},
+	}
+
+	for _, c := range cases {
+		accountStoreMapping := NewAccountStoreMapping("", c.url)
+		assert.Equal(t, accountStoreMapping.IsAccountStoreDirectory(), c.isDirectory)
+	}
 }

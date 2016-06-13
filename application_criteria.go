@@ -32,7 +32,7 @@ func (c ApplicationCriteria) DescriptionEq(description string) ApplicationCriter
 }
 
 func (c ApplicationCriteria) StatusEq(status string) ApplicationCriteria {
-	c.filter.Add("statu", status)
+	c.filter.Add("status", status)
 	return c
 }
 
@@ -73,12 +73,12 @@ func (c ApplicationCriteria) WithDefaultGroupStoreMapping() ApplicationCriteria 
 	return c
 }
 
-func (c ApplicationCriteria) WithRefreshTokens() ApplicationCriteria {
-	c.expandedAttributes = append(c.expandedAttributes, "refreshTokens")
+func (c ApplicationCriteria) WithRefreshTokens(pageRequest PageRequest) ApplicationCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, pageRequest.toExpansion("refreshTokens"))
 	return c
 }
 
-func (c ApplicationCriteria) WithAccessTokens() ApplicationCriteria {
-	c.expandedAttributes = append(c.expandedAttributes, "accessTokens")
+func (c ApplicationCriteria) WithAccessTokens(pageRequest PageRequest) ApplicationCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, pageRequest.toExpansion("accessTokens"))
 	return c
 }

@@ -1,0 +1,229 @@
+stormpath:
+  application:
+    href: null
+    name: null
+    
+  web:
+    basePath: null
+
+    oauth2:
+      enabled: true
+      uri: "/oauth/token"
+      client_credentials:
+        enabled: true
+        accessToken:
+          ttl: 3600
+      password:
+        enabled: true
+        validationStrategy: "local"
+
+    accessTokenCookie:
+      name: "access_token"
+      httpOnly: true
+
+      # See cookie-authentication.md for explanation of
+      # how `null` values behave for these properties.
+      secure: null
+      path: null
+      domain: null
+
+    refreshTokenCookie:
+      name: "refresh_token"
+      httpOnly: true
+
+      # See cookie-authentication.md for explanation of
+      # how `null` values behave for these properties.
+      secure: null
+      path: null
+      domain: null
+
+    # By default the Stormpath integration will respond to JSON and HTML
+    # requests.  If a requested type is not in this list, the Stormpath
+    # integration should pass on the request, and allow the developer or base
+    # framework to handle the response.
+    #
+    # If the request does not specify an Accept header, or the preferred content
+    # type is */*, the Stormpath integration will respond with the first type in
+    # this list.
+    produces:
+      - application/json
+      - text/html
+
+    register:
+      enabled: true
+      uri: "/register"
+      nextUri: "/"
+      autoLogin: false
+      form:
+        fields:
+          givenName:
+            enabled: true
+            visible: true
+            label: "First Name"
+            placeholder: "First Name"
+            required: true
+            type: "text"
+          middleName:
+            enabled: false
+            visible: true
+            label: "Middle Name"
+            placeholder: "Middle Name"
+            required: true
+            type: "text"
+          surname:
+            enabled: true
+            visible: true
+            label: "Last Name"
+            placeholder: "Last Name"
+            required: true
+            type: "text"
+          username:
+            enabled: false
+            visible: true
+            label: "Username"
+            placeholder: "Username"
+            required: true
+            type: "text"
+          email:
+            enabled: true
+            visible: true
+            label: "Email"
+            placeholder: "Email"
+            required: true
+            type: "email"
+          password:
+            enabled: true
+            visible: true
+            label: "Password"
+            placeholder: "Password"
+            required: true
+            type: "password"
+          confirmPassword:
+            enabled: false
+            visible: true
+            label: "Confirm Password"
+            placeholder: "Confirm Password"
+            required: true
+            type: "password"
+        fieldOrder:
+          - "username"
+          - "givenName"
+          - "middleName"
+          - "surname"
+          - "email"
+          - "password"
+          - "confirmPassword"
+      view: "register"
+
+    # Unless verifyEmail.enabled is specifically set to false, the email
+    # verification feature must be automatically enabled if the default account
+    # store for the defined Stormpath application has the email verification
+    # workflow enabled.
+    verifyEmail:
+      enabled: null
+      uri: "/verify"
+      nextUri: "/login?status=unverified"
+      view: "verify"
+
+    login:
+      enabled: true
+      uri: "/login"
+      nextUri: "/"
+      view: "login"
+      form:
+        fields:
+          login:
+            enabled: true
+            visible: true
+            label: "Username or Email"
+            placeholder: "Username or Email"
+            required: true
+            type: "text"
+          password:
+            enabled: true
+            visible: true
+            label: "Password"
+            placeholder: "Password"
+            required: true
+            type: "password"
+        fieldOrder:
+          - "login"
+          - "password"
+
+    logout:
+      enabled: true
+      uri: "/logout"
+      nextUri: "/"
+
+    # Unless forgotPassword.enabled is explicitly set to false, this feature
+    # will be automatically enabled if the default account store for the defined
+    # Stormpath application has the password reset workflow enabled.
+    forgotPassword:
+      enabled: null
+      uri: "/forgot"
+      view: "forgot-password"
+      nextUri: "/login?status=forgot"
+
+    # Unless changePassword.enabled is explicitly set to false, this feature
+    # will be automatically enabled if the default account store for the defined
+    # Stormpath application has the password reset workflow enabled.
+    changePassword:
+      enabled: null
+      autoLogin: false
+      uri: "/change"
+      nextUri: "/login?status=reset"
+      view: "change-password"
+      errorUri: "/forgot?status=invalid_sptoken"
+
+    # If idSite.enabled is true, the user should be redirected to ID site for
+    # login, registration, and password reset.  They should also be redirected
+    # through ID Site on logout.
+    idSite:
+      enabled: false
+      loginUri: ""
+      forgotUri: "/#/forgot"
+      registerUri: "/#/register"
+
+    # A callback so Stormpath can pass information to the web application. This is
+    # currently being used for ID Site, but may be used in the future for SAML,
+    # Stormpath handled social login, webhooks, and other messages from Stormpath. 
+    callback: 
+      enabled: true
+      uri: "/stormpathCallback"
+
+    # Social login configuration.  This defines the callback URIs for OAuth
+    # flows, and the scope that is requested of each provider.  Some providers
+    # want space-separated scopes, some want comma-separated.  As such, these
+    # string values should be passed directly, as defined.
+    #
+    # These settings have no affect if the application does not have an account
+    # store for the given provider.
+    social:
+      facebook:
+        uri: "/callbacks/facebook"
+        scope: "email"
+      github:
+        uri: "/callbacks/github"
+        scope: "user:email"
+      google:
+        uri: "/callbacks/google"
+        scope: "email profile"
+      linkedin:
+        uri: "/callbacks/linkedin"
+        scope: "r_basicprofile r_emailaddress"
+
+    # The /me route is for front-end applications, it returns a JSON object with
+    # the current user object.  The developer can opt-in to expanding account
+    # resources on this enpdoint.
+    me:
+      enabled: true
+      uri: "/me"
+      expand:
+        apiKeys: false
+        applications: false
+        customData: false
+        directory: false
+        groupMemberships: false
+        groups: false
+        providerData: false
+        tenant: false

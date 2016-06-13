@@ -9,18 +9,17 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"runtime"
 	"strings"
+	"sync"
 	"time"
+
+	"io/ioutil"
 
 	uuid "github.com/nu7hatch/gouuid"
 )
 
-//BaseURL defines the Stormpath API base URL
-var BaseURL = "https://api.stormpath.com/v1/"
-
 //Version is the current SDK Version
-const version = "0.1.0-beta.15"
+const version = "0.1.0-beta.16"
 
 const (
 	Enabled                   = "ENABLED"
@@ -28,25 +27,35 @@ const (
 	Unverified                = "UNVERIFIED"
 	ApplicationJSON           = "application/json"
 	ApplicationFormURLencoded = "application/x-www-form-urlencoded"
-	GET                       = "GET"
-	POST                      = "POST"
-	DELETE                    = "DELETE"
+	TextPlain                 = "text/plain"
+	TextHTML                  = "text/html"
+	ContentTypeHeader         = "Content-Type"
+	AcceptHeader              = "Accept"
+	UserAgentHeader           = "User-Agent"
 )
 
 var client *Client
+var buffPool = sync.Pool{
+	New: func() interface{} {
+		return &bytes.Buffer{}
+	},
+}
 
 //Client is low level REST client for any Stormpath request,
 //it holds the credentials, an the actual http client, and the cache.
 //The Cache can be initialize in nil and the client would simply ignore it
 //and don't cache any response.
 type Client struct {
-	Credentials Credentials
-	HTTPClient  *http.Client
-	Cache       Cache
+	ClientConfiguration ClientConfiguration
+	HTTPClient          *http.Client
+	Cache               Cache
+	WebSDKToken         string
 }
 
 //Init initializes the underlying client that communicates with Stormpath
-func Init(credentials Credentials, cache Cache) {
+func Init(clientConfiguration ClientConfiguration, cache Cache) {
+	InitLog()
+
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{},
 		DisableCompression: true,
@@ -54,33 +63,34 @@ func Init(credentials Credentials, cache Cache) {
 	httpClient := &http.Client{Transport: tr}
 	httpClient.CheckRedirect = checkRedirect
 
-	client = &Client{credentials, httpClient, cache}
+	client = &Client{clientConfiguration, httpClient, nil, ""}
 
-	initLog()
+	if clientConfiguration.CacheManagerEnabled && cache == nil {
+		client.Cache = NewLocalCache(clientConfiguration.CacheTTL, clientConfiguration.CacheTTI)
+	} else if clientConfiguration.CacheManagerEnabled && cache != nil {
+		client.Cache = cache
+	}
 }
 
-//InitWithCustomHTTPClient initializes the underlying client that communicates with Stormpath with a custom http.Client
-func InitWithCustomHTTPClient(credentials Credentials, cache Cache, httpClient *http.Client) {
-	httpClient.CheckRedirect = checkRedirect
-	client = &Client{credentials, httpClient, cache}
-
-	initLog()
+//GetClient returns the configured client
+func GetClient() *Client {
+	return client
 }
 
 func (client *Client) postURLEncodedForm(urlStr string, body string, result interface{}) error {
-	return client.execute(POST, urlStr, []byte(body), result, ApplicationFormURLencoded)
+	return client.execute(http.MethodPost, urlStr, []byte(body), result, ApplicationFormURLencoded)
 }
 
 func (client *Client) post(urlStr string, body interface{}, result interface{}) error {
-	return client.execute(POST, urlStr, body, result, ApplicationJSON)
+	return client.execute(http.MethodPost, urlStr, body, result, ApplicationJSON)
 }
 
 func (client *Client) get(urlStr string, result interface{}) error {
-	return client.execute(GET, urlStr, emptyPayload(), result, ApplicationJSON)
+	return client.execute(http.MethodGet, urlStr, emptyPayload(), result, ApplicationJSON)
 }
 
 func (client *Client) delete(urlStr string) error {
-	return client.do(client.newRequest(DELETE, urlStr, emptyPayload(), ApplicationJSON))
+	return client.do(client.newRequest(http.MethodDelete, urlStr, emptyPayload(), ApplicationJSON))
 }
 
 func (client *Client) execute(method string, urlStr string, body interface{}, result interface{}, contentType string) error {
@@ -88,7 +98,7 @@ func (client *Client) execute(method string, urlStr string, body interface{}, re
 }
 
 func buildRelativeURL(parts ...string) string {
-	buffer := bytes.NewBufferString(BaseURL)
+	buffer := bytes.NewBufferString(client.ClientConfiguration.BaseURL)
 
 	for i, part := range parts {
 		buffer.WriteString(part)
@@ -115,22 +125,26 @@ func buildAbsoluteURL(parts ...string) string {
 
 func (client *Client) newRequest(method string, urlStr string, body interface{}, contentType string) *http.Request {
 	var encodedBody []byte
-	if contentType != ApplicationJSON || method == GET || method == DELETE {
+
+	if contentType != ApplicationJSON || method == http.MethodGet || method == http.MethodDelete {
 		//If content type is not application/json then it is application/x-www-form-urlencoded in which case the body should the encoded params as a []byte
 		//Fixes issue #23 if the method is GET then body should also be just the bytes instead of doing a JSON marshaling
 		encodedBody = body.([]byte)
 	} else {
-		encodedBody, _ = json.Marshal(body)
+		if _, ok := body.([]byte); !ok {
+			encodedBody, _ = json.Marshal(body)
+		}
 	}
 	req, _ := http.NewRequest(method, urlStr, bytes.NewReader(encodedBody))
-	req.Header.Set("User-Agent", fmt.Sprintf("jarias/stormpath-sdk-go/%s (%s; %s)", version, runtime.GOOS, runtime.GOARCH))
-	req.Header.Set("Accept", ApplicationJSON)
-	req.Header.Set("Content-Type", contentType)
+
+	req.Header.Set(UserAgentHeader, strings.TrimSpace(fmt.Sprintf("stormpath-sdk-go/%s %s", version, client.WebSDKToken)))
+	req.Header.Set(AcceptHeader, ApplicationJSON)
+	req.Header.Set(ContentTypeHeader, contentType)
 
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
-	Authenticate(req, encodedBody, time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, encodedBody, time.Now().In(time.UTC), client.ClientConfiguration.APIKeyID, client.ClientConfiguration.APIKeySecret, nonce)
 	return req
 }
 
@@ -159,24 +173,26 @@ func buildExpandParam(expandAttributes []string) url.Values {
 }
 
 func requestParams(values ...url.Values) string {
-	params := url.Values{}
+	buff := buffPool.Get().(*bytes.Buffer)
+	buff.Reset()
+	defer buffPool.Put(buff)
 
+	first := true
 	for _, v := range values {
-		params = appendParams(params, v)
+		encodedValues := v.Encode()
+
+		if buff.Len() > 0 && !first && encodedValues != "" {
+			buff.WriteByte('&')
+		}
+		buff.WriteString(encodedValues)
+		first = false
 	}
 
-	encodedParams := params.Encode()
+	encodedParams := buff.String()
 	if encodedParams != "" {
 		return "?" + encodedParams
 	}
 	return ""
-}
-
-func appendParams(params url.Values, toAppend url.Values) url.Values {
-	for k, v := range toAppend {
-		params[k] = v
-	}
-	return params
 }
 
 func emptyPayload() []byte {
@@ -186,28 +202,43 @@ func emptyPayload() []byte {
 //doWithResult executes the given StormpathRequest and serialize the response body into the given expected result,
 //it returns an error if any occurred while executing the request or serializing the response
 func (client *Client) doWithResult(request *http.Request, result interface{}) error {
+	var jsonData []byte
 	var err error
-	var response *http.Response
 
 	key := request.URL.String()
 
-	if client.Cache != nil && request.Method == "GET" && client.Cache.Exists(key) {
-		err = client.Cache.Get(key, result)
-	} else {
-		response, err = client.execRequest(request)
+	if client.Cache != nil && request.Method == http.MethodGet && client.Cache.Exists(key) {
+		jsonData = client.Cache.Get(key)
+	}
+
+	if len(jsonData) == 0 {
+		response, err := client.execRequest(request)
 		if err != nil {
 			return err
 		}
-		err = json.NewDecoder(response.Body).Decode(result)
+		jsonData, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
 	}
 
-	if client.Cache != nil && err == nil {
+	if result != nil {
+		err = json.NewDecoder(bytes.NewBuffer(jsonData)).Decode(result)
+	}
+
+	if client.Cache != nil && err == nil && result != nil {
 		switch request.Method {
-		case "POST", "DELETE", "PUT":
+		case http.MethodPost, http.MethodDelete:
 			client.Cache.Del(key)
 			break
-		case "GET":
-			cacheResource(key, result, client.Cache)
+		case http.MethodGet:
+			c, ok := result.(Cacheable)
+			if ok &&
+				c.IsCacheable() &&
+				!strings.Contains(key, "passwordResetTokens") &&
+				!strings.Contains(key, "authTokens") {
+				client.Cache.Set(key, jsonData)
+			}
 		}
 	}
 
@@ -253,7 +284,7 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 
 	//We can use an empty payload cause the only redirect is for the current tenant
 	//this could change in the future
-	Authenticate(req, emptyPayload(), time.Now().In(time.UTC), client.Credentials, nonce)
+	Authenticate(req, emptyPayload(), time.Now().In(time.UTC), client.ClientConfiguration.APIKeyID, client.ClientConfiguration.APIKeySecret, nonce)
 
 	return nil
 }

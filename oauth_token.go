@@ -33,21 +33,22 @@ type Claims struct {
 type Header struct {
 	ALG string `json:"alg"`
 	KID string `json:"kid"`
+	STT string `json:"stt"`
 }
 
 //OAuthTokens collection type for OAuthToken
 type OAuthTokens struct {
 	collectionResource
-	Items []OAuthToken `json:"items"`
+	Items []OAuthToken `json:"items,omitempty"`
 }
 
 //OAuthResponse represents an OAuth2 response from StormPath
 type OAuthResponse struct {
 	AccessToken              string `json:"access_token"`
-	RefreshToken             string `json:"refresh_token"`
+	RefreshToken             string `json:"refresh_token,omitempty"`
 	TokenType                string `json:"token_type"`
 	ExpiresIn                int    `json:"expires_in"`
-	StormpathAccessTokenHref string `json:"stormpath_access_token_href"`
+	StormpathAccessTokenHref string `json:"stormpath_access_token_href,omitempty"`
 }
 
 type OAuthTokenCriteria struct {

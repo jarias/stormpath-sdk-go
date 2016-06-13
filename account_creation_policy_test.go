@@ -1,9 +1,8 @@
-package stormpath_test
+package stormpath
 
 import (
 	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -106,7 +105,7 @@ func TestUpdateAccountCreationPolicyNoExists(t *testing.T) {
 	t.Parallel()
 
 	policy := AccountCreationPolicy{}
-	policy.Href = BaseURL + "accountCreationPolicies/XXXX"
+	policy.Href = GetClient().ClientConfiguration.BaseURL + "accountCreationPolicies/XXXX"
 
 	err := policy.Update()
 

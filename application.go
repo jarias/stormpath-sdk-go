@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/url"
 	"time"
 
@@ -26,20 +27,28 @@ type Application struct {
 	DefaultAccountStoreMapping *AccountStoreMapping  `json:"defaultAccountStoreMapping,omitempty"`
 	DefaultGroupStoreMapping   *AccountStoreMapping  `json:"defaultGroupStoreMapping,omitempty"`
 	OAuthPolicy                *OAuthPolicy          `json:"oAuthPolicy,omitempty"`
+	APIKeys                    *APIKeys              `json:"apiKeys,omitempty"`
 }
 
 //Applications represents a paged result or applications
 type Applications struct {
 	collectionResource
-	Items []Application `json:"items"`
+	Items []Application `json:"items,omitempty"`
 }
 
-//IDSiteCallbackResult holds the ID Site callback parsed JWT token information + the acccount if one was given
-type IDSiteCallbackResult struct {
+//CallbackResult holds the ID Site callback parsed JWT token information + the acccount if one was given
+type CallbackResult struct {
 	Account *Account
 	State   string
 	IsNew   bool
 	Status  string
+}
+
+type IDSiteOptions struct {
+	Logout      bool
+	Path        string
+	CallbackURL string
+	State       string
 }
 
 //NewApplication creates a new application
@@ -102,6 +111,19 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStor
 	return accountStoreMappings, nil
 }
 
+func (app *Application) GetDefaultAccountStoreMapping(criteria Criteria) (*AccountStoreMapping, error) {
+	err := client.get(
+		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.ToQueryString()),
+		app.DefaultAccountStoreMapping,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return app.DefaultAccountStoreMapping, nil
+}
+
 //RegisterAccount registers a new account into the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-accounts
@@ -152,6 +174,16 @@ func (app *Application) AuthenticateAccount(username string, password string) (*
 	}
 
 	return account, nil
+}
+
+//ResendVerificationEmail resends the verification email to the given email address
+//
+//See: https://docs.stormpath.com/rest/product-guide/latest/accnt_mgmt.html#how-to-verify-an-account-s-email
+func (app *Application) ResendVerificationEmail(email string) error {
+	resendVerificationEmailPayload := map[string]string{
+		"login": email,
+	}
+	return client.post(buildAbsoluteURL(app.Href, "verificationEmails"), resendVerificationEmailPayload, nil)
 }
 
 //SendPasswordResetEmail sends a password reset email to the given user
@@ -233,24 +265,24 @@ func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 }
 
 //CreateIDSiteURL creates the IDSite URL for the application
-func (app *Application) CreateIDSiteURL(options map[string]string) (string, error) {
+func (app *Application) CreateIDSiteURL(options IDSiteOptions) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	nonce, _ := uuid.NewV4()
 
-	if options["path"] == "" {
-		options["path"] = "/"
+	if options.Path == "" {
+		options.Path = "/"
 	}
 
 	token.Claims["jti"] = nonce.String()
 	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["iss"] = client.Credentials.ID
+	token.Claims["iss"] = client.ClientConfiguration.APIKeyID
 	token.Claims["sub"] = app.Href
-	token.Claims["state"] = options["state"]
-	token.Claims["path"] = options["path"]
-	token.Claims["cb_uri"] = options["callbackURI"]
+	token.Claims["state"] = options.State
+	token.Claims["path"] = options.Path
+	token.Claims["cb_uri"] = options.CallbackURL
 
-	tokenString, err := token.SignedString([]byte(client.Credentials.Secret))
+	tokenString, err := token.SignedString([]byte(client.ClientConfiguration.APIKeySecret))
 	if err != nil {
 		return "", err
 	}
@@ -258,7 +290,7 @@ func (app *Application) CreateIDSiteURL(options map[string]string) (string, erro
 	p, _ := url.Parse(app.Href)
 	ssoURL := p.Scheme + "://" + p.Host + "/sso"
 
-	if options["logout"] == "true" {
+	if options.Logout {
 		ssoURL = ssoURL + "/logout" + "?jwtRequest=" + tokenString
 	} else {
 		ssoURL = ssoURL + "?jwtRequest=" + tokenString
@@ -267,10 +299,10 @@ func (app *Application) CreateIDSiteURL(options map[string]string) (string, erro
 	return ssoURL, nil
 }
 
-//HandleIDSiteCallback handles the URL from an ID Site callback it parses the JWT token
-//validates it and return an IDSiteCallbackResult with the token info + the Account if the sub was given
-func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult, error) {
-	result := &IDSiteCallbackResult{}
+//HandleCallback handles the URL from an ID Site callback or SAML callback it parses the JWT token
+//validates it and return an CallbackResult with the token info + the Account if the sub was given
+func (app *Application) HandleCallback(URL string) (*CallbackResult, error) {
+	result := &CallbackResult{}
 
 	cbURL, err := url.Parse(URL)
 	if err != nil {
@@ -280,13 +312,13 @@ func (app *Application) HandleIDSiteCallback(URL string) (*IDSiteCallbackResult,
 	jwtResponse := cbURL.Query().Get("jwtResponse")
 
 	token, err := jwt.Parse(jwtResponse, func(token *jwt.Token) (interface{}, error) {
-		return []byte(client.Credentials.Secret), nil
+		return []byte(client.ClientConfiguration.APIKeySecret), nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if token.Claims["aud"].(string) != client.Credentials.ID {
+	if token.Claims["aud"].(string) != client.ClientConfiguration.APIKeyID {
 		return nil, errors.New("ID Site invalid aud")
 	}
 
@@ -318,12 +350,31 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 		"username":   {username},
 		"password":   {password},
 	}
-	body := &bytes.Buffer{}
-	canonicalizeQueryString(body, values)
 
 	err := client.postURLEncodedForm(
 		buildAbsoluteURL(app.Href, "oauth/token"),
-		body.String(),
+		values.Encode(),
+		response,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (app *Application) GetOAuthTokenStormpathGrantType(token string) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
+
+	values := url.Values{
+		"grant_type": {"stormpath_token"},
+		"token":      {token},
+	}
+
+	err := client.postURLEncodedForm(
+		buildAbsoluteURL(app.Href, "oauth/token"),
+		values.Encode(),
 		response,
 	)
 
@@ -372,4 +423,19 @@ func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
 	}
 
 	return response, nil
+}
+
+func (app *Application) GetAPIKey(apiKeyID string, criteria APIKeyCriteria) (*APIKey, error) {
+	apiKeys := &APIKeys{}
+
+	err := client.get(buildAbsoluteURL(app.APIKeys.Href, criteria.idEq(apiKeyID).ToQueryString()), apiKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(apiKeys.Items) == 0 {
+		return nil, fmt.Errorf("API Key not found")
+	}
+
+	return &apiKeys.Items[0], nil
 }
