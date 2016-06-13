@@ -92,6 +92,7 @@ func loadConfig() {
 	stormpath.InitLog()
 
 	viper.SetConfigType("yaml")
+	viper.AutomaticEnv()
 
 	//Load bundled default config
 	defaultConfig, err := Asset("config/web.stormpath.yaml")
