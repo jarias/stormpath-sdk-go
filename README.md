@@ -10,6 +10,8 @@ Master:
 
 # Usage
 
+## Core
+
 ```go get github.com/jarias/stormpath-sdk-go```
 
 ```go
@@ -43,6 +45,10 @@ account, _ := app.AuthenticateAccount("username", "password")
 fmt.Println(account)
 ```
 
+## Web
+
+See `web/example/example.go`
+
 Features:
 
 * Cache with a sample local in-memory implementation
@@ -50,6 +56,7 @@ Features:
 * Load credentials via properties file or env variables
 * Load client configuration according to Stormpath framework spec
 * Requests are authenticated via Stormpath SAuthc1 algorithm only
+* Web extension according to the [Stormpath Spec](https://github.com/stormpath/stormpath-framework-spec)
 
 # Debugging
 
@@ -64,7 +71,7 @@ Please make sure you add tests ;)
 
 Development requirements:
 
-- Go 1.4+
+- Go 1.6+
 - [Testify](https://github.com/stretchr/testify) ```go get github.com/stretchr/testify/assert```
 - An [Stormpath](https://stormpath.com) account (for integration testing)
 
