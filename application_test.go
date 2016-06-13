@@ -1,4 +1,4 @@
-package stormpath_test
+package stormpath
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 

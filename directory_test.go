@@ -1,10 +1,10 @@
-package stormpath_test
+package stormpath
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,6 +16,44 @@ func TestDirectoryJsonMarshaling(t *testing.T) {
 	jsonData, _ := json.Marshal(directory)
 
 	assert.Equal(t, "{\"name\":\"name\"}", string(jsonData))
+}
+
+func TestGetDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := createTestDirectory()
+	defer directory.Delete()
+
+	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria())
+
+	assert.NoError(t, err)
+	assert.NotNil(t, d)
+	assert.Equal(t, directory.Href, d.Href)
+}
+
+func TestGetDirectoryNotFound(t *testing.T) {
+	t.Parallel()
+
+	d, err := GetDirectory(client.ClientConfiguration.BaseURL+"/directories/XXX", MakeDirectoryCriteria())
+
+	assert.Error(t, err)
+	assert.Nil(t, d)
+	assert.Equal(t, http.StatusNotFound, err.(Error).Status)
+}
+
+func TestUpdateDirectory(t *testing.T) {
+	t.Parallel()
+
+	directory := createTestDirectory()
+	defer directory.Delete()
+
+	directory.Name = "newName" + randomName()
+	err := directory.Update()
+
+	d, _ := GetDirectory(directory.Href, MakeDirectoryCriteria())
+
+	assert.NoError(t, err)
+	assert.Equal(t, directory.Name, d.Name)
 }
 
 func TestDeleteDirectory(t *testing.T) {

@@ -1,10 +1,9 @@
-package stormpath_test
+package stormpath
 
 import (
 	"testing"
 	"time"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 

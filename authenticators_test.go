@@ -1,11 +1,55 @@
-package stormpath_test
+package stormpath
 
 import (
 	"testing"
+	"time"
 
-	. "github.com/jarias/stormpath-sdk-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestOAuthStormpathTokenAuthenticator(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	account := createTestAccount(application)
+
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	token.Claims["iat"] = time.Now().Unix()
+	token.Claims["iss"] = application.Href
+	token.Claims["sub"] = account.Href
+	token.Claims["exp"] = time.Now().Add(1 * time.Minute).Unix()
+	token.Claims["status"] = "AUTHENTICATED"
+	token.Claims["aud"] = client.ClientConfiguration.APIKeyID
+	token.Header["kid"] = client.ClientConfiguration.APIKeyID
+
+	tokenString, _ := token.SignedString([]byte(client.ClientConfiguration.APIKeySecret))
+
+	authenticator := NewOAuthStormpathTokenAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate(tokenString)
+
+	assert.NoError(t, err)
+	assert.Equal(t, account.Href, authResult.GetAccount().Href)
+}
+
+func TestOAuthStormpathTokenAuthenticatorInvalidToken(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication()
+	defer application.Purge()
+
+	authenticator := NewOAuthStormpathTokenAuthenticator(application)
+
+	authResult, err := authenticator.Authenticate("I'm not a JWT token really")
+
+	assert.Error(t, err)
+	assert.EqualError(t, err, "Token is invalid")
+	assert.Nil(t, authResult)
+}
 
 func TestOAuthClientCredentialsAuthenticator(t *testing.T) {
 	t.Parallel()
@@ -37,7 +81,7 @@ func TestOAuthClientCredentialsAuthenticatorInvalidCredentials(t *testing.T) {
 	authResult, err := authenticator.Authenticate("foo", "bar", "")
 
 	assert.Error(t, err)
-	assert.Equal(t, "invalid_client", err.Error())
+	assert.EqualError(t, err, "invalid_client")
 	assert.Nil(t, authResult)
 }
 
@@ -55,7 +99,7 @@ func TestOAuthClientCredentialsAuthenticatorScopeFactory(t *testing.T) {
 	authResult, err := authenticator.Authenticate("foo", "bar", "bar")
 
 	assert.Error(t, err)
-	assert.Equal(t, "invalid_scope", err.Error())
+	assert.EqualError(t, err, "invalid_scope")
 	assert.Nil(t, authResult)
 }
 
@@ -128,7 +172,7 @@ func TestBasicAuthenticatorDisabledCredentials(t *testing.T) {
 	authResult, err := authenticator.Authenticate(apiKey.ID, apiKey.Secret)
 
 	assert.Error(t, err)
-	assert.Equal(t, "API Key disabled", err.Error())
+	assert.EqualError(t, err, "API Key disabled")
 	assert.Nil(t, authResult)
 }
 
@@ -148,7 +192,7 @@ func TestBasicAuthenticatorDisabledAccount(t *testing.T) {
 	authResult, err := authenticator.Authenticate(apiKey.ID, apiKey.Secret)
 
 	assert.Error(t, err)
-	assert.Equal(t, "Account is disable", err.Error())
+	assert.EqualError(t, err, "Account is disable")
 	assert.Nil(t, authResult)
 }
 
@@ -166,7 +210,7 @@ func TestBasicAuthenticatorInvalidSecret(t *testing.T) {
 	authResult, err := authenticator.Authenticate(apiKey.ID, "foo")
 
 	assert.Error(t, err)
-	assert.Equal(t, "Invalid API Key Secret", err.Error())
+	assert.EqualError(t, err, "Invalid API Key Secret")
 	assert.Nil(t, authResult)
 }
 
@@ -201,7 +245,7 @@ func TestOAuthPasswordAuthenticatorInvalidCredentials(t *testing.T) {
 	authResult, err := authenticator.Authenticate(account.Username, "foo")
 
 	assert.Error(t, err)
-	assert.Equal(t, "Invalid username or password.", err.Error())
+	assert.EqualError(t, err, "Invalid username or password.")
 	assert.Nil(t, authResult)
 }
 
@@ -235,6 +279,6 @@ func TestOAuthRefreshTokenAuthenticatorInvalidToken(t *testing.T) {
 	authResult, err := authenticator.Authenticate("foo")
 
 	assert.Error(t, err)
-	assert.Equal(t, "Token is invalid", err.Error())
+	assert.EqualError(t, err, "Token is invalid")
 	assert.Nil(t, authResult)
 }

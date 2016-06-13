@@ -1,11 +1,10 @@
-package stormpath_test
+package stormpath
 
 import (
 	"encoding/json"
 	"net/http"
 	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
 

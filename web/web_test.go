@@ -1,4 +1,4 @@
-package stormpathweb_test
+package stormpathweb
 
 import (
 	"fmt"
@@ -10,13 +10,12 @@ import (
 	"testing"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"github.com/jarias/stormpath-sdk-go/web"
 )
 
 func GetTestServer() (*httptest.Server, string) {
 	mux := http.NewServeMux()
 
-	stormpathFilter := stormpathweb.NewStormpathHandler(mux, []string{"/"})
+	stormpathFilter := NewStormpathHandler(mux, []string{"/"})
 
 	mux.Handle("/hello", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/html")

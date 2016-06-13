@@ -2,8 +2,8 @@ package stormpath
 
 type GroupMembership struct {
 	resource
-	Account Account `json:"account"`
-	Group   Group   `json:"group"`
+	Account *Account `json:"account"`
+	Group   *Group   `json:"group"`
 }
 
 type GroupMemberships struct {
@@ -17,37 +17,33 @@ func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
 	group := Group{}
 	group.Href = groupHref
 	return &GroupMembership{
-		Account: account,
-		Group:   group,
+		Account: &account,
+		Group:   &group,
 	}
 }
 
 func (groupmembership *GroupMembership) GetAccount(criteria Criteria) (*Account, error) {
-	account := &Account{}
-
 	err := client.get(
 		buildAbsoluteURL(groupmembership.Account.Href, criteria.ToQueryString()),
-		account,
+		groupmembership.Account,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return account, nil
+	return groupmembership.Account, nil
 }
 
 func (groupmembership *GroupMembership) GetGroup(criteria Criteria) (*Group, error) {
-	group := &Group{}
-
 	err := client.get(
 		buildAbsoluteURL(groupmembership.Group.Href, criteria.ToQueryString()),
-		group,
+		groupmembership.Group,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return group, nil
+	return groupmembership.Group, nil
 }

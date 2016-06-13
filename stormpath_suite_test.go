@@ -1,15 +1,12 @@
-package stormpath_test
+package stormpath
 
 import (
-	"os"
-	"testing"
-
-	"strings"
-
 	"io/ioutil"
 	"log"
+	"os"
+	"strings"
+	"testing"
 
-	. "github.com/jarias/stormpath-sdk-go"
 	uuid "github.com/nu7hatch/gouuid"
 )
 
