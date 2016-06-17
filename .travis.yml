@@ -3,6 +3,7 @@ go:
 - 1.6
 install:
 - go get golang.org/x/tools/cmd/cover
+- go get github.com/stretchr/testify/assert
 - go get ./...
 script:
   - go test . -coverprofile=coverage-core.txt -covermode=atomic
