@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"time"
 
+	"os"
+
 	"github.com/jarias/stormpath-sdk-go"
 	"github.com/spf13/viper"
 )
@@ -103,8 +105,8 @@ func loadConfig() {
 	viper.ReadConfig(bytes.NewBuffer(defaultConfig))
 
 	//Merge users custom configuration
-	viper.SetConfigFile("stormpath.yaml")
-	viper.AddConfigPath("~/.stormpath/")
+	viper.SetConfigName("stormpath")
+	viper.AddConfigPath(os.Getenv("HOME") + "/.stormpath")
 	viper.AddConfigPath(".")
 	err = viper.MergeInConfig()
 	if err != nil {

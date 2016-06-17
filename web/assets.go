@@ -90,7 +90,7 @@ func templatesChangePasswordHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/change-password.html", size: 3746, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "templates/change-password.html", size: 3746, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -110,7 +110,7 @@ func templatesForgotPasswordHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/forgot-password.html", size: 3549, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "templates/forgot-password.html", size: 3549, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -130,7 +130,7 @@ func templatesLoginHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/login.html", size: 5675, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "templates/login.html", size: 5675, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -150,7 +150,7 @@ func templatesRegisterHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/register.html", size: 3235, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "templates/register.html", size: 3235, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -170,7 +170,7 @@ func templatesVerifyHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/verify.html", size: 3560, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "templates/verify.html", size: 3560, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -190,7 +190,7 @@ func assetsCssStormpathCss() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "assets/css/stormpath.css", size: 33961, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "assets/css/stormpath.css", size: 33961, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -210,7 +210,7 @@ func assetsJsSocialLoginJs() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "assets/js/social-login.js", size: 3314, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "assets/js/social-login.js", size: 3314, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -230,7 +230,7 @@ func configWebStormpathYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "config/web.stormpath.yaml", size: 6649, mode: os.FileMode(420), modTime: time.Unix(1465509447, 0)}
+	info := bindataFileInfo{name: "config/web.stormpath.yaml", size: 6649, mode: os.FileMode(420), modTime: time.Unix(1466193310, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

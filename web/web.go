@@ -277,6 +277,7 @@ func (h *StormpathMiddleware) handleAssets(w http.ResponseWriter, r *http.Reques
 	data, err := Asset(location)
 	if err != nil {
 		http.Error(w, err.Error(), 404)
+		return
 	}
 
 	if strings.HasSuffix(location, ".css") {
@@ -389,7 +390,7 @@ func (h *StormpathMiddleware) resolveContentType(r *http.Request) string {
 
 	accept := r.Header.Get(stormpath.AcceptHeader)
 
-	if accept == "*/*" || accept == "" {
+	if accept == "*/*" || accept == "" || strings.HasPrefix(accept, TextCSS) || strings.HasPrefix(accept, ApplicationJavascript) {
 		return produces[0]
 	}
 
