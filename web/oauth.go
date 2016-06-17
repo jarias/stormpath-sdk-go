@@ -6,8 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/jarias/stormpath-sdk-go"
+	"gopkg.in/dgrijalva/jwt-go.v2"
 )
 
 type oauthHandler struct {
