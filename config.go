@@ -3,6 +3,7 @@ package stormpath
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"time"
 
@@ -71,6 +72,7 @@ func LoadConfiguration() (ClientConfiguration, error) {
 
 	v.SetConfigType("yaml")
 	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.SetConfigName("stormpath")
 	v.AddConfigPath(os.Getenv("HOME") + "/.stormpath")
 	v.AddConfigPath(".")

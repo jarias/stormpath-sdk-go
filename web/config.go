@@ -3,6 +3,7 @@ package stormpathweb
 import (
 	"bytes"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jarias/stormpath-sdk-go"
@@ -102,6 +103,7 @@ func loadConfig() {
 
 	v.SetConfigType("yaml")
 	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	//Load bundled default config
 	defaultConfig, err := Asset("config/web.stormpath.yaml")
