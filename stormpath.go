@@ -19,7 +19,7 @@ import (
 )
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.17"
+const version = "0.1.0-beta.18"
 
 const (
 	Enabled                   = "ENABLED"
