@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 )
 
@@ -88,8 +87,8 @@ func NewStormpathMiddleware(next http.Handler, publicPaths []string) *StormpathM
 		MeHandler:             meHandler{},
 	}
 
-	h.LoginHandler = loginHandler{h, application, buildForm("login")}
-	h.RegisterHandler = registerHandler{h, application, buildForm("register")}
+	h.LoginHandler = loginHandler{h, application, Config.LoginForm}
+	h.RegisterHandler = registerHandler{h, application, Config.RegisterForm}
 	h.FacebookCallbackHandler = facebookCallbackHandler{defaultSocialHandler{application, h.LoginHandler}}
 	h.GoogleCallbackHandler = googleCallbackHandler{defaultSocialHandler{application, h.LoginHandler}}
 	h.LinkedinCallbackHandler = linkedinCallbackHandler{defaultSocialHandler{application, h.LoginHandler}}
@@ -114,8 +113,8 @@ func resolveAccountStores(application *stormpath.Application) {
 
 func resolveApplication() *stormpath.Application {
 	//see https://github.com/stormpath/stormpath-framework-spec/blob/master/configuration.md
-	applicationHref := viper.GetString("stormpath.application.href")
-	applicationName := viper.GetString("stormpath.application.name")
+	applicationHref := Config.ApplicationHref
+	applicationName := Config.ApplicationName
 
 	tenant, err := stormpath.CurrentTenant()
 	if err != nil {

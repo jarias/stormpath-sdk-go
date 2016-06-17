@@ -67,15 +67,17 @@ func LoadConfiguration() (ClientConfiguration, error) {
 		ProxyPassword:        "",
 	}
 
-	viper.SetConfigType("yaml")
-	viper.SetConfigFile("stormpath.yaml")
-	viper.AddConfigPath("~/.stormpath")
-	viper.AddConfigPath(".")
-	viper.AutomaticEnv()
-	viper.ReadInConfig()
+	v := viper.New()
 
-	c.APIKeyID = viper.GetString("stormpath.client.apiKey.id")
-	c.APIKeySecret = viper.GetString("stormpath.client.apiKey.secret")
+	v.SetConfigType("yaml")
+	v.AutomaticEnv()
+	v.SetConfigName("stormpath")
+	v.AddConfigPath(os.Getenv("HOME") + "/.stormpath")
+	v.AddConfigPath(".")
+	v.ReadInConfig()
+
+	c.APIKeyID = v.GetString("stormpath.client.apiKey.id")
+	c.APIKeySecret = v.GetString("stormpath.client.apiKey.secret")
 	id, secret, err := loadCredentials(c.APIKeyFile)
 	if err == nil {
 		c.APIKeyID = id
@@ -86,31 +88,31 @@ func LoadConfiguration() (ClientConfiguration, error) {
 		return c, fmt.Errorf("API credentials couldn't be loaded")
 	}
 
-	if viper.Get("stormpath.client.cacheManager.enabled") != nil {
-		c.CacheManagerEnabled = viper.GetBool("stormpath.client.cacheManager.enabled")
+	if v.Get("stormpath.client.cacheManager.enabled") != nil {
+		c.CacheManagerEnabled = v.GetBool("stormpath.client.cacheManager.enabled")
 	}
-	if viper.Get("stormpath.client.cacheManager.defaultTtl") != nil {
-		c.CacheTTL = time.Duration(viper.GetInt("stormpath.client.cacheManager.defaultTtl")) * time.Second
+	if v.Get("stormpath.client.cacheManager.defaultTtl") != nil {
+		c.CacheTTL = time.Duration(v.GetInt("stormpath.client.cacheManager.defaultTtl")) * time.Second
 	}
-	if viper.Get("stormpath.client.cacheManager.defaultTti") != nil {
-		c.CacheTTI = time.Duration(viper.GetInt("stormpath.client.cacheManager.defaultTti")) * time.Second
-	}
-
-	if viper.GetString("stormpath.client.baseUrl") != "" {
-		c.BaseURL = viper.GetString("stormpath.client.baseUrl")
-	}
-	if viper.Get("stormpath.client.connectionTimeout") != nil {
-		c.ConnectionTimeout = viper.GetInt("stormpath.client.connectionTimeout")
+	if v.Get("stormpath.client.cacheManager.defaultTti") != nil {
+		c.CacheTTI = time.Duration(v.GetInt("stormpath.client.cacheManager.defaultTti")) * time.Second
 	}
 
-	if viper.GetString("stormpath.client.authenticationScheme") != "" {
-		c.AuthenticationScheme = viper.GetString("stormpath.client.authenticationScheme")
+	if v.GetString("stormpath.client.baseUrl") != "" {
+		c.BaseURL = v.GetString("stormpath.client.baseUrl")
+	}
+	if v.Get("stormpath.client.connectionTimeout") != nil {
+		c.ConnectionTimeout = v.GetInt("stormpath.client.connectionTimeout")
 	}
 
-	c.ProxyHost = viper.GetString("stormpath.client.proxy.host")
-	c.ProxyPort = viper.GetInt("stormpath.client.proxy.port")
-	c.ProxyUsername = viper.GetString("stormpath.client.proxy.username")
-	c.ProxyPassword = viper.GetString("stormpath.client.proxy.password")
+	if v.GetString("stormpath.client.authenticationScheme") != "" {
+		c.AuthenticationScheme = v.GetString("stormpath.client.authenticationScheme")
+	}
+
+	c.ProxyHost = v.GetString("stormpath.client.proxy.host")
+	c.ProxyPort = v.GetInt("stormpath.client.proxy.port")
+	c.ProxyUsername = v.GetString("stormpath.client.proxy.username")
+	c.ProxyPassword = v.GetString("stormpath.client.proxy.password")
 
 	return c, nil
 }

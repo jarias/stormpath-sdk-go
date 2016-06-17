@@ -2,9 +2,8 @@ package stormpathweb
 
 import (
 	"bytes"
-	"time"
-
 	"os"
+	"time"
 
 	"github.com/jarias/stormpath-sdk-go"
 	"github.com/spf13/viper"
@@ -14,6 +13,10 @@ import (
 var Config = &webConfig{}
 
 type webConfig struct {
+	//Application
+	ApplicationName string
+	ApplicationHref string
+	//General web
 	Produces []string
 	BasePath string
 	//Login
@@ -21,6 +24,7 @@ type webConfig struct {
 	LoginNextURI string
 	LoginView    string
 	LoginEnabled bool
+	LoginForm    form
 	//Logout
 	LogoutURI     string
 	LogoutNextURI string
@@ -31,6 +35,7 @@ type webConfig struct {
 	RegisterView             string
 	RegisterEnabled          bool
 	RegisterAutoLoginEnabled bool
+	RegisterForm             form
 	//Forgot password
 	ForgotPasswordURI     string
 	ForgotPasswordNextURI string
@@ -93,8 +98,10 @@ type webConfig struct {
 func loadConfig() {
 	stormpath.InitLog()
 
-	viper.SetConfigType("yaml")
-	viper.AutomaticEnv()
+	v := viper.New()
+
+	v.SetConfigType("yaml")
+	v.AutomaticEnv()
 
 	//Load bundled default config
 	defaultConfig, err := Asset("config/web.stormpath.yaml")
@@ -102,113 +109,118 @@ func loadConfig() {
 		stormpath.Logger.Panicf("[ERROR] Couldn't load default bundle configuration: %s", err)
 	}
 
-	viper.ReadConfig(bytes.NewBuffer(defaultConfig))
+	v.ReadConfig(bytes.NewBuffer(defaultConfig))
 
 	//Merge users custom configuration
-	viper.SetConfigName("stormpath")
-	viper.AddConfigPath(os.Getenv("HOME") + "/.stormpath")
-	viper.AddConfigPath(".")
-	err = viper.MergeInConfig()
+	v.SetConfigName("stormpath")
+	v.AddConfigPath(os.Getenv("HOME") + "/.stormpath")
+	v.AddConfigPath(".")
+	err = v.MergeInConfig()
 	if err != nil {
 		stormpath.Logger.Println("[WARN] User didn't provide custom configuration")
 	}
 
-	Config.Produces = viper.GetStringSlice("stormpath.web.produces")
-	Config.BasePath = viper.GetString("stormpath.web.basePath")
+	Config.Produces = v.GetStringSlice("stormpath.web.produces")
+	Config.BasePath = v.GetString("stormpath.web.basePath")
 
-	loadSocialConfig()
-	loadCookiesConfig()
-	loadEndpointsConfig()
-	loadOAuth2Config()
+	Config.ApplicationHref = v.GetString("stormpath.application.href")
+	Config.ApplicationName = v.GetString("stormpath.application.name")
+
+	loadSocialConfig(v)
+	loadCookiesConfig(v)
+	loadEndpointsConfig(v)
+	loadOAuth2Config(v)
 }
 
-func loadOAuth2Config() {
-	Config.OAuth2Enabled = viper.GetBool("stormpath.web.oauth2.enabled")
-	Config.OAuth2URI = viper.GetString("stormpath.web.oauth2.uri")
-	Config.OAuth2ClientCredentialsGrantTypeEnabled = viper.GetBool("stormpath.web.oauth2.client_credentials.enabled")
-	Config.OAuth2ClientCredentialsGrantTypeAccessTokenTTL = time.Duration(viper.GetInt("stormpath.web.oauth2.client_credentials.accessToken.ttl")) * time.Second
-	Config.OAuth2PasswordGrantTypeEnabled = viper.GetBool("stormpath.web.oauth2.password.enabled")
-	Config.OAuth2PasswordGrantTypeValidationStrategy = viper.GetString("stormpath.web.oauth2.password.validationStrategy")
+func loadOAuth2Config(v *viper.Viper) {
+	Config.OAuth2Enabled = v.GetBool("stormpath.web.oauth2.enabled")
+	Config.OAuth2URI = v.GetString("stormpath.web.oauth2.uri")
+	Config.OAuth2ClientCredentialsGrantTypeEnabled = v.GetBool("stormpath.web.oauth2.client_credentials.enabled")
+	Config.OAuth2ClientCredentialsGrantTypeAccessTokenTTL = time.Duration(v.GetInt("stormpath.web.oauth2.client_credentials.accessToken.ttl")) * time.Second
+	Config.OAuth2PasswordGrantTypeEnabled = v.GetBool("stormpath.web.oauth2.password.enabled")
+	Config.OAuth2PasswordGrantTypeValidationStrategy = v.GetString("stormpath.web.oauth2.password.validationStrategy")
 }
 
-func loadSocialConfig() {
-	Config.FacebookCallbackURI = viper.GetString("stormpath.web.social.facebook.uri")
-	Config.FacebookScope = viper.GetString("stormpath.web.social.facebook.scope")
-	Config.GoogleCallbackURI = viper.GetString("stormpath.web.social.google.uri")
-	Config.GoogleScope = viper.GetString("stormpath.web.social.google.scope")
-	Config.LinkedinCallbackURI = viper.GetString("stormpath.web.social.linkedin.uri")
-	Config.LinkedinScope = viper.GetString("stormpath.web.social.linkedin.scope")
-	Config.GithubCallbackURI = viper.GetString("stormpath.web.social.github.uri")
-	Config.GithubScope = viper.GetString("stormpath.web.social.github.scope")
+func loadSocialConfig(v *viper.Viper) {
+	Config.FacebookCallbackURI = v.GetString("stormpath.web.social.facebook.uri")
+	Config.FacebookScope = v.GetString("stormpath.web.social.facebook.scope")
+	Config.GoogleCallbackURI = v.GetString("stormpath.web.social.google.uri")
+	Config.GoogleScope = v.GetString("stormpath.web.social.google.scope")
+	Config.LinkedinCallbackURI = v.GetString("stormpath.web.social.linkedin.uri")
+	Config.LinkedinScope = v.GetString("stormpath.web.social.linkedin.scope")
+	Config.GithubCallbackURI = v.GetString("stormpath.web.social.github.uri")
+	Config.GithubScope = v.GetString("stormpath.web.social.github.scope")
 }
 
-func loadCookiesConfig() {
+func loadCookiesConfig(v *viper.Viper) {
 	//AccessToken
-	Config.AccessTokenCookieHTTPOnly = viper.GetBool("stormpath.web.accessTokenCookie.httpOnly")
-	Config.AccessTokenCookieName = viper.GetString("stormpath.web.accessTokenCookie.name")
-	Config.AccessTokenCookieSecure = loadBoolPtr("stormpath.web.accessTokenCookie.secure")
-	Config.AccessTokenCookiePath = viper.GetString("stormpath.web.accessTokenCookie.path")
-	Config.AccessTokenCookieDomain = viper.GetString("stormpath.web.accessTokenCookie.domain")
+	Config.AccessTokenCookieHTTPOnly = v.GetBool("stormpath.web.accessTokenCookie.httpOnly")
+	Config.AccessTokenCookieName = v.GetString("stormpath.web.accessTokenCookie.name")
+	Config.AccessTokenCookieSecure = loadBoolPtr("stormpath.web.accessTokenCookie.secure", v)
+	Config.AccessTokenCookiePath = v.GetString("stormpath.web.accessTokenCookie.path")
+	Config.AccessTokenCookieDomain = v.GetString("stormpath.web.accessTokenCookie.domain")
 	//RefreshToken
-	Config.RefreshTokenCookieHTTPOnly = viper.GetBool("stormpath.web.refreshTokenCookie.httpOnly")
-	Config.RefreshTokenCookieName = viper.GetString("stormpath.web.refreshTokenCookie.name")
-	Config.RefreshTokenCookieSecure = loadBoolPtr("stormpath.web.refreshTokenCookie.secure")
-	Config.RefreshTokenCookiePath = viper.GetString("stormpath.web.refreshTokenCookie.path")
-	Config.RefreshTokenCookieDomain = viper.GetString("stormpath.web.refreshTokenCookie.domain")
+	Config.RefreshTokenCookieHTTPOnly = v.GetBool("stormpath.web.refreshTokenCookie.httpOnly")
+	Config.RefreshTokenCookieName = v.GetString("stormpath.web.refreshTokenCookie.name")
+	Config.RefreshTokenCookieSecure = loadBoolPtr("stormpath.web.refreshTokenCookie.secure", v)
+	Config.RefreshTokenCookiePath = v.GetString("stormpath.web.refreshTokenCookie.path")
+	Config.RefreshTokenCookieDomain = v.GetString("stormpath.web.refreshTokenCookie.domain")
 }
 
-func loadEndpointsConfig() {
+func loadEndpointsConfig(v *viper.Viper) {
 	//Login
-	Config.LoginURI = viper.GetString("stormpath.web.login.uri")
-	Config.LoginNextURI = viper.GetString("stormpath.web.login.nextUri")
-	Config.LoginView = viper.GetString("stormpath.web.login.view")
-	Config.LoginEnabled = viper.GetBool("stormpath.web.login.enabled")
+	Config.LoginURI = v.GetString("stormpath.web.login.uri")
+	Config.LoginNextURI = v.GetString("stormpath.web.login.nextUri")
+	Config.LoginView = v.GetString("stormpath.web.login.view")
+	Config.LoginEnabled = v.GetBool("stormpath.web.login.enabled")
+	Config.LoginForm = buildForm("login", v)
 	//Register
-	Config.RegisterURI = viper.GetString("stormpath.web.register.uri")
-	Config.RegisterView = viper.GetString("stormpath.web.register.view")
-	Config.RegisterNextURI = viper.GetString("stormpath.web.register.uri")
-	Config.RegisterEnabled = viper.GetBool("stormpath.web.register.enabled")
-	Config.RegisterAutoLoginEnabled = viper.GetBool("stormpath.web.register.autoLogin")
+	Config.RegisterURI = v.GetString("stormpath.web.register.uri")
+	Config.RegisterView = v.GetString("stormpath.web.register.view")
+	Config.RegisterNextURI = v.GetString("stormpath.web.register.uri")
+	Config.RegisterEnabled = v.GetBool("stormpath.web.register.enabled")
+	Config.RegisterAutoLoginEnabled = v.GetBool("stormpath.web.register.autoLogin")
+	Config.RegisterForm = buildForm("register", v)
 	//Verify
-	Config.VerifyURI = viper.GetString("stormpath.web.verifyEmail.uri")
-	Config.VerifyEnabled = loadBoolPtr("stormpath.web.verifyEmail.enabled")
-	Config.VerifyView = viper.GetString("stormpath.web.verifyEmail.view")
-	Config.VerifyNextURI = viper.GetString("stormpath.web.verifyEmail.nextUri")
+	Config.VerifyURI = v.GetString("stormpath.web.verifyEmail.uri")
+	Config.VerifyEnabled = loadBoolPtr("stormpath.web.verifyEmail.enabled", v)
+	Config.VerifyView = v.GetString("stormpath.web.verifyEmail.view")
+	Config.VerifyNextURI = v.GetString("stormpath.web.verifyEmail.nextUri")
 	//Forgot Password
-	Config.ForgotPasswordURI = viper.GetString("stormpath.web.forgotPassword.uri")
-	Config.ForgotPasswordNextURI = viper.GetString("stormpath.web.forgotPassword.nextUri")
-	Config.ForgotPasswordView = viper.GetString("stormpath.web.forgotPassword.view")
-	Config.ForgotPasswordEnabled = loadBoolPtr("stormpath.web.forgotPassword.enabled")
+	Config.ForgotPasswordURI = v.GetString("stormpath.web.forgotPassword.uri")
+	Config.ForgotPasswordNextURI = v.GetString("stormpath.web.forgotPassword.nextUri")
+	Config.ForgotPasswordView = v.GetString("stormpath.web.forgotPassword.view")
+	Config.ForgotPasswordEnabled = loadBoolPtr("stormpath.web.forgotPassword.enabled", v)
 	//Change Password
-	Config.ChangePasswordURI = viper.GetString("stormpath.web.changePassword.uri")
-	Config.ChangePasswordNextURI = viper.GetString("stormpath.web.changePassword.nextUri")
-	Config.ChangePasswordView = viper.GetString("stormpath.web.changePassword.view")
-	Config.ChangePasswordEnabled = loadBoolPtr("stormpath.web.changePassword.enabled")
-	Config.ChangePasswordAutoLoginEnabled = viper.GetBool("stormpath.web.changePassword.autoLogin")
-	Config.ChangePasswordErrorURI = viper.GetString("stormpath.web.changePassword.errorUri")
+	Config.ChangePasswordURI = v.GetString("stormpath.web.changePassword.uri")
+	Config.ChangePasswordNextURI = v.GetString("stormpath.web.changePassword.nextUri")
+	Config.ChangePasswordView = v.GetString("stormpath.web.changePassword.view")
+	Config.ChangePasswordEnabled = loadBoolPtr("stormpath.web.changePassword.enabled", v)
+	Config.ChangePasswordAutoLoginEnabled = v.GetBool("stormpath.web.changePassword.autoLogin")
+	Config.ChangePasswordErrorURI = v.GetString("stormpath.web.changePassword.errorUri")
 	//Logout
-	Config.LogoutURI = viper.GetString("stormpath.web.logout.uri")
-	Config.LogoutNextURI = viper.GetString("stormpath.web.logout.nextUri")
-	Config.LogoutEnabled = viper.GetBool("stormpath.web.logout.enabled")
+	Config.LogoutURI = v.GetString("stormpath.web.logout.uri")
+	Config.LogoutNextURI = v.GetString("stormpath.web.logout.nextUri")
+	Config.LogoutEnabled = v.GetBool("stormpath.web.logout.enabled")
 	//IDSite
-	Config.IDSiteEnabled = viper.GetBool("stormpath.web.idSite.enabled")
-	Config.IDSiteLoginURI = viper.GetString("stormpath.web.idSite.loginUri")
-	Config.IDSiteForgotURI = viper.GetString("stormpath.web.idSite.forgotUri")
-	Config.IDSiteRegisterURI = viper.GetString("stormpath.web.idSite.registerUri")
-	Config.CallbackEnabled = viper.GetBool("stormpath.web.callback.enabled")
-	Config.CallbackURI = viper.GetString("stormpath.web.callback.uri")
+	Config.IDSiteEnabled = v.GetBool("stormpath.web.idSite.enabled")
+	Config.IDSiteLoginURI = v.GetString("stormpath.web.idSite.loginUri")
+	Config.IDSiteForgotURI = v.GetString("stormpath.web.idSite.forgotUri")
+	Config.IDSiteRegisterURI = v.GetString("stormpath.web.idSite.registerUri")
+	Config.CallbackEnabled = v.GetBool("stormpath.web.callback.enabled")
+	Config.CallbackURI = v.GetString("stormpath.web.callback.uri")
 	//Me
-	Config.MeEnabled = viper.GetBool("stormpath.web.me.enabled")
-	Config.MeURI = viper.GetString("stormpath.web.me.uri")
-	Config.MeExpand = viper.GetStringMap("stormpath.web.me.expand")
+	Config.MeEnabled = v.GetBool("stormpath.web.me.enabled")
+	Config.MeURI = v.GetString("stormpath.web.me.uri")
+	Config.MeExpand = v.GetStringMap("stormpath.web.me.expand")
 }
 
-func loadBoolPtr(key string) *bool {
-	val := viper.Get(key)
+func loadBoolPtr(key string, v *viper.Viper) *bool {
+	val := v.Get(key)
 	if val == nil {
 		return nil
 	}
-	b := viper.GetBool(key)
+	b := v.GetBool(key)
 	return &b
 }
 
@@ -244,4 +256,37 @@ func IsVerifyEnabled(application *stormpath.Application) bool {
 	}
 
 	return false
+}
+
+func buildForm(formName string, v *viper.Viper) form {
+	form := form{}
+
+	for _, fieldName := range getConfiguredFormFieldNames(formName, v) {
+		field := field{
+			Name:        fieldName,
+			Label:       v.GetString("stormpath.web." + formName + ".form.fields." + fieldName + ".label"),
+			PlaceHolder: v.GetString("stormpath.web." + formName + ".form.fields." + fieldName + ".placeHolder"),
+			Visible:     v.GetBool("stormpath.web." + formName + ".form.fields." + fieldName + ".visible"),
+			Enabled:     v.GetBool("stormpath.web." + formName + ".form.fields." + fieldName + ".enabled"),
+			Required:    v.GetBool("stormpath.web." + formName + ".form.fields." + fieldName + ".required"),
+			Type:        v.GetString("stormpath.web." + formName + ".form.fields." + fieldName + ".type"),
+		}
+		if field.Enabled {
+			form.Fields = append(form.Fields, field)
+		}
+	}
+
+	return form
+}
+
+func getConfiguredFormFieldNames(formName string, v *viper.Viper) []string {
+	configuredFields := v.GetStringMapString("stormpath.web." + formName + ".form.fields")
+	fieldOrder := v.GetStringSlice("stormpath.web." + formName + ".form.fieldOrder")
+
+	for fieldName := range configuredFields {
+		if !contains(fieldOrder, fieldName) {
+			fieldOrder = append(fieldOrder, fieldName)
+		}
+	}
+	return fieldOrder
 }
