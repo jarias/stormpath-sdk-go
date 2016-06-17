@@ -107,7 +107,7 @@ func resolveAccountStores(application *stormpath.Application) {
 		panic(fmt.Errorf("No account stores are mapped to the specified application. Account stores are required for login and registration. \n"))
 	}
 
-	if application.DefaultAccountStoreMapping.Href == "" && Config.RegisterEnabled {
+	if application.DefaultAccountStoreMapping == nil && Config.RegisterEnabled {
 		panic(fmt.Errorf("No default account store is mapped to the specified application. A default account store is required for registration. \n"))
 	}
 }
