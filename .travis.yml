@@ -3,6 +3,7 @@ go:
 - 1.6
 install:
 - go get golang.org/x/tools/cmd/cover
+- go get ./...
 script:
   - go test . -coverprofile=coverage-core.txt -covermode=atomic
   - go test ./web -coverprofile=coverage-web.txt -covermode=atomic -coverpkg=github.com/jarias/stormpath-sdk-go,github.com/jarias/stormpath-sdk-go/web
