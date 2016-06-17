@@ -1,12 +1,11 @@
 package stormpathweb
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
-
-	"bytes"
-	"encoding/json"
 
 	"github.com/jarias/stormpath-sdk-go"
 	"golang.org/x/net/context"
