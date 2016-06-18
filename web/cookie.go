@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/dgrijalva/jwt-go.v2"
 	"github.com/jarias/stormpath-sdk-go"
 )
 
@@ -108,25 +107,22 @@ func saveAuthenticationResult(w http.ResponseWriter, r *http.Request, authentica
 	return nil
 }
 
-func getJwtExpiration(jwtToken string) time.Time {
-	token, _ := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
-		return []byte(stormpath.GetClient().ClientConfiguration.APIKeySecret), nil
-	})
+func getJwtExpiration(jwtString string) time.Time {
+	claims := &stormpath.AccessTokenClaims{}
 
-	exp := time.Duration(token.Claims["exp"].(float64)) * time.Second
+	stormpath.ParseJWT(jwtString, claims)
+
+	exp := time.Duration(claims.ExpiresAt) * time.Second
 
 	return time.Unix(0, exp.Nanoseconds())
 }
 
-func getJwtID(jwtToken string) string {
-	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
-		return []byte(stormpath.GetClient().ClientConfiguration.APIKeySecret), nil
-	})
-	if err != nil {
-		return ""
-	}
+func getJwtID(jwtString string) string {
+	claims := &stormpath.AccessTokenClaims{}
 
-	return token.Claims["jti"].(string)
+	stormpath.ParseJWT(jwtString, claims)
+
+	return claims.Id
 }
 
 func clearAuthentication(w http.ResponseWriter, r *http.Request, application *stormpath.Application) {
