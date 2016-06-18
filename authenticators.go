@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	"gopkg.in/dgrijalva/jwt-go.v2"
 )
 
 type AuthResult interface {
@@ -165,21 +163,17 @@ func (a OAuthClientCredentialsAuthenticator) Authenticate(accountAPIKeyID, accou
 		return nil, fmt.Errorf("invalid_client")
 	}
 
-	token := jwt.New(jwt.SigningMethodHS256)
+	claims := GrantTypeClientCredentialsTokenClaims{}
+	claims.IssuedAt = time.Now().Unix()
+	claims.ExpiresAt = time.Now().Add(a.TTL).Unix()
+	claims.Issuer = a.Application.Href
+	claims.Subject = accountAPIKeyID
+	claims.Scope = scope
 
-	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["exp"] = time.Now().Add(a.TTL).Unix()
-	token.Claims["iss"] = a.Application.Href
-	token.Claims["sub"] = accountAPIKeyID
-	token.Claims["scope"] = scope
-
-	tokenString, err := token.SignedString([]byte(client.ClientConfiguration.APIKeySecret))
-	if err != nil {
-		return nil, err
-	}
+	jwtString := JWT(claims, map[string]interface{}{})
 
 	return &OAuthClientCredentialsAuthenticationResult{
-		AccessToken: tokenString,
+		AccessToken: jwtString,
 		ExpiresIn:   int(a.TTL.Seconds()),
 		TokenType:   "bearer",
 	}, nil
@@ -268,14 +262,11 @@ func (ar *AuthenticationResult) GetAccount() *Account {
 }
 
 func (ar *OAuthAccessTokenResult) GetAccount() *Account {
-	token, err := jwt.Parse(ar.AccessToken, func(token *jwt.Token) (interface{}, error) {
-		return []byte(client.ClientConfiguration.APIKeySecret), nil
-	})
-	if err != nil {
-		return nil
-	}
+	claims := &AccessTokenClaims{}
 
-	account, err := GetAccount(token.Claims["sub"].(string), MakeAccountCriteria().WithProviderData().WithDirectory())
+	ParseJWT(ar.AccessToken, claims)
+
+	account, err := GetAccount(claims.Subject, MakeAccountCriteria().WithProviderData().WithDirectory())
 	if err != nil {
 		return nil
 	}
@@ -284,19 +275,16 @@ func (ar *OAuthAccessTokenResult) GetAccount() *Account {
 }
 
 func (ar *OAuthClientCredentialsAuthenticationResult) GetAccount() *Account {
-	token, err := jwt.Parse(ar.AccessToken, func(token *jwt.Token) (interface{}, error) {
-		return []byte(client.ClientConfiguration.APIKeySecret), nil
-	})
+	claims := &GrantTypeClientCredentialsTokenClaims{}
+
+	ParseJWT(ar.AccessToken, claims)
+
+	application, err := GetApplication(claims.Issuer, MakeApplicationCriteria())
 	if err != nil {
 		return nil
 	}
 
-	application, err := GetApplication(token.Claims["iss"].(string), MakeApplicationCriteria())
-	if err != nil {
-		return nil
-	}
-
-	apiKey, err := application.GetAPIKey(token.Claims["sub"].(string), MakeAPIKeysCriteria())
+	apiKey, err := application.GetAPIKey(claims.Subject, MakeAPIKeysCriteria())
 	if err != nil {
 		return nil
 	}

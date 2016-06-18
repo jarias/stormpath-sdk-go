@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dgrijalva/jwt-go.v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,21 +15,24 @@ func TestOAuthStormpathTokenAuthenticator(t *testing.T) {
 
 	account := createTestAccount(application)
 
-	token := jwt.New(jwt.SigningMethodHS256)
+	claims := GrantTypeStormpathTokenClaims{}
+	claims.IssuedAt = time.Now().Unix()
+	claims.Issuer = application.Href
+	claims.Subject = account.Href
+	claims.ExpiresAt = time.Now().Add(1 * time.Minute).Unix()
+	claims.Status = "AUTHENTICATED"
+	claims.Audience = client.ClientConfiguration.APIKeyID
 
-	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["iss"] = application.Href
-	token.Claims["sub"] = account.Href
-	token.Claims["exp"] = time.Now().Add(1 * time.Minute).Unix()
-	token.Claims["status"] = "AUTHENTICATED"
-	token.Claims["aud"] = client.ClientConfiguration.APIKeyID
-	token.Header["kid"] = client.ClientConfiguration.APIKeyID
-
-	tokenString, _ := token.SignedString([]byte(client.ClientConfiguration.APIKeySecret))
+	jwtString := JWT(
+		claims,
+		map[string]interface{}{
+			"kid": client.ClientConfiguration.APIKeyID,
+		},
+	)
 
 	authenticator := NewOAuthStormpathTokenAuthenticator(application)
 
-	authResult, err := authenticator.Authenticate(tokenString)
+	authResult, err := authenticator.Authenticate(jwtString)
 
 	assert.NoError(t, err)
 	assert.Equal(t, account.Href, authResult.GetAccount().Href)

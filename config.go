@@ -141,3 +141,8 @@ func loadCredentials(extraFileLocation string) (id string, secret string, err er
 	}
 	return
 }
+
+//GetJWTSigningKey returns the API Key Secret as a []byte to sign JWT tokens
+func (config ClientConfiguration) GetJWTSigningKey() []byte {
+	return []byte(config.APIKeySecret)
+}
