@@ -49,7 +49,7 @@ fmt.Println(account)
 
 See `web/example/example.go`
 
-Features:
+# Features
 
 * Cache with a sample local in-memory implementation
 * Almost 100% of the Stormpath API implemented
