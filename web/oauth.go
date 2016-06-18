@@ -7,7 +7,6 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"gopkg.in/dgrijalva/jwt-go.v2"
 )
 
 type oauthHandler struct {
@@ -84,20 +83,20 @@ func (h oauthHandler) handleOAuth2Error(w http.ResponseWriter, r *http.Request, 
 }
 
 func exchangeToken(account *stormpath.Account, application *stormpath.Application) (*stormpath.OAuthAccessTokenResult, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
+	claims := stormpath.GrantTypeStormpathTokenClaims{}
+	claims.IssuedAt = time.Now().Unix()
+	claims.Issuer = application.Href
+	claims.Subject = account.Href
+	claims.ExpiresAt = time.Now().Add(1 * time.Minute).Unix()
+	claims.Status = "AUTHENTICATED"
+	claims.Audience = stormpath.GetClient().ClientConfiguration.APIKeyID
 
-	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["iss"] = application.Href
-	token.Claims["sub"] = account.Href
-	token.Claims["exp"] = time.Now().Add(1 * time.Minute).Unix()
-	token.Claims["status"] = "AUTHENTICATED"
-	token.Claims["aud"] = stormpath.GetClient().ClientConfiguration.APIKeyID
-	token.Header["kid"] = stormpath.GetClient().ClientConfiguration.APIKeyID
+	jwtString := stormpath.JWT(
+		claims,
+		map[string]interface{}{
+			"kid": stormpath.GetClient().ClientConfiguration.APIKeyID,
+		},
+	)
 
-	tokenString, err := token.SignedString([]byte(stormpath.GetClient().ClientConfiguration.APIKeySecret))
-	if err != nil {
-		return nil, err
-	}
-
-	return stormpath.NewOAuthStormpathTokenAuthenticator(application).Authenticate(tokenString)
+	return stormpath.NewOAuthStormpathTokenAuthenticator(application).Authenticate(jwtString)
 }

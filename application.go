@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"time"
 
-	"gopkg.in/dgrijalva/jwt-go.v2"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -266,34 +265,30 @@ func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 
 //CreateIDSiteURL creates the IDSite URL for the application
 func (app *Application) CreateIDSiteURL(options IDSiteOptions) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-
 	nonce, _ := uuid.NewV4()
 
 	if options.Path == "" {
 		options.Path = "/"
 	}
 
-	token.Claims["jti"] = nonce.String()
-	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["iss"] = client.ClientConfiguration.APIKeyID
-	token.Claims["sub"] = app.Href
-	token.Claims["state"] = options.State
-	token.Claims["path"] = options.Path
-	token.Claims["cb_uri"] = options.CallbackURL
+	claims := SSOTokenClaims{}
+	claims.Id = nonce.String()
+	claims.IssuedAt = time.Now().Unix()
+	claims.Issuer = client.ClientConfiguration.APIKeyID
+	claims.Subject = app.Href
+	claims.State = options.State
+	claims.Path = options.Path
+	claims.CallbackURI = options.CallbackURL
 
-	tokenString, err := token.SignedString([]byte(client.ClientConfiguration.APIKeySecret))
-	if err != nil {
-		return "", err
-	}
+	jwtString := JWT(claims, map[string]interface{}{})
 
 	p, _ := url.Parse(app.Href)
 	ssoURL := p.Scheme + "://" + p.Host + "/sso"
 
 	if options.Logout {
-		ssoURL = ssoURL + "/logout" + "?jwtRequest=" + tokenString
+		ssoURL = ssoURL + "/logout" + "?jwtRequest=" + jwtString
 	} else {
-		ssoURL = ssoURL + "?jwtRequest=" + tokenString
+		ssoURL = ssoURL + "?jwtRequest=" + jwtString
 	}
 
 	return ssoURL, nil
@@ -311,32 +306,28 @@ func (app *Application) HandleCallback(URL string) (*CallbackResult, error) {
 
 	jwtResponse := cbURL.Query().Get("jwtResponse")
 
-	token, err := jwt.Parse(jwtResponse, func(token *jwt.Token) (interface{}, error) {
-		return []byte(client.ClientConfiguration.APIKeySecret), nil
-	})
-	if err != nil {
-		return nil, err
-	}
+	claims := &IDSiteAssertionTokenClaims{}
 
-	if token.Claims["aud"].(string) != client.ClientConfiguration.APIKeyID {
+	ParseJWT(jwtResponse, claims)
+
+	if claims.Audience != client.ClientConfiguration.APIKeyID {
 		return nil, errors.New("ID Site invalid aud")
 	}
 
-	if time.Now().Unix() > int64(token.Claims["exp"].(float64)) {
+	if time.Now().Unix() > claims.ExpiresAt {
 		return nil, errors.New("ID Site JWT has expired")
 	}
 
-	if token.Claims["sub"] != nil {
-		account, err := GetAccount(token.Claims["sub"].(string), MakeAccountCriteria())
+	if claims.Subject != "" {
+		account, err := GetAccount(claims.Subject, MakeAccountCriteria())
 		if err != nil {
 			return nil, err
 		}
 		result.Account = account
 	}
-	if token.Claims["state"] != nil {
-		result.State = token.Claims["state"].(string)
-	}
-	result.Status = token.Claims["status"].(string)
+
+	result.State = claims.State
+	result.Status = claims.Status
 
 	return result, nil
 }

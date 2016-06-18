@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dgrijalva/jwt-go.v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -267,21 +266,21 @@ func TestCreateIDSiteURL(t *testing.T) {
 	assert.NotEmpty(t, u.Query)
 
 	//Check Token
-	jwtRequest := u.Query().Get("jwtRequest")
+	jwtString := u.Query().Get("jwtRequest")
 
-	token, _ := jwt.Parse(jwtRequest, func(token *jwt.Token) (interface{}, error) {
-		return []byte(GetClient().ClientConfiguration.APIKeySecret), nil
-	})
+	claims := &SSOTokenClaims{}
+
+	token := ParseJWT(jwtString, claims)
 
 	assert.True(t, token.Valid)
 
-	assert.Equal(t, "http://localhost:8080", token.Claims["cb_uri"])
-	assert.Equal(t, "", token.Claims["state"])
-	assert.Equal(t, "/", token.Claims["path"])
-	assert.Equal(t, GetClient().ClientConfiguration.APIKeyID, token.Claims["iss"])
-	assert.Equal(t, application.Href, token.Claims["sub"])
-	assert.NotEmpty(t, token.Claims["jti"])
-	assert.NotEmpty(t, token.Claims["iat"])
+	assert.Equal(t, "http://localhost:8080", claims.CallbackURI)
+	assert.Equal(t, "", claims.State)
+	assert.Equal(t, "/", claims.Path)
+	assert.Equal(t, client.ClientConfiguration.APIKeyID, claims.Issuer)
+	assert.Equal(t, application.Href, claims.Subject)
+	assert.NotEmpty(t, claims.Id)
+	assert.NotEmpty(t, claims.IssuedAt)
 }
 
 func TestCreateIDSiteLogoutURL(t *testing.T) {
@@ -304,21 +303,21 @@ func TestCreateIDSiteLogoutURL(t *testing.T) {
 	assert.NotEmpty(t, u.Query)
 
 	//Check Token
-	jwtRequest := u.Query().Get("jwtRequest")
+	jwtString := u.Query().Get("jwtRequest")
 
-	token, _ := jwt.Parse(jwtRequest, func(token *jwt.Token) (interface{}, error) {
-		return []byte(GetClient().ClientConfiguration.APIKeySecret), nil
-	})
+	claims := &SSOTokenClaims{}
+
+	token := ParseJWT(jwtString, claims)
 
 	assert.True(t, token.Valid)
 
-	assert.Equal(t, "http://localhost:8080", token.Claims["cb_uri"])
-	assert.Equal(t, "", token.Claims["state"])
-	assert.Equal(t, "/", token.Claims["path"])
-	assert.Equal(t, GetClient().ClientConfiguration.APIKeyID, token.Claims["iss"])
-	assert.Equal(t, application.Href, token.Claims["sub"])
-	assert.NotEmpty(t, token.Claims["jti"])
-	assert.NotEmpty(t, token.Claims["iat"])
+	assert.Equal(t, "http://localhost:8080", claims.CallbackURI)
+	assert.Equal(t, "", claims.State)
+	assert.Equal(t, "/", claims.Path)
+	assert.Equal(t, client.ClientConfiguration.APIKeyID, claims.Issuer)
+	assert.Equal(t, application.Href, claims.Subject)
+	assert.NotEmpty(t, claims.Id)
+	assert.NotEmpty(t, claims.IssuedAt)
 }
 
 func TestGetApplicationDefaultAccountStoreMapping(t *testing.T) {
@@ -345,19 +344,22 @@ func TestGetOAuthTokenStormpathGrantType(t *testing.T) {
 
 	account := createTestAccount(application)
 
-	token := jwt.New(jwt.SigningMethodHS256)
+	claims := GrantTypeStormpathTokenClaims{}
+	claims.IssuedAt = time.Now().Unix()
+	claims.Issuer = application.Href
+	claims.Subject = account.Href
+	claims.ExpiresAt = time.Now().Add(1 * time.Minute).Unix()
+	claims.Status = "AUTHENTICATED"
+	claims.Audience = client.ClientConfiguration.APIKeyID
 
-	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["iss"] = application.Href
-	token.Claims["sub"] = account.Href
-	token.Claims["exp"] = time.Now().Add(1 * time.Minute).Unix()
-	token.Claims["status"] = "AUTHENTICATED"
-	token.Claims["aud"] = GetClient().ClientConfiguration.APIKeyID
-	token.Header["kid"] = GetClient().ClientConfiguration.APIKeyID
+	jwtString := JWT(
+		claims,
+		map[string]interface{}{
+			"kid": client.ClientConfiguration.APIKeyID,
+		},
+	)
 
-	tokenString, _ := token.SignedString([]byte(GetClient().ClientConfiguration.APIKeySecret))
-
-	oauthResponse, err := application.GetOAuthTokenStormpathGrantType(tokenString)
+	oauthResponse, err := application.GetOAuthTokenStormpathGrantType(jwtString)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, oauthResponse)

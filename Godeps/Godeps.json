@@ -111,9 +111,9 @@
 			"Rev": "d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03"
 		},
 		{
-			"ImportPath": "gopkg.in/dgrijalva/jwt-go.v2",
-			"Comment": "v2.7.0",
-			"Rev": "268038b363c7a8d7306b8e35bf77a1fde4b0c402"
+			"ImportPath": "gopkg.in/dgrijalva/jwt-go.v3",
+			"Comment": "v3.0.0",
+			"Rev": "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
