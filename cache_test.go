@@ -120,7 +120,8 @@ func TestNonCacheableResources(t *testing.T) {
 		&Accounts{},
 		&Groups{},
 		&Directories{},
-		&AccountStoreMappings{},
+		&ApplicationAccountStoreMappings{},
+		&OrganizationAccountStoreMappings{},
 	}
 	for _, resource := range resources {
 		c, ok := resource.(Cacheable)
@@ -136,7 +137,8 @@ func TestCacheableResources(t *testing.T) {
 		&Account{},
 		&Group{},
 		&Directory{},
-		&AccountStoreMapping{},
+		&ApplicationAccountStoreMapping{},
+		&OrganizationAccountStoreMapping{},
 		&Tenant{},
 		&CustomData{},
 	}

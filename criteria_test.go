@@ -173,15 +173,31 @@ func TestAPIKeyCriteria(t *testing.T) {
 	}
 }
 
-func TestAccountStoreMappingCriteria(t *testing.T) {
+func TestApplicationAccountStoreMappingCriteria(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
 		expected string
-		actual   AccountStoreMappingCriteria
+		actual   ApplicationAccountStoreMappingCriteria
 	}{
-		{"", MakeAccountStoreMappingCriteria()},
-		{"?expand=application", MakeAccountStoreMappingCriteria().WithApplication()},
+		{"", MakeApplicationAccountStoreMappingCriteria()},
+		{"?expand=application", MakeApplicationAccountStoreMappingCriteria().WithApplication()},
+	}
+
+	for _, c := range cases {
+		assert.Equal(t, c.expected, c.actual.ToQueryString())
+	}
+}
+
+func TestOrganizationAccountStoreMappingCriteria(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		expected string
+		actual   OrganizationAccountStoreMappingCriteria
+	}{
+		{"", MakeOrganizationAccountStoreMappingCriteria()},
+		{"?expand=organization", MakeOrganizationAccountStoreMappingCriteria().WithOrganization()},
 	}
 
 	for _, c := range cases {

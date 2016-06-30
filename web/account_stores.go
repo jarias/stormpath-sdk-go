@@ -23,7 +23,7 @@ func getApplicationAccountStores(application *stormpath.Application) []accountSt
 	accountStores := make([]accountStore, 0, 100)
 
 	//TODO iterate until len(mappings.Items) == 0
-	mappings, err := application.GetAccountStoreMappings(stormpath.MakeAccountStoreMappingsCriteria().Limit(100))
+	mappings, err := application.GetAccountStoreMappings(stormpath.MakeApplicationAccountStoreMappingsCriteria().Limit(100))
 	if err != nil {
 		stormpath.Logger.Printf("[ERROR] Error getting application's account store mappings: %s \n", err)
 		return accountStores
