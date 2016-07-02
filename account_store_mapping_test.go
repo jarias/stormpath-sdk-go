@@ -15,7 +15,7 @@ func TestAccountStoreMappingJsonMarshaling(t *testing.T) {
 
 	jsonData, _ := json.Marshal(accountStoreMapping)
 
-	assert.Equal(t, "{\"application\":{\"href\":\"http://appurl\"},\"accountStore\":{\"href\":\"http://storeUrl\"}}", string(jsonData))
+	assert.Equal(t, "{\"isDefaultAccountStore\":false,\"isDefaultGroupStore\":false,\"application\":{\"href\":\"http://appurl\"},\"accountStore\":{\"href\":\"http://storeUrl\"}}", string(jsonData))
 }
 
 func TestSaveAccountStoreMapping(t *testing.T) {

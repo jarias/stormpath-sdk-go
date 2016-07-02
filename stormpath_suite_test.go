@@ -89,10 +89,20 @@ func newTestAccount() *Account {
 	return NewAccount(email, "1234567z!A89", email, "givenName", "surname")
 }
 
+func newTestOrganization() *Organization {
+	return NewOrganization("go-sdk-org-"+randomName(), "go-sdk-org-"+randomName())
+}
+
 func createTestApplication() *Application {
 	application := newTestApplication()
 	tenant.CreateApplication(application)
 	return application
+}
+
+func createTestOrganization() *Organization {
+	organization := newTestOrganization()
+	tenant.CreateOrganization(organization)
+	return organization
 }
 
 func createTestAccount(application *Application) *Account {

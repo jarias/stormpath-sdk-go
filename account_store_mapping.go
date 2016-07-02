@@ -8,8 +8,8 @@ import "strings"
 type ApplicationAccountStoreMapping struct {
 	resource
 	ListIndex             *int         `json:"collectionResourceIndex,omitempty"`
-	IsDefaultAccountStore *bool        `json:"isDefaultAccountStore,omitempty"`
-	IsDefaultGroupStore   *bool        `json:"isDefaultGroupStore,omitempty"`
+	IsDefaultAccountStore bool         `json:"isDefaultAccountStore"`
+	IsDefaultGroupStore   bool         `json:"isDefaultGroupStore"`
 	Application           *Application `json:"application,omitempty"`
 	AccountStore          *resource    `json:"accountStore,omitempty"`
 }
@@ -17,8 +17,8 @@ type ApplicationAccountStoreMapping struct {
 type OrganizationAccountStoreMapping struct {
 	resource
 	ListIndex             *int          `json:"collectionResourceIndex,omitempty"`
-	IsDefaultAccountStore *bool         `json:"isDefaultAccountStore,omitempty"`
-	IsDefaultGroupStore   *bool         `json:"isDefaultGroupStore,omitempty"`
+	IsDefaultAccountStore bool          `json:"isDefaultAccountStore"`
+	IsDefaultGroupStore   bool          `json:"isDefaultGroupStore"`
 	Organization          *Organization `json:"organization,omitempty"`
 	AccountStore          *resource     `json:"accountStore,omitempty"`
 }
@@ -83,5 +83,17 @@ func (mapping *ApplicationAccountStoreMapping) IsAccountStoreGroup() bool {
 }
 
 func (mapping *ApplicationAccountStoreMapping) IsAccountStoreOrganization() bool {
+	return strings.Contains(mapping.AccountStore.Href, "/organizations/")
+}
+
+func (mapping *OrganizationAccountStoreMapping) IsAccountStoreDirectory() bool {
+	return strings.Contains(mapping.AccountStore.Href, "/directories/")
+}
+
+func (mapping *OrganizationAccountStoreMapping) IsAccountStoreGroup() bool {
+	return strings.Contains(mapping.AccountStore.Href, "/groups/")
+}
+
+func (mapping *OrganizationAccountStoreMapping) IsAccountStoreOrganization() bool {
 	return strings.Contains(mapping.AccountStore.Href, "/organizations/")
 }

@@ -110,7 +110,7 @@ func TestUpdateApplication(t *testing.T) {
 	assert.Equal(t, application.Name, updatedApplication.Name)
 }
 
-func TestRegisterAccount(t *testing.T) {
+func TestApplicationRegisterAccount(t *testing.T) {
 	t.Parallel()
 
 	application := createTestApplication()
@@ -326,14 +326,10 @@ func TestGetApplicationDefaultAccountStoreMapping(t *testing.T) {
 	application := createTestApplication()
 	defer application.Purge()
 
-	directory := createTestDirectory()
-	defer directory.Delete()
-
 	defaultMapping, err := application.GetDefaultAccountStoreMapping(MakeApplicationAccountStoreMappingCriteria())
 
 	assert.NoError(t, err)
 	assert.Equal(t, application.Href, defaultMapping.Application.Href)
-	assert.NotEmpty(t, directory.Href)
 }
 
 func TestGetOAuthTokenStormpathGrantType(t *testing.T) {
