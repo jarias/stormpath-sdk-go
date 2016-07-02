@@ -139,6 +139,30 @@ func TestApplicationCriteria(t *testing.T) {
 	}
 }
 
+func TestOrganizationCriteria(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		expected string
+		actual   OrganizationCriteria
+	}{
+		{"", MakeOrganizationCriteria()},
+		{"?name=test", MakeOrganizationCriteria().NameEq("test")},
+		{"?description=test", MakeOrganizationCriteria().DescriptionEq("test")},
+		{"?status=" + Enabled, MakeOrganizationCriteria().StatusEq(Enabled)},
+		{"?expand=customData", MakeOrganizationCriteria().WithCustomData()},
+		{"?expand=accounts" + defaultPage, MakeOrganizationCriteria().WithAccounts(DefaultPageRequest)},
+		{"?expand=tenant", MakeOrganizationCriteria().WithTenant()},
+		{"?expand=groups" + defaultPage, MakeOrganizationCriteria().WithGroups(DefaultPageRequest)},
+		{"?expand=defaultAccountStoreMapping", MakeOrganizationCriteria().WithDefaultAccountStoreMapping()},
+		{"?expand=defaultGroupStoreMapping", MakeOrganizationCriteria().WithDefaultGroupStoreMapping()},
+	}
+
+	for _, c := range cases {
+		assert.Equal(t, c.expected, c.actual.ToQueryString())
+	}
+}
+
 func TestGroupMembershipCriteria(t *testing.T) {
 	t.Parallel()
 
