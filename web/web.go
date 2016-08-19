@@ -101,7 +101,7 @@ func NewStormpathMiddleware(next http.Handler, publicPaths []string) *StormpathM
 
 func resolveAccountStores(application *stormpath.Application) {
 	//see https://github.com/stormpath/stormpath-framework-spec/blob/master/configuration.md
-	mappings, err := application.GetAccountStoreMappings(stormpath.MakeAccountStoreMappingsCriteria())
+	mappings, err := application.GetAccountStoreMappings(stormpath.MakeApplicationAccountStoreMappingsCriteria())
 	if err != nil || len(mappings.Items) == 0 {
 		panic(fmt.Errorf("No account stores are mapped to the specified application. Account stores are required for login and registration. \n"))
 	}

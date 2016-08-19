@@ -11,11 +11,11 @@ import (
 func TestAccountStoreMappingJsonMarshaling(t *testing.T) {
 	t.Parallel()
 
-	accountStoreMapping := NewAccountStoreMapping("http://appurl", "http://storeUrl")
+	accountStoreMapping := NewApplicationAccountStoreMapping("http://appurl", "http://storeUrl")
 
 	jsonData, _ := json.Marshal(accountStoreMapping)
 
-	assert.Equal(t, "{\"application\":{\"href\":\"http://appurl\"},\"accountStore\":{\"href\":\"http://storeUrl\"}}", string(jsonData))
+	assert.Equal(t, "{\"isDefaultAccountStore\":false,\"isDefaultGroupStore\":false,\"application\":{\"href\":\"http://appurl\"},\"accountStore\":{\"href\":\"http://storeUrl\"}}", string(jsonData))
 }
 
 func TestSaveAccountStoreMapping(t *testing.T) {
@@ -27,7 +27,7 @@ func TestSaveAccountStoreMapping(t *testing.T) {
 	directory := createTestDirectory()
 	defer directory.Delete()
 
-	asm := NewAccountStoreMapping(application.Href, directory.Href)
+	asm := NewApplicationAccountStoreMapping(application.Href, directory.Href)
 	err := asm.Save()
 
 	assert.NoError(t, err)
@@ -40,7 +40,7 @@ func TestSaveAccountStoreMappingApplicationNoExists(t *testing.T) {
 	directory := createTestDirectory()
 	defer directory.Delete()
 
-	asm := NewAccountStoreMapping(GetClient().ClientConfiguration.BaseURL+"applications/XXX", directory.Href)
+	asm := NewApplicationAccountStoreMapping(GetClient().ClientConfiguration.BaseURL+"applications/XXX", directory.Href)
 	err := asm.Save()
 
 	assert.Error(t, err)
@@ -54,7 +54,7 @@ func TestSaveAccountStoreMappingDirectoryNoExists(t *testing.T) {
 	application := createTestApplication()
 	defer application.Purge()
 
-	asm := NewAccountStoreMapping(application.Href, GetClient().ClientConfiguration.BaseURL+"directories/XXX")
+	asm := NewApplicationAccountStoreMapping(application.Href, GetClient().ClientConfiguration.BaseURL+"directories/XXX")
 	err := asm.Save()
 
 	assert.Error(t, err)
@@ -74,7 +74,7 @@ func TestIsAccountStoreDirectory(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		accountStoreMapping := NewAccountStoreMapping("", c.url)
+		accountStoreMapping := NewApplicationAccountStoreMapping("", c.url)
 		assert.Equal(t, accountStoreMapping.IsAccountStoreDirectory(), c.isDirectory)
 	}
 }

@@ -16,17 +16,17 @@ import (
 //See: http://docs.stormpath.com/rest/product-guide/#applications
 type Application struct {
 	accountStoreResource
-	Name                       string                `json:"name,omitempty"`
-	Description                string                `json:"description,omitempty"`
-	Status                     string                `json:"status,omitempty"`
-	Groups                     *Groups               `json:"groups,omitempty"`
-	Tenant                     *Tenant               `json:"tenant,omitempty"`
-	PasswordResetTokens        *resource             `json:"passwordResetTokens,omitempty"`
-	AccountStoreMappings       *AccountStoreMappings `json:"accountStoreMappings,omitempty"`
-	DefaultAccountStoreMapping *AccountStoreMapping  `json:"defaultAccountStoreMapping,omitempty"`
-	DefaultGroupStoreMapping   *AccountStoreMapping  `json:"defaultGroupStoreMapping,omitempty"`
-	OAuthPolicy                *OAuthPolicy          `json:"oAuthPolicy,omitempty"`
-	APIKeys                    *APIKeys              `json:"apiKeys,omitempty"`
+	Name                       string                           `json:"name,omitempty"`
+	Description                string                           `json:"description,omitempty"`
+	Status                     string                           `json:"status,omitempty"`
+	Groups                     *Groups                          `json:"groups,omitempty"`
+	Tenant                     *Tenant                          `json:"tenant,omitempty"`
+	PasswordResetTokens        *resource                        `json:"passwordResetTokens,omitempty"`
+	AccountStoreMappings       *ApplicationAccountStoreMappings `json:"accountStoreMappings,omitempty"`
+	DefaultAccountStoreMapping *ApplicationAccountStoreMapping  `json:"defaultAccountStoreMapping,omitempty"`
+	DefaultGroupStoreMapping   *ApplicationAccountStoreMapping  `json:"defaultGroupStoreMapping,omitempty"`
+	OAuthPolicy                *OAuthPolicy                     `json:"oAuthPolicy,omitempty"`
+	APIKeys                    *APIKeys                         `json:"apiKeys,omitempty"`
 }
 
 //Applications represents a paged result or applications
@@ -81,7 +81,7 @@ func (app *Application) Update() error {
 //
 //See: http://docs.stormpath.com/rest/product-guide/#delete-an-application
 func (app *Application) Purge() error {
-	accountStoreMappings, err := app.GetAccountStoreMappings(MakeAccountStoreMappingCriteria().Offset(0).Limit(25))
+	accountStoreMappings, err := app.GetAccountStoreMappings(MakeApplicationAccountStoreMappingCriteria().Offset(0).Limit(25))
 	if err != nil {
 		return err
 	}
@@ -95,8 +95,8 @@ func (app *Application) Purge() error {
 //GetAccountStoreMappings returns all the applications account store mappings
 //
 //See: http://docs.stormpath.com/rest/product-guide/#application-account-store-mappings
-func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStoreMappings, error) {
-	accountStoreMappings := &AccountStoreMappings{}
+func (app *Application) GetAccountStoreMappings(criteria Criteria) (*ApplicationAccountStoreMappings, error) {
+	accountStoreMappings := &ApplicationAccountStoreMappings{}
 
 	err := client.get(
 		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.ToQueryString()),
@@ -110,7 +110,7 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*AccountStor
 	return accountStoreMappings, nil
 }
 
-func (app *Application) GetDefaultAccountStoreMapping(criteria Criteria) (*AccountStoreMapping, error) {
+func (app *Application) GetDefaultAccountStoreMapping(criteria Criteria) (*ApplicationAccountStoreMapping, error) {
 	err := client.get(
 		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.ToQueryString()),
 		app.DefaultAccountStoreMapping,
@@ -153,12 +153,17 @@ func (app *Application) RegisterSocialAccount(socialAccount *SocialAccount) (*Ac
 //AuthenticateAccount authenticates an account against the application
 //
 //See: http://docs.stormpath.com/rest/product-guide/#authenticate-an-account
-func (app *Application) AuthenticateAccount(username string, password string) (*Account, error) {
+func (app *Application) AuthenticateAccount(username string, password string, accountStoreHref string) (*Account, error) {
 	accountRef := &accountRef{Account: &Account{}}
 
-	loginAttemptPayload := make(map[string]string)
+	loginAttemptPayload := make(map[string]interface{})
 	loginAttemptPayload["type"] = "basic"
 	loginAttemptPayload["value"] = base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+	if accountStoreHref != "" {
+		loginAttemptPayload["accountStore"] = map[string]string{
+			"href": accountStoreHref,
+		}
+	}
 
 	err := client.post(buildAbsoluteURL(app.Href, "loginAttempts"), loginAttemptPayload, accountRef)
 
