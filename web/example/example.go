@@ -57,30 +57,35 @@ var helloTemplate = `
 func main() {
 	mux := http.NewServeMux()
 
-	stormpath := stormpathweb.NewStormpathMiddleware(mux, []string{"/"})
+	stormpathMiddleware := stormpathweb.NewStormpathMiddleware(mux)
 
-	stormpath.PreLoginHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.PreLoginHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
 		fmt.Println("--> Pre Login")
 		return nil
 	})
 
-	stormpath.PostLoginHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.PostLoginHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
 		fmt.Println("--> Post Login")
 		return nil
 	})
 
-	stormpath.PreRegisterHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.PreRegisterHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
 		fmt.Println("--> Pre Register")
 		return nil
 	})
 
-	stormpath.PostRegisterHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.PostRegisterHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
 		fmt.Println("--> Post Register")
 		return nil
 	})
 
-	mux.Handle("/hello", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		account := stormpath.GetAuthenticatedAccount(w, r)
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+
+		account := stormpathMiddleware.GetAuthenticatedAccount(w, r)
 
 		w.Header().Add("Content-Type", "text/html")
 
@@ -106,5 +111,5 @@ func main() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 
-	log.Fatal(http.ListenAndServe(":8080", stormpath))
+	log.Fatal(http.ListenAndServe(":8080", stormpathMiddleware))
 }
