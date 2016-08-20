@@ -5,10 +5,12 @@ import "net/url"
 //Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
 type Tenant struct {
 	customDataAwareResource
-	Name         string        `json:"name,omitempty"`
-	Key          string        `json:"key,omitempty"`
-	Applications *Applications `json:"applications,omitempty"`
-	Directories  *Directories  `json:"directories,omitempty"`
+	Name          string         `json:"name,omitempty"`
+	Key           string         `json:"key,omitempty"`
+	Applications  *Applications  `json:"applications,omitempty"`
+	Directories   *Directories   `json:"directories,omitempty"`
+	Groups        *Groups        `json:"groups,omitempty"`
+	Organizations *Organizations `json:"organizations,omitempty"`
 }
 
 //CurrentTenant returns the current tenant see http://docs.stormpath.com/rest/product-guide/#retrieve-the-current-tenant
@@ -35,6 +37,11 @@ func (tenant *Tenant) CreateApplication(app *Application) error {
 //See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
 func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 	return client.post(buildRelativeURL("directories"), dir, dir)
+}
+
+//CreateOrganization creates new organization for the given tenant
+func (tenant *Tenant) CreateOrganization(org *Organization) error {
+	return client.post(buildRelativeURL("organizations"), org, org)
 }
 
 //GetApplications returns all the applications for the given tenant

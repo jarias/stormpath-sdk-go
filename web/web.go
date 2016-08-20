@@ -25,8 +25,7 @@ var templates = make(map[string]*template.Template, 3)
 //StormpathMiddleware the base http.Handler as the base Stormpath web integration
 type StormpathMiddleware struct {
 	//User configured handler and public paths define by user
-	Next        http.Handler
-	PublicPaths []string
+	Next http.Handler
 	//Configured application
 	Application *stormpath.Application
 	//Integration handlers
@@ -62,7 +61,7 @@ func EmptyUserHandler() UserHandler {
 }
 
 //NewStormpathMiddleware initialize the StormpathMiddleware with the actual user application as a http.Handler
-func NewStormpathMiddleware(next http.Handler, publicPaths []string) *StormpathMiddleware {
+func NewStormpathMiddleware(next http.Handler) *StormpathMiddleware {
 	loadConfig()
 	clientConfig, err := stormpath.LoadConfiguration()
 
@@ -77,7 +76,6 @@ func NewStormpathMiddleware(next http.Handler, publicPaths []string) *StormpathM
 
 	h := &StormpathMiddleware{
 		Next:                  next,
-		PublicPaths:           publicPaths,
 		Application:           application,
 		LogoutHandler:         logoutHandler{application},
 		ForgotPasswordHandler: forgotPassordHandler{application},
@@ -101,7 +99,7 @@ func NewStormpathMiddleware(next http.Handler, publicPaths []string) *StormpathM
 
 func resolveAccountStores(application *stormpath.Application) {
 	//see https://github.com/stormpath/stormpath-framework-spec/blob/master/configuration.md
-	mappings, err := application.GetAccountStoreMappings(stormpath.MakeAccountStoreMappingsCriteria())
+	mappings, err := application.GetAccountStoreMappings(stormpath.MakeApplicationAccountStoreMappingsCriteria())
 	if err != nil || len(mappings.Items) == 0 {
 		panic(fmt.Errorf("No account stores are mapped to the specified application. Account stores are required for login and registration. \n"))
 	}
@@ -150,15 +148,16 @@ func resolveApplication() *stormpath.Application {
 		panic(fmt.Errorf("Could not automatically resolve a Stormpath Application. Please specify your Stormpath Application in your configuration \n"))
 	}
 
-	var application *stormpath.Application
+	var application stormpath.Application
 
 	for _, app := range applications.Items {
 		if app.Name != "Stormpath" {
-			application = &app
+			application = app
+			break
 		}
 	}
 
-	return application
+	return &application
 }
 
 func (h *StormpathMiddleware) configureFilterChainHandler() {
@@ -247,19 +246,14 @@ func (h *StormpathMiddleware) configureFilterChainHandler() {
 			}
 		}
 
-		//If authenticated and not an integration handler pass to the user app handler
-		if authenticated || contains(h.PublicPaths, r.URL.Path) {
-			h.Next.ServeHTTP(w, r)
-			return
-		}
-
-		unauthorizedRequest(w, r, ctx)
+		h.Next.ServeHTTP(w, r)
 		return
 	})
 }
 
 func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	resolvedContentType := h.resolveContentType(r)
+	fmt.Println(resolvedContentType)
 	if resolvedContentType == "" {
 		h.Next.ServeHTTP(w, r)
 		return

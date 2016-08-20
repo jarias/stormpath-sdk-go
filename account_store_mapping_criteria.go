@@ -2,22 +2,39 @@ package stormpath
 
 import "net/url"
 
-type AccountStoreMappingCriteria struct {
+type ApplicationAccountStoreMappingCriteria struct {
 	baseCriteria
 }
 
-func MakeAccountStoreMappingCriteria() AccountStoreMappingCriteria {
-	return AccountStoreMappingCriteria{baseCriteria{filter: url.Values{}}}
+type OrganizationAccountStoreMappingCriteria struct {
+	baseCriteria
 }
 
-func MakeAccountStoreMappingsCriteria() AccountStoreMappingCriteria {
-	return AccountStoreMappingCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
+func MakeApplicationAccountStoreMappingCriteria() ApplicationAccountStoreMappingCriteria {
+	return ApplicationAccountStoreMappingCriteria{baseCriteria{filter: url.Values{}}}
+}
+
+func MakeApplicationAccountStoreMappingsCriteria() ApplicationAccountStoreMappingCriteria {
+	return ApplicationAccountStoreMappingCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
+}
+
+func MakeOrganizationAccountStoreMappingCriteria() OrganizationAccountStoreMappingCriteria {
+	return OrganizationAccountStoreMappingCriteria{baseCriteria{filter: url.Values{}}}
+}
+
+func MakeOrganizationAccountStoreMappingsCriteria() OrganizationAccountStoreMappingCriteria {
+	return OrganizationAccountStoreMappingCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
 //Expansion related functions
 
-func (c AccountStoreMappingCriteria) WithApplication() AccountStoreMappingCriteria {
+func (c ApplicationAccountStoreMappingCriteria) WithApplication() ApplicationAccountStoreMappingCriteria {
 	c.expandedAttributes = append(c.expandedAttributes, "application")
+	return c
+}
+
+func (c OrganizationAccountStoreMappingCriteria) WithOrganization() OrganizationAccountStoreMappingCriteria {
+	c.expandedAttributes = append(c.expandedAttributes, "organization")
 	return c
 }
 

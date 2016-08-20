@@ -24,8 +24,11 @@ func newErrorModel(spError stormpath.Error) errorModel {
 }
 
 func unauthorizedRequest(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+	application := ctx.Value(ApplicationKey).(*stormpath.Application)
+
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("WWW-Authenticate", "Bearer realm=\""+application.Name+"\"")
 
 	contentType := ctx.Value(ResolvedContentType)
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
 	"time"
 
 	"github.com/spf13/viper"
@@ -52,22 +51,7 @@ type ClientConfiguration struct {
 
 //LoadConfiguration loads the configuration from the default locations
 func LoadConfiguration() (ClientConfiguration, error) {
-	c := ClientConfiguration{
-		APIKeyFile:           "",
-		APIKeyID:             "",
-		APIKeySecret:         "",
-		CacheManagerEnabled:  true,
-		CacheTTI:             300 * time.Second,
-		CacheTTL:             300 * time.Second,
-		BaseURL:              "https://api.stormpath.com/v1/",
-		ConnectionTimeout:    30,
-		AuthenticationScheme: "SAUTHC1",
-		ProxyHost:            "",
-		ProxyPort:            0,
-		ProxyUsername:        "",
-		ProxyPassword:        "",
-	}
-
+	c := newDefaultClientConfiguration()
 	v := viper.New()
 
 	v.SetConfigType("yaml")
@@ -119,6 +103,15 @@ func LoadConfiguration() (ClientConfiguration, error) {
 	return c, nil
 }
 
+//LoadConfigurationWithCreds loads the configuration from the default localtions but with custom Stormpath credentials
+func LoadConfigurationWithCreds(key string, secret string) ClientConfiguration {
+	c := newDefaultClientConfiguration()
+	c.APIKeyID = key
+	c.APIKeySecret = secret
+
+	return c
+}
+
 func loadCredentials(extraFileLocation string) (id string, secret string, err error) {
 	id = os.Getenv("STORMPATH_API_KEY_ID")
 	secret = os.Getenv("STORMPATH_API_KEY_SECRET")
@@ -145,4 +138,22 @@ func loadCredentials(extraFileLocation string) (id string, secret string, err er
 //GetJWTSigningKey returns the API Key Secret as a []byte to sign JWT tokens
 func (config ClientConfiguration) GetJWTSigningKey() []byte {
 	return []byte(config.APIKeySecret)
+}
+
+func newDefaultClientConfiguration() (c ClientConfiguration) {
+	return ClientConfiguration{
+		APIKeyFile:           "",
+		APIKeyID:             "",
+		APIKeySecret:         "",
+		CacheManagerEnabled:  true,
+		CacheTTI:             300 * time.Second,
+		CacheTTL:             300 * time.Second,
+		BaseURL:              "https://api.stormpath.com/v1/",
+		ConnectionTimeout:    30,
+		AuthenticationScheme: "SAUTHC1",
+		ProxyHost:            "",
+		ProxyPort:            0,
+		ProxyUsername:        "",
+		ProxyPassword:        "",
+	}
 }
