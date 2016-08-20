@@ -253,6 +253,7 @@ func (h *StormpathMiddleware) configureFilterChainHandler() {
 
 func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	resolvedContentType := h.resolveContentType(r)
+	fmt.Println(resolvedContentType)
 	if resolvedContentType == "" {
 		h.Next.ServeHTTP(w, r)
 		return

@@ -62,6 +62,11 @@ func GetTestServer() (*httptest.Server, string) {
 	stormpathMiddleware := NewStormpathMiddleware(mux)
 
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+
 		account := stormpathMiddleware.GetAuthenticatedAccount(w, r)
 
 		w.Header().Add("Content-Type", "text/html")
