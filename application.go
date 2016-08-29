@@ -339,34 +339,37 @@ func (app *Application) HandleCallback(URL string) (*CallbackResult, error) {
 
 //GetOAuthToken creates a OAuth2 token response for a given user credentials
 func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
-	response := &OAuthResponse{}
-
 	values := url.Values{
 		"grant_type": {"password"},
 		"username":   {username},
 		"password":   {password},
 	}
 
-	err := client.postURLEncodedForm(
-		buildAbsoluteURL(app.Href, "oauth/token"),
-		values.Encode(),
-		response,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return app.getOAuthTokenCommon(values)
 }
 
 func (app *Application) GetOAuthTokenStormpathGrantType(token string) (*OAuthResponse, error) {
-	response := &OAuthResponse{}
-
 	values := url.Values{
 		"grant_type": {"stormpath_token"},
 		"token":      {token},
 	}
+
+	return app.getOAuthTokenCommon(values)
+}
+
+//GetOAuthTokenSocialGrantType creates a OAuth2 token response for a given social provider token
+func (app *Application) GetOAuthTokenSocialGrantType(providerID string, token string) (*OAuthResponse, error) {
+	values := url.Values{
+		"grant_type":  {"stormpath_social"},
+		"providerId":  {providerID},
+		"accessToken": {token},
+	}
+
+	return app.getOAuthTokenCommon(values)
+}
+
+func (app *Application) getOAuthTokenCommon(values url.Values) (*OAuthResponse, error) {
+	response := &OAuthResponse{}
 
 	err := client.postURLEncodedForm(
 		buildAbsoluteURL(app.Href, "oauth/token"),
