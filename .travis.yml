@@ -1,10 +1,14 @@
 language: go
+
 go:
-- 1.6
+ - 1.6
+ - 1.7
+
 install:
-- go get golang.org/x/tools/cmd/cover
-- go get github.com/stretchr/testify/assert
-- go get ./...
+  - curl https://glide.sh/get | sh
+  - go get golang.org/x/tools/cmd/cover
+  - go get ./...
+  - glide install
 script:
   - go test . -coverprofile=coverage-core.txt -covermode=atomic
   - go test ./web -coverprofile=coverage-web.txt -covermode=atomic -coverpkg=github.com/jarias/stormpath-sdk-go,github.com/jarias/stormpath-sdk-go/web
