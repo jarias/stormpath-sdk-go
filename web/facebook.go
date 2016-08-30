@@ -4,14 +4,13 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type facebookCallbackHandler struct {
 	defaultSocialHandler
 }
 
-func (h facebookCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h facebookCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		accessToken := r.URL.Query().Get("accessToken")
 

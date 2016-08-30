@@ -2,6 +2,7 @@ package stormpathweb
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -291,4 +292,67 @@ func getConfiguredFormFieldNames(formName string, v *viper.Viper) []string {
 		}
 	}
 	return fieldOrder
+}
+
+func resolveAccountStores(application *stormpath.Application) {
+	//see https://github.com/stormpath/stormpath-framework-spec/blob/master/configuration.md
+	mappings, err := application.GetAccountStoreMappings(stormpath.MakeApplicationAccountStoreMappingsCriteria())
+	if err != nil || len(mappings.Items) == 0 {
+		panic(fmt.Errorf("No account stores are mapped to the specified application. Account stores are required for login and registration. \n"))
+	}
+
+	if application.DefaultAccountStoreMapping == nil && Config.RegisterEnabled {
+		panic(fmt.Errorf("No default account store is mapped to the specified application. A default account store is required for registration. \n"))
+	}
+}
+
+func resolveApplication() *stormpath.Application {
+	//see https://github.com/stormpath/stormpath-framework-spec/blob/master/configuration.md
+	applicationHref := Config.ApplicationHref
+	applicationName := Config.ApplicationName
+
+	tenant, err := stormpath.CurrentTenant()
+	if err != nil {
+		panic(fmt.Errorf("Fatal couldn't get current tenant: %s \n", err))
+	}
+
+	if applicationHref != "" {
+		if !strings.Contains(applicationHref, "/applications/") {
+			panic(fmt.Errorf("(%s) is not a valid Stormpath Application href \n", applicationHref))
+		}
+
+		application, err := stormpath.GetApplication(applicationHref, stormpath.MakeApplicationCriteria().WithDefaultAccountStoreMapping())
+		if err != nil {
+			panic(fmt.Errorf("The provided application could not be found. The provided application href was: %s \n", applicationHref))
+		}
+		return application
+	}
+
+	if applicationName != "" {
+		applications, err := tenant.GetApplications(stormpath.MakeApplicationsCriteria().NameEq(applicationName).WithDefaultAccountStoreMapping())
+		if err != nil || len(applications.Items) == 0 {
+			panic(fmt.Errorf("The provided application could not be found. The provided application name was: %s \n", applicationName))
+		}
+
+		return &applications.Items[0]
+	}
+
+	//Get all apps if size > 1 && <= 2 return the one that's not name "Stormpath" else error
+
+	applications, err := tenant.GetApplications(stormpath.MakeApplicationsCriteria().WithDefaultAccountStoreMapping())
+
+	if len(applications.Items) > 2 || len(applications.Items) == 1 {
+		panic(fmt.Errorf("Could not automatically resolve a Stormpath Application. Please specify your Stormpath Application in your configuration \n"))
+	}
+
+	var application stormpath.Application
+
+	for _, app := range applications.Items {
+		if app.Name != "Stormpath" {
+			application = app
+			break
+		}
+	}
+
+	return &application
 }

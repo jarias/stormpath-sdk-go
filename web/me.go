@@ -4,23 +4,22 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type meHandler struct {
+	Application *stormpath.Application
 }
 
-func (h meHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h meHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
-		if ctx, ok := isAuthenticated(w, r, ctx); ok {
+		if ctx.Account != nil {
 			w.Header().Set("Cache-Control", "no-store, no-cache")
 			w.Header().Set("Pragma", "no-cache")
 
-			account := expandAccountAttributes(ctx.Value(AccountKey).(*stormpath.Account))
-			respondJSON(w, accountModel(account), http.StatusOK)
+			respondJSON(w, accountModel(ctx.Account), http.StatusOK)
 			return
 		}
-		unauthorizedRequest(w, r, ctx)
+		unauthorizedRequest(w, r, ctx, h.Application)
 		return
 	}
 

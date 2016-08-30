@@ -4,17 +4,16 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type registerHandler struct {
-	Parent      *StormpathMiddleware
-	Application *stormpath.Application
-	Form        form
+	PreRegisterHandler  UserHandler
+	PostRegisterHandler UserHandler
+	Application         *stormpath.Application
 }
 
-func (h registerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	if _, ok := isAuthenticated(w, r, ctx); ok {
+func (h registerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	if ctx.Account != nil {
 		http.Redirect(w, r, Config.LoginNextURI, http.StatusFound)
 		return
 	}
@@ -46,11 +45,11 @@ func (h registerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx c
 	methodNotAllowed(w, r, ctx)
 }
 
-func (h registerHandler) doGET(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	contentType := ctx.Value(ResolvedContentType)
+func (h registerHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	contentType := ctx.ContentType
 
 	model := map[string]interface{}{
-		"form": h.Form,
+		"form": Config.RegisterForm,
 	}
 
 	if contentType == stormpath.ApplicationJSON {
@@ -60,21 +59,21 @@ func (h registerHandler) doGET(w http.ResponseWriter, r *http.Request, ctx conte
 	}
 	if contentType == stormpath.TextHTML {
 		model["loginURI"] = Config.LoginURI
-		model["postedData"] = ctx.Value("postedData")
-		model["error"] = ctx.Value("error")
+		model["postedData"] = ctx.PostedData
+		model["error"] = ctx.Error
 
 		respondHTML(w, model, Config.RegisterView)
 	}
 }
 
-func (h registerHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	contentType := ctx.Value(ResolvedContentType)
+func (h registerHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	contentType := ctx.ContentType
 
 	postedData, _ := getPostedData(r)
 
-	err := validateForm(h.Form, postedData)
+	err := validateForm(Config.RegisterForm, postedData)
 	if err != nil {
-		h.handlePostError(w, r, ctx, err, postedData)
+		handleError(w, r, ctx.withError(postedData, err), h.doGET)
 		return
 	}
 
@@ -93,9 +92,9 @@ func (h registerHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx cont
 	}
 
 	//TODO custom data
-	if h.Parent.PreRegisterHandler != nil {
-		pre := h.Parent.PreRegisterHandler(w, r, context.WithValue(ctx, AccountKey, account))
-		if pre != nil {
+	if h.PreRegisterHandler != nil {
+		pre := h.PreRegisterHandler(w, r, account)
+		if !pre {
 			//User halted so we return
 			return
 		}
@@ -103,13 +102,13 @@ func (h registerHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx cont
 
 	err = h.Application.RegisterAccount(account)
 	if err != nil {
-		h.handlePostError(w, r, ctx, err, postedData)
+		handleError(w, r, ctx.withError(postedData, err), h.doGET)
 		return
 	}
 
-	if h.Parent.PostRegisterHandler != nil {
-		post := h.Parent.PostRegisterHandler(w, r, context.WithValue(ctx, AccountKey, account))
-		if post != nil {
+	if h.PostRegisterHandler != nil {
+		post := h.PostRegisterHandler(w, r, account)
+		if !post {
 			//user halted so we return
 			return
 		}
@@ -126,7 +125,7 @@ func (h registerHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx cont
 		if Config.RegisterAutoLoginEnabled {
 			err := saveAuthenticationResult(w, r, transientAuthenticationResult(account), h.Application)
 			if err != nil {
-				h.handlePostError(w, r, ctx, err, postedData)
+				handleError(w, r, ctx.withError(postedData, err), h.doGET)
 				return
 			}
 		}
@@ -137,20 +136,4 @@ func (h registerHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx cont
 		return
 	}
 	http.Redirect(w, r, Config.RegisterNextURI, http.StatusFound)
-}
-
-func (h registerHandler) handlePostError(w http.ResponseWriter, r *http.Request, ctx context.Context, err error, postedData map[string]string) {
-	contentType := ctx.Value(ResolvedContentType)
-
-	if contentType == stormpath.TextHTML {
-		//Sanitize postedData
-		postedData["password"] = ""
-		postedData["confirmPassword"] = ""
-
-		h.doGET(w, r, contextWithError(ctx, err, postedData))
-		return
-	}
-	if contentType == stormpath.ApplicationJSON {
-		badRequest(w, r, err)
-	}
 }

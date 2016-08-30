@@ -4,14 +4,13 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type logoutHandler struct {
 	Application *stormpath.Application
 }
 
-func (h logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if Config.IDSiteEnabled {
 		options := stormpath.IDSiteOptions{
 			CallbackURL: baseURL(r) + Config.CallbackURI,
@@ -27,17 +26,19 @@ func (h logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx con
 	}
 
 	if r.Method == http.MethodPost {
-		if _, ok := isAuthenticated(w, r, ctx); ok {
+		contentType := ctx.ContentType
+
+		if ctx.Account != nil {
 			clearAuthentication(w, r, h.Application)
 
-			if ctx.Value(ResolvedContentType) == stormpath.TextHTML {
+			if contentType == stormpath.TextHTML {
 				http.Redirect(w, r, Config.LogoutNextURI, http.StatusFound)
 				return
 			}
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if ctx.Value(ResolvedContentType) == stormpath.TextHTML {
+		if contentType == stormpath.TextHTML {
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}

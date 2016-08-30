@@ -4,15 +4,13 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type callbackHandler struct {
-	Parent      *StormpathMiddleware
 	Application *stormpath.Application
 }
 
-func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		authenticationResult, err := stormpath.NewStormpathAssertionAuthenticator(h.Application).Authenticate(r.URL.Query().Get("jwtResponse"))
 		if err != nil {

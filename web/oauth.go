@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/jarias/stormpath-sdk-go"
 )
 
@@ -13,7 +11,7 @@ type oauthHandler struct {
 	Application *stormpath.Application
 }
 
-func (h oauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h oauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodPost {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")

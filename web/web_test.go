@@ -59,7 +59,7 @@ var mainTemplate = `
 func GetTestServer() (*httptest.Server, string) {
 	mux := http.NewServeMux()
 
-	stormpathMiddleware := NewStormpathMiddleware(mux)
+	stormpathMiddleware := NewStormpathMiddleware(mux, nil)
 
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {

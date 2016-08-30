@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 const githubAccessTokenURL = "https://github.com/login/oauth/access_token"
@@ -19,14 +18,13 @@ type githubCallbackHandler struct {
 	defaultSocialHandler
 }
 
-func (h githubCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h githubCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		code := r.URL.Query().Get("code")
 
 		accessToken, err := h.exchangeCode(code)
 		if err != nil {
-			context.WithValue(ctx, "error", buildErrorModel(err))
-			h.LoginHandler.doGET(w, r, ctx)
+			h.LoginHandler.doGET(w, r, ctx.withError(nil, err))
 		}
 
 		socialAccount := &stormpath.SocialAccount{

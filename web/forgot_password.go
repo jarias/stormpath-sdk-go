@@ -5,15 +5,14 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
-type forgotPassordHandler struct {
+type forgotPasswordHandler struct {
 	Application *stormpath.Application
 }
 
-func (h forgotPassordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	if _, ok := isAuthenticated(w, r, ctx); ok {
+func (h forgotPasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	if ctx.Account != nil {
 		http.Redirect(w, r, Config.LoginNextURI, http.StatusFound)
 		return
 	}
@@ -38,7 +37,7 @@ func (h forgotPassordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	//No GET for application/json
-	if r.Method == http.MethodGet && ctx.Value(ResolvedContentType) == stormpath.TextHTML {
+	if r.Method == http.MethodGet && ctx.ContentType == stormpath.TextHTML {
 		h.doGET(w, r, ctx)
 		return
 	}
@@ -46,23 +45,23 @@ func (h forgotPassordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, 
 	methodNotAllowed(w, r, ctx)
 }
 
-func (h forgotPassordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h forgotPasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	model := map[string]interface{}{
 		"loginURI": Config.LoginURI,
 		"status":   resolveForgotPasswordStatus(r.URL.Query().Get("status")),
-		"error":    ctx.Value("error"),
+		"error":    ctx.Error,
 	}
 
 	respondHTML(w, model, Config.ForgotPasswordView)
 }
 
-func (h forgotPassordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	contentType := ctx.Value(ResolvedContentType)
+func (h forgotPasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	contentType := ctx.ContentType
 
 	data, _ := getPostedData(r)
 
 	if data["email"] == "" {
-		h.handlePostError(w, r, ctx, fmt.Errorf("email is required"))
+		handleError(w, r, ctx.withError(nil, fmt.Errorf("email is required")), h.doGET)
 		return
 	}
 
@@ -76,18 +75,6 @@ func (h forgotPassordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx
 	if contentType == stormpath.TextHTML {
 		http.Redirect(w, r, Config.ForgotPasswordNextURI, http.StatusFound)
 		return
-	}
-}
-
-func (h forgotPassordHandler) handlePostError(w http.ResponseWriter, r *http.Request, ctx context.Context, err error) {
-	contentType := ctx.Value(ResolvedContentType)
-
-	if contentType == stormpath.TextHTML {
-		h.doGET(w, r, context.WithValue(ctx, "error", buildErrorModel(err)))
-		return
-	}
-	if contentType == stormpath.ApplicationJSON {
-		badRequest(w, r, err)
 	}
 }
 

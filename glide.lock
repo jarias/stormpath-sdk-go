@@ -1,5 +1,5 @@
-hash: 835c4cd5a0f5f71472a58bd0d9e43c29e25057718958da27b23ccd70ca537baf
-updated: 2016-08-30T13:10:11.311937955-06:00
+hash: c7c59e293e45885619d02661b05df2bf0ec2f4aadb5b9beedb3106a09e6c4ae2
+updated: 2016-08-30T16:54:31.766146071-06:00
 imports:
 - name: github.com/dmotylev/goproperties
   version: 7cbffbaada472bc302cbaca51c1d5ed2682eb509
