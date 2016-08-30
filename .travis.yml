@@ -5,9 +5,9 @@ go:
  - 1.7
 
 install:
-  - curl https://glide.sh/get | sh
   - go get golang.org/x/tools/cmd/cover
   - go get ./...
+  - curl https://glide.sh/get | sh
   - glide install
 script:
   - go test . -coverprofile=coverage-core.txt -covermode=atomic
