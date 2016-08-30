@@ -11,3 +11,4 @@ stormpath-framework-tck
 coverage.txt
 coverage-web.txt
 coverage-core.txt
+vendor/
