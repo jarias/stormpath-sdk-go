@@ -4,16 +4,14 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/jarias/stormpath-sdk-go"
 )
 
 type oauthHandler struct {
-	Application *stormpath.Application
+	application *stormpath.Application
 }
 
-func (h oauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h oauthHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodPost {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Pragma", "no-cache")
@@ -38,7 +36,7 @@ func (h oauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx cont
 			return
 		}
 
-		oauthRequestAuthenticator := stormpath.NewOAuthRequestAuthenticator(h.Application)
+		oauthRequestAuthenticator := stormpath.NewOAuthRequestAuthenticator(h.application)
 		oauthRequestAuthenticator.TTL = Config.OAuth2ClientCredentialsGrantTypeAccessTokenTTL
 
 		authenticationResult, err := oauthRequestAuthenticator.Authenticate(r)

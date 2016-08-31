@@ -35,6 +35,15 @@ func (f form) getField(fieldName string) *field {
 	return nil
 }
 
+func sanitizePostedData(postedData map[string]string) map[string]string {
+	if postedData == nil {
+		return nil
+	}
+	postedData["password"] = ""
+	postedData["confirmPassword"] = ""
+	return postedData
+}
+
 func getPostedData(r *http.Request) (map[string]string, []byte) {
 	data := map[string]string{}
 

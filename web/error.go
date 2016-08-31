@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type errorModel struct {
@@ -23,14 +22,12 @@ func newErrorModel(spError stormpath.Error) errorModel {
 	}
 }
 
-func unauthorizedRequest(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	application := ctx.Value(ApplicationKey).(*stormpath.Application)
-
+func unauthorizedRequest(w http.ResponseWriter, r *http.Request, ctx webContext, application *stormpath.Application) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("WWW-Authenticate", "Bearer realm=\""+application.Name+"\"")
 
-	contentType := ctx.Value(ResolvedContentType)
+	contentType := ctx.contentType
 
 	errorModel := buildErrorModelWithCode(fmt.Errorf("Unauthorized"), http.StatusUnauthorized)
 
@@ -62,8 +59,8 @@ func badRequest(w http.ResponseWriter, r *http.Request, err error) {
 	respondJSON(w, errorModel, errorModel.Status)
 }
 
-func methodNotAllowed(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	contentType := ctx.Value(ResolvedContentType)
+func methodNotAllowed(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	contentType := ctx.contentType
 
 	errorModel := buildErrorModelWithCode(fmt.Errorf("Method not allow"), http.StatusMethodNotAllowed)
 

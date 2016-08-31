@@ -7,8 +7,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	stormpath "github.com/jarias/stormpath-sdk-go"
 	"github.com/jarias/stormpath-sdk-go/web"
-	"golang.org/x/net/context"
 )
 
 var helloTemplate = `
@@ -57,26 +57,26 @@ var helloTemplate = `
 func main() {
 	mux := http.NewServeMux()
 
-	stormpathMiddleware := stormpathweb.NewStormpathMiddleware(mux)
+	stormpathMiddleware := stormpathweb.NewStormpathMiddleware(mux, nil)
 
-	stormpathMiddleware.PreLoginHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.SetPreLoginHandler(func(w http.ResponseWriter, r *http.Request, account *stormpath.Account) bool {
 		fmt.Println("--> Pre Login")
-		return nil
+		return true
 	})
 
-	stormpathMiddleware.PostLoginHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.SetPostLoginHandler(func(w http.ResponseWriter, r *http.Request, account *stormpath.Account) bool {
 		fmt.Println("--> Post Login")
-		return nil
+		return true
 	})
 
-	stormpathMiddleware.PreRegisterHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.SetPreRegisterHandler(func(w http.ResponseWriter, r *http.Request, account *stormpath.Account) bool {
 		fmt.Println("--> Pre Register")
-		return nil
+		return true
 	})
 
-	stormpathMiddleware.PostRegisterHandler = stormpathweb.UserHandler(func(w http.ResponseWriter, r *http.Request, ctx context.Context) context.Context {
+	stormpathMiddleware.SetPostRegisterHandler(func(w http.ResponseWriter, r *http.Request, account *stormpath.Account) bool {
 		fmt.Println("--> Post Register")
-		return nil
+		return true
 	})
 
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
