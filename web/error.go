@@ -27,7 +27,7 @@ func unauthorizedRequest(w http.ResponseWriter, r *http.Request, ctx webContext,
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("WWW-Authenticate", "Bearer realm=\""+application.Name+"\"")
 
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	errorModel := buildErrorModelWithCode(fmt.Errorf("Unauthorized"), http.StatusUnauthorized)
 
@@ -60,7 +60,7 @@ func badRequest(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func methodNotAllowed(w http.ResponseWriter, r *http.Request, ctx webContext) {
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	errorModel := buildErrorModelWithCode(fmt.Errorf("Method not allow"), http.StatusMethodNotAllowed)
 

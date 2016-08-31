@@ -10,7 +10,7 @@ type googleCallbackHandler struct {
 	defaultSocialHandler
 }
 
-func (h googleCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h googleCallbackHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		code := r.URL.Query().Get("code")
 

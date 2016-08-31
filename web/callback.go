@@ -7,12 +7,12 @@ import (
 )
 
 type callbackHandler struct {
-	Application *stormpath.Application
+	application *stormpath.Application
 }
 
-func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h callbackHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
-		authenticationResult, err := stormpath.NewStormpathAssertionAuthenticator(h.Application).Authenticate(r.URL.Query().Get("jwtResponse"))
+		authenticationResult, err := stormpath.NewStormpathAssertionAuthenticator(h.application).Authenticate(r.URL.Query().Get("jwtResponse"))
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -20,7 +20,7 @@ func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx w
 
 		switch authenticationResult.Status {
 		case "AUTHENTICATED":
-			err = saveAuthenticationResult(w, r, authenticationResult, h.Application)
+			err = saveAuthenticationResult(w, r, authenticationResult, h.application)
 			if err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
@@ -32,7 +32,7 @@ func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx w
 
 			if accountStatus == stormpath.Enabled {
 				if Config.RegisterAutoLoginEnabled {
-					err := saveAuthenticationResult(w, r, authenticationResult, h.Application)
+					err := saveAuthenticationResult(w, r, authenticationResult, h.application)
 					if err != nil {
 						http.Error(w, "Unauthorized", http.StatusUnauthorized)
 						return
@@ -47,7 +47,7 @@ func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx w
 			http.Redirect(w, r, Config.RegisterNextURI, http.StatusFound)
 			return
 		case "LOGOUT":
-			clearAuthentication(w, r, h.Application)
+			clearAuthentication(w, r, h.application)
 			http.Redirect(w, r, Config.LogoutNextURI, http.StatusFound)
 			return
 		}

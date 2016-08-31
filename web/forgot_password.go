@@ -8,11 +8,11 @@ import (
 )
 
 type forgotPasswordHandler struct {
-	Application *stormpath.Application
+	application *stormpath.Application
 }
 
-func (h forgotPasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
-	if ctx.Account != nil {
+func (h forgotPasswordHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	if ctx.account != nil {
 		http.Redirect(w, r, Config.LoginNextURI, http.StatusFound)
 		return
 	}
@@ -23,7 +23,7 @@ func (h forgotPasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request,
 			CallbackURL: baseURL(r) + Config.CallbackURI,
 		}
 
-		idSiteURL, err := h.Application.CreateIDSiteURL(options)
+		idSiteURL, err := h.application.CreateIDSiteURL(options)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -37,7 +37,7 @@ func (h forgotPasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request,
 		return
 	}
 	//No GET for application/json
-	if r.Method == http.MethodGet && ctx.ContentType == stormpath.TextHTML {
+	if r.Method == http.MethodGet && ctx.contentType == stormpath.TextHTML {
 		h.doGET(w, r, ctx)
 		return
 	}
@@ -49,14 +49,14 @@ func (h forgotPasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx
 	model := map[string]interface{}{
 		"loginURI": Config.LoginURI,
 		"status":   resolveForgotPasswordStatus(r.URL.Query().Get("status")),
-		"error":    ctx.Error,
+		"error":    ctx.webError,
 	}
 
 	respondHTML(w, model, Config.ForgotPasswordView)
 }
 
 func (h forgotPasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	data, _ := getPostedData(r)
 
@@ -65,7 +65,7 @@ func (h forgotPasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ct
 		return
 	}
 
-	h.Application.SendPasswordResetEmail(data["email"])
+	h.application.SendPasswordResetEmail(data["email"])
 
 	if contentType == stormpath.ApplicationJSON {
 		respondJSON(w, nil, http.StatusOK)

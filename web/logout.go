@@ -7,7 +7,7 @@ import (
 )
 
 type logoutHandler struct {
-	Application *stormpath.Application
+	application *stormpath.Application
 }
 
 func (h logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
@@ -16,7 +16,7 @@ func (h logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx web
 			CallbackURL: baseURL(r) + Config.CallbackURI,
 			Logout:      true,
 		}
-		idSiteURL, err := h.Application.CreateIDSiteURL(options)
+		idSiteURL, err := h.application.CreateIDSiteURL(options)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -26,10 +26,10 @@ func (h logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx web
 	}
 
 	if r.Method == http.MethodPost {
-		contentType := ctx.ContentType
+		contentType := ctx.contentType
 
-		if ctx.Account != nil {
-			clearAuthentication(w, r, h.Application)
+		if ctx.account != nil {
+			clearAuthentication(w, r, h.application)
 
 			if contentType == stormpath.TextHTML {
 				http.Redirect(w, r, Config.LogoutNextURI, http.StatusFound)

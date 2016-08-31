@@ -11,15 +11,15 @@ import (
 )
 
 type loginHandler struct {
-	PreLoginHandler  UserHandler
-	PostLoginHandler UserHandler
-	Application      *stormpath.Application
+	preLoginHandler  UserHandler
+	postLoginHandler UserHandler
+	application      *stormpath.Application
 }
 
 func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
-	ctx.Next = r.URL.Query().Get(NextKey)
+	ctx.next = r.URL.Query().Get(NextKey)
 
-	if ctx.Account != nil {
+	if ctx.account != nil {
 		http.Redirect(w, r, Config.LoginNextURI, http.StatusFound)
 		return
 	}
@@ -30,7 +30,7 @@ func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webC
 			CallbackURL: baseURL(r) + Config.CallbackURI,
 		}
 
-		idSiteURL, err := h.Application.CreateIDSiteURL(options)
+		idSiteURL, err := h.application.CreateIDSiteURL(options)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -52,11 +52,11 @@ func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webC
 }
 
 func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webContext) {
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	model := map[string]interface{}{
 		"form":          Config.LoginForm,
-		"accountStores": getApplicationAccountStores(h.Application),
+		"accountStores": getApplicationAccountStores(h.application),
 	}
 
 	if contentType == stormpath.ApplicationJSON {
@@ -65,10 +65,10 @@ func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webConte
 	}
 	if contentType == stormpath.TextHTML {
 		model["registerURI"] = Config.RegisterURI
-		if IsVerifyEnabled(h.Application) {
+		if isVerifyEnabled(h.application) {
 			model["verifyURI"] = Config.VerifyURI
 		}
-		if IsForgotPasswordEnabled(h.Application) {
+		if isForgotPasswordEnabled(h.application) {
 			model["forgotURI"] = Config.ForgotPasswordURI
 		}
 		//Social
@@ -81,10 +81,10 @@ func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webConte
 		model["linkedinCallbackUri"] = Config.LinkedinCallbackURI
 		model["linkedinScope"] = Config.LinkedinScope
 		//End Social
-		model["postedData"] = ctx.PostedData
+		model["postedData"] = ctx.postedData
 		model["baseURL"] = fmt.Sprintf("http://%s/%s", r.Host, Config.BasePath)
 		model["status"] = resolveLoginStatus(r.URL.Query().Get("status"))
-		model["error"] = ctx.Error
+		model["error"] = ctx.webError
 
 		respondHTML(w, model, Config.LoginView)
 	}
@@ -93,15 +93,15 @@ func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webConte
 func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	var authenticationResult stormpath.AuthResult
 
-	if h.PreLoginHandler != nil {
-		pre := h.PreLoginHandler(w, r, nil)
+	if h.preLoginHandler != nil {
+		pre := h.preLoginHandler(w, r, nil)
 		if !pre {
 			//User halted execution so we return
 			return
 		}
 	}
 
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	postedData, originalData := getPostedData(r)
 
@@ -111,7 +111,7 @@ func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webCont
 
 		json.NewDecoder(bytes.NewBuffer(originalData)).Decode(socialAccount)
 
-		account, err := h.Application.RegisterSocialAccount(socialAccount)
+		account, err := h.application.RegisterSocialAccount(socialAccount)
 		if err != nil {
 			handleError(w, r, ctx.withError(postedData, err), h.doGET)
 			return
@@ -124,14 +124,14 @@ func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webCont
 			return
 		}
 
-		authenticationResult, err = stormpath.NewOAuthPasswordAuthenticator(h.Application).Authenticate(postedData["login"], postedData["password"])
+		authenticationResult, err = stormpath.NewOAuthPasswordAuthenticator(h.application).Authenticate(postedData["login"], postedData["password"])
 		if err != nil {
 			handleError(w, r, ctx.withError(postedData, err), h.doGET)
 			return
 		}
 	}
 
-	err := saveAuthenticationResult(w, r, authenticationResult, h.Application)
+	err := saveAuthenticationResult(w, r, authenticationResult, h.application)
 	if err != nil {
 		handleError(w, r, ctx.withError(postedData, err), h.doGET)
 		return
@@ -142,8 +142,8 @@ func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webCont
 		return
 	}
 
-	if h.PostLoginHandler != nil {
-		post := h.PostLoginHandler(w, r, account)
+	if h.postLoginHandler != nil {
+		post := h.postLoginHandler(w, r, account)
 		if !post {
 			//User halted execution so we return
 			return
@@ -156,8 +156,8 @@ func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webCont
 	}
 
 	redirectURL := Config.LoginNextURI
-	if ctx.Next != "" {
-		redirectURL = ctx.Next
+	if ctx.next != "" {
+		redirectURL = ctx.next
 	}
 
 	http.Redirect(w, r, redirectURL, http.StatusFound)

@@ -10,7 +10,7 @@ type linkedinCallbackHandler struct {
 	defaultSocialHandler
 }
 
-func (h linkedinCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h linkedinCallbackHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		code := r.URL.Query().Get("code")
 

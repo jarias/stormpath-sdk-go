@@ -67,15 +67,15 @@ func NewStormpathMiddleware(next http.Handler, cache stormpath.Cache) *Stormpath
 	h := &StormpathMiddleware{
 		next:                  next,
 		Application:           application,
-		meHandler:             meHandler{Application: application},
-		registerHandler:       registerHandler{Application: application},
-		loginHandler:          loginHandler{Application: application},
-		logoutHandler:         logoutHandler{Application: application},
-		forgotPasswordHandler: forgotPasswordHandler{Application: application},
-		changePasswordHandler: changePasswordHandler{Application: application},
-		emailVerifyHandler:    emailVerifyHandler{Application: application},
-		oauthHandler:          oauthHandler{Application: application},
-		callbackHandler:       callbackHandler{Application: application},
+		meHandler:             meHandler{application: application},
+		registerHandler:       registerHandler{application: application},
+		loginHandler:          loginHandler{application: application},
+		logoutHandler:         logoutHandler{application: application},
+		forgotPasswordHandler: forgotPasswordHandler{application: application},
+		changePasswordHandler: changePasswordHandler{application: application},
+		emailVerifyHandler:    emailVerifyHandler{application: application},
+		oauthHandler:          oauthHandler{application: application},
+		callbackHandler:       callbackHandler{application: application},
 	}
 
 	h.facebookCallbackHandler = facebookCallbackHandler{defaultSocialHandler{application, h.loginHandler}}
@@ -87,19 +87,19 @@ func NewStormpathMiddleware(next http.Handler, cache stormpath.Cache) *Stormpath
 }
 
 func (h *StormpathMiddleware) SetPreLoginHandler(uh UserHandler) {
-	h.loginHandler.PreLoginHandler = uh
+	h.loginHandler.preLoginHandler = uh
 }
 
 func (h *StormpathMiddleware) SetPostLoginHandler(uh UserHandler) {
-	h.loginHandler.PostLoginHandler = uh
+	h.loginHandler.postLoginHandler = uh
 }
 
 func (h *StormpathMiddleware) SetPreRegisterHandler(uh UserHandler) {
-	h.registerHandler.PreRegisterHandler = uh
+	h.registerHandler.preRegisterHandler = uh
 }
 
 func (h *StormpathMiddleware) SetPostRegisterHandler(uh UserHandler) {
-	h.registerHandler.PostRegisterHandler = uh
+	h.registerHandler.postRegisterHandler = uh
 }
 
 func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +136,7 @@ func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	case Config.RegisterURI:
 		if Config.RegisterEnabled {
-			h.registerHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.registerHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.LogoutURI:
@@ -145,48 +145,48 @@ func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	case Config.ForgotPasswordURI:
-		if IsForgotPasswordEnabled(h.Application) {
-			h.forgotPasswordHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+		if isForgotPasswordEnabled(h.Application) {
+			h.forgotPasswordHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.ChangePasswordURI:
-		if IsForgotPasswordEnabled(h.Application) {
-			h.changePasswordHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+		if isForgotPasswordEnabled(h.Application) {
+			h.changePasswordHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.VerifyURI:
-		if IsVerifyEnabled(h.Application) {
-			h.emailVerifyHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+		if isVerifyEnabled(h.Application) {
+			h.emailVerifyHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.FacebookCallbackURI:
 		if Config.LoginEnabled {
-			h.facebookCallbackHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.facebookCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.GoogleCallbackURI:
 		if Config.LoginEnabled {
-			h.googleCallbackHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.googleCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.LinkedinCallbackURI:
 		if Config.LoginEnabled {
-			h.linkedinCallbackHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.linkedinCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.GithubCallbackURI:
 		if Config.LoginEnabled {
-			h.githubCallbackHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.githubCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.CallbackURI:
 		if Config.CallbackEnabled {
-			h.callbackHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.callbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.OAuth2URI:
 		if Config.OAuth2Enabled {
-			h.oauthHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.oauthHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	}
@@ -436,11 +436,11 @@ func baseURL(r *http.Request) string {
 }
 
 func transientAuthenticationResult(account *stormpath.Account) *stormpath.AuthenticationResult {
-	return &stormpath.AuthenticationResult{account}
+	return &stormpath.AuthenticationResult{Account: account}
 }
 
 func handleError(w http.ResponseWriter, r *http.Request, ctx webContext, h internalHandler) {
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	if contentType == stormpath.TextHTML {
 		if r.Method == http.MethodGet {
@@ -451,6 +451,6 @@ func handleError(w http.ResponseWriter, r *http.Request, ctx webContext, h inter
 	}
 
 	if contentType == stormpath.ApplicationJSON {
-		badRequest(w, r, ctx.getError())
+		badRequest(w, r, ctx.originalError)
 	}
 }

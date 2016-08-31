@@ -8,10 +8,10 @@ import (
 )
 
 type changePasswordHandler struct {
-	Application *stormpath.Application
+	application *stormpath.Application
 }
 
-func (h changePasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h changePasswordHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodPost {
 		h.doPOST(w, r, ctx)
 		return
@@ -25,12 +25,12 @@ func (h changePasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request,
 }
 
 func (h changePasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webContext) {
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	sptoken := r.URL.Query().Get("sptoken")
 
 	if sptoken != "" {
-		_, err := h.Application.ValidatePasswordResetToken(sptoken)
+		_, err := h.application.ValidatePasswordResetToken(sptoken)
 		if err != nil {
 			if contentType == stormpath.TextHTML {
 				http.Redirect(w, r, Config.ChangePasswordErrorURI, http.StatusFound)
@@ -44,7 +44,7 @@ func (h changePasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx
 		if contentType == stormpath.TextHTML {
 			model := map[string]interface{}{
 				"loginURI": Config.LoginURI,
-				"error":    ctx.Error,
+				"error":    ctx.webError,
 			}
 			respondHTML(w, model, Config.ChangePasswordView)
 			return
@@ -64,7 +64,7 @@ func (h changePasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx
 }
 
 func (h changePasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
-	contentType := ctx.ContentType
+	contentType := ctx.contentType
 
 	data, _ := getPostedData(r)
 
@@ -83,7 +83,7 @@ func (h changePasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ct
 		return
 	}
 
-	_, err := h.Application.ValidatePasswordResetToken(data["sptoken"])
+	_, err := h.application.ValidatePasswordResetToken(data["sptoken"])
 	if err != nil {
 		if contentType == stormpath.TextHTML {
 			http.Redirect(w, r, Config.ChangePasswordErrorURI, http.StatusFound)
@@ -95,14 +95,14 @@ func (h changePasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ct
 		}
 	}
 
-	account, err := h.Application.ResetPassword(data["sptoken"], data["password"])
+	account, err := h.application.ResetPassword(data["sptoken"], data["password"])
 	if err != nil {
 		handleError(w, r, ctx.withError(nil, err), h.doGET)
 		return
 	}
 
 	if Config.ChangePasswordAutoLoginEnabled {
-		err = saveAuthenticationResult(w, r, transientAuthenticationResult(account), h.Application)
+		err = saveAuthenticationResult(w, r, transientAuthenticationResult(account), h.application)
 		if err != nil {
 			handleError(w, r, ctx.withError(nil, err), h.doGET)
 			return

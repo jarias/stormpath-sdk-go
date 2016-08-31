@@ -10,7 +10,7 @@ type facebookCallbackHandler struct {
 	defaultSocialHandler
 }
 
-func (h facebookCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h facebookCallbackHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		accessToken := r.URL.Query().Get("accessToken")
 

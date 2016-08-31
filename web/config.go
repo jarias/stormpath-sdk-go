@@ -227,7 +227,7 @@ func loadBoolPtr(key string, v *viper.Viper) *bool {
 	return &b
 }
 
-func IsForgotPasswordEnabled(application *stormpath.Application) bool {
+func isForgotPasswordEnabled(application *stormpath.Application) bool {
 	mapping := application.DefaultAccountStoreMapping
 
 	if mapping != nil && mapping.IsAccountStoreDirectory() {
@@ -244,7 +244,7 @@ func IsForgotPasswordEnabled(application *stormpath.Application) bool {
 	return false
 }
 
-func IsVerifyEnabled(application *stormpath.Application) bool {
+func isVerifyEnabled(application *stormpath.Application) bool {
 	mapping := application.DefaultAccountStoreMapping
 
 	if mapping != nil && mapping.IsAccountStoreDirectory() {
