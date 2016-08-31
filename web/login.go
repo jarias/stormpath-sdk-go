@@ -8,19 +8,18 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type loginHandler struct {
-	Parent      *StormpathMiddleware
-	Application *stormpath.Application
-	Form        form
+	preLoginHandler  UserHandler
+	postLoginHandler UserHandler
+	application      *stormpath.Application
 }
 
-func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	ctx = context.WithValue(ctx, NextKey, r.URL.Query().Get(NextKey))
+func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	ctx.next = r.URL.Query().Get(NextKey)
 
-	if _, ok := isAuthenticated(w, r, ctx); ok {
+	if ctx.account != nil {
 		http.Redirect(w, r, Config.LoginNextURI, http.StatusFound)
 		return
 	}
@@ -31,7 +30,7 @@ func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx cont
 			CallbackURL: baseURL(r) + Config.CallbackURI,
 		}
 
-		idSiteURL, err := h.Application.CreateIDSiteURL(options)
+		idSiteURL, err := h.application.CreateIDSiteURL(options)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -52,12 +51,12 @@ func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx cont
 	methodNotAllowed(w, r, ctx)
 }
 
-func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	contentType := ctx.Value(ResolvedContentType)
+func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	contentType := ctx.contentType
 
 	model := map[string]interface{}{
-		"form":          h.Form,
-		"accountStores": getApplicationAccountStores(h.Application),
+		"form":          Config.LoginForm,
+		"accountStores": getApplicationAccountStores(h.application),
 	}
 
 	if contentType == stormpath.ApplicationJSON {
@@ -66,10 +65,10 @@ func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx context.
 	}
 	if contentType == stormpath.TextHTML {
 		model["registerURI"] = Config.RegisterURI
-		if IsVerifyEnabled(h.Application) {
+		if isVerifyEnabled(h.application) {
 			model["verifyURI"] = Config.VerifyURI
 		}
-		if IsForgotPasswordEnabled(h.Application) {
+		if isForgotPasswordEnabled(h.application) {
 			model["forgotURI"] = Config.ForgotPasswordURI
 		}
 		//Social
@@ -82,27 +81,27 @@ func (h loginHandler) doGET(w http.ResponseWriter, r *http.Request, ctx context.
 		model["linkedinCallbackUri"] = Config.LinkedinCallbackURI
 		model["linkedinScope"] = Config.LinkedinScope
 		//End Social
-		model["postedData"] = ctx.Value("postedData")
+		model["postedData"] = ctx.postedData
 		model["baseURL"] = fmt.Sprintf("http://%s/%s", r.Host, Config.BasePath)
 		model["status"] = resolveLoginStatus(r.URL.Query().Get("status"))
-		model["error"] = ctx.Value("error")
+		model["error"] = ctx.webError
 
 		respondHTML(w, model, Config.LoginView)
 	}
 }
 
-func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	var authenticationResult stormpath.AuthResult
 
-	if h.Parent.PreLoginHandler != nil {
-		pre := h.Parent.PreLoginHandler(w, r, ctx)
-		if pre != nil {
+	if h.preLoginHandler != nil {
+		pre := h.preLoginHandler(w, r, nil)
+		if !pre {
 			//User halted execution so we return
 			return
 		}
 	}
 
-	contentType := ctx.Value(ResolvedContentType)
+	contentType := ctx.contentType
 
 	postedData, originalData := getPostedData(r)
 
@@ -112,40 +111,40 @@ func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx context
 
 		json.NewDecoder(bytes.NewBuffer(originalData)).Decode(socialAccount)
 
-		account, err := h.Application.RegisterSocialAccount(socialAccount)
+		account, err := h.application.RegisterSocialAccount(socialAccount)
 		if err != nil {
-			h.handlePostError(w, r, ctx, err, postedData)
+			handleError(w, r, ctx.withError(postedData, err), h.doGET)
 			return
 		}
 		authenticationResult = transientAuthenticationResult(account)
 	} else {
-		err := validateForm(h.Form, postedData)
+		err := validateForm(Config.LoginForm, postedData)
 		if err != nil {
-			h.handlePostError(w, r, ctx, err, postedData)
+			handleError(w, r, ctx.withError(postedData, err), h.doGET)
 			return
 		}
 
-		authenticationResult, err = stormpath.NewOAuthPasswordAuthenticator(h.Application).Authenticate(postedData["login"], postedData["password"])
+		authenticationResult, err = stormpath.NewOAuthPasswordAuthenticator(h.application).Authenticate(postedData["login"], postedData["password"])
 		if err != nil {
-			h.handlePostError(w, r, ctx, err, postedData)
+			handleError(w, r, ctx.withError(postedData, err), h.doGET)
 			return
 		}
 	}
 
-	err := saveAuthenticationResult(w, r, authenticationResult, h.Application)
+	err := saveAuthenticationResult(w, r, authenticationResult, h.application)
 	if err != nil {
-		h.handlePostError(w, r, ctx, err, postedData)
+		handleError(w, r, ctx.withError(postedData, err), h.doGET)
 		return
 	}
 	account := authenticationResult.GetAccount()
 	if account == nil {
-		h.handlePostError(w, r, ctx, fmt.Errorf("can't get account from authentication result"), postedData)
+		handleError(w, r, ctx.withError(postedData, fmt.Errorf("can't get account from authentication result")), h.doGET)
 		return
 	}
 
-	if h.Parent.PostLoginHandler != nil {
-		post := h.Parent.PostLoginHandler(w, r, context.WithValue(ctx, AccountKey, account))
-		if post != nil {
+	if h.postLoginHandler != nil {
+		post := h.postLoginHandler(w, r, account)
+		if !post {
 			//User halted execution so we return
 			return
 		}
@@ -157,26 +156,11 @@ func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx context
 	}
 
 	redirectURL := Config.LoginNextURI
-	if ctx.Value(NextKey) != "" {
-		redirectURL = ctx.Value(NextKey).(string)
+	if ctx.next != "" {
+		redirectURL = ctx.next
 	}
 
 	http.Redirect(w, r, redirectURL, http.StatusFound)
-}
-
-func (h loginHandler) handlePostError(w http.ResponseWriter, r *http.Request, ctx context.Context, err error, postedData map[string]string) {
-	contentType := ctx.Value(ResolvedContentType)
-
-	if contentType == stormpath.TextHTML {
-		//Sanitize postedData
-		postedData["password"] = ""
-		postedData["confirmPassword"] = ""
-		h.doGET(w, r, contextWithError(ctx, err, postedData))
-		return
-	}
-	if contentType == stormpath.ApplicationJSON {
-		badRequest(w, r, err)
-	}
 }
 
 func resolveLoginStatus(status string) template.HTML {

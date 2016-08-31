@@ -4,14 +4,13 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type linkedinCallbackHandler struct {
 	defaultSocialHandler
 }
 
-func (h linkedinCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h linkedinCallbackHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		code := r.URL.Query().Get("code")
 

@@ -5,14 +5,13 @@ import (
 	"net/http"
 
 	"github.com/jarias/stormpath-sdk-go"
-	"golang.org/x/net/context"
 )
 
 type changePasswordHandler struct {
-	Application *stormpath.Application
+	application *stormpath.Application
 }
 
-func (h changePasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (h changePasswordHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodPost {
 		h.doPOST(w, r, ctx)
 		return
@@ -25,13 +24,13 @@ func (h changePasswordHandler) ServeHTTP(w http.ResponseWriter, r *http.Request,
 	methodNotAllowed(w, r, ctx)
 }
 
-func (h changePasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	contentType := ctx.Value(ResolvedContentType)
+func (h changePasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	contentType := ctx.contentType
 
 	sptoken := r.URL.Query().Get("sptoken")
 
 	if sptoken != "" {
-		_, err := h.Application.ValidatePasswordResetToken(sptoken)
+		_, err := h.application.ValidatePasswordResetToken(sptoken)
 		if err != nil {
 			if contentType == stormpath.TextHTML {
 				http.Redirect(w, r, Config.ChangePasswordErrorURI, http.StatusFound)
@@ -45,7 +44,7 @@ func (h changePasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx
 		if contentType == stormpath.TextHTML {
 			model := map[string]interface{}{
 				"loginURI": Config.LoginURI,
-				"error":    ctx.Value("error"),
+				"error":    ctx.webError,
 			}
 			respondHTML(w, model, Config.ChangePasswordView)
 			return
@@ -64,27 +63,27 @@ func (h changePasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx
 	}
 }
 
-func (h changePasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx context.Context) {
-	contentType := ctx.Value(ResolvedContentType)
+func (h changePasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
+	contentType := ctx.contentType
 
 	data, _ := getPostedData(r)
 
 	if data["sptoken"] == "" {
-		h.handlePostError(w, r, ctx, fmt.Errorf("sptoken is required"))
+		handleError(w, r, ctx.withError(nil, fmt.Errorf("sptoken is required")), h.doGET)
 		return
 	}
 
 	if data["password"] == "" {
-		h.handlePostError(w, r, ctx, fmt.Errorf("Password is required"))
+		handleError(w, r, ctx.withError(nil, fmt.Errorf("Password is required")), h.doGET)
 		return
 	}
 
 	if data["confirmPassword"] != "" && data["password"] != data["confirmPassword"] {
-		h.handlePostError(w, r, ctx, fmt.Errorf("Password values do not match."))
+		handleError(w, r, ctx.withError(data, fmt.Errorf("Password values do not match.")), h.doGET)
 		return
 	}
 
-	_, err := h.Application.ValidatePasswordResetToken(data["sptoken"])
+	_, err := h.application.ValidatePasswordResetToken(data["sptoken"])
 	if err != nil {
 		if contentType == stormpath.TextHTML {
 			http.Redirect(w, r, Config.ChangePasswordErrorURI, http.StatusFound)
@@ -96,16 +95,16 @@ func (h changePasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ct
 		}
 	}
 
-	account, err := h.Application.ResetPassword(data["sptoken"], data["password"])
+	account, err := h.application.ResetPassword(data["sptoken"], data["password"])
 	if err != nil {
-		h.handlePostError(w, r, ctx, err)
+		handleError(w, r, ctx.withError(nil, err), h.doGET)
 		return
 	}
 
 	if Config.ChangePasswordAutoLoginEnabled {
-		err = saveAuthenticationResult(w, r, transientAuthenticationResult(account), h.Application)
+		err = saveAuthenticationResult(w, r, transientAuthenticationResult(account), h.application)
 		if err != nil {
-			h.handlePostError(w, r, ctx, err)
+			handleError(w, r, ctx.withError(nil, err), h.doGET)
 			return
 		}
 
@@ -125,17 +124,5 @@ func (h changePasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ct
 	if contentType == stormpath.ApplicationJSON {
 		respondJSON(w, nil, http.StatusOK)
 		return
-	}
-}
-
-func (h changePasswordHandler) handlePostError(w http.ResponseWriter, r *http.Request, ctx context.Context, err error) {
-	contentType := ctx.Value(ResolvedContentType)
-
-	if contentType == stormpath.TextHTML {
-		h.doGET(w, r, context.WithValue(ctx, "error", buildErrorModel(err)))
-		return
-	}
-	if contentType == stormpath.ApplicationJSON {
-		badRequest(w, r, err)
 	}
 }

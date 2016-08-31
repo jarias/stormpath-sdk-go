@@ -1,0 +1,11 @@
+package: github.com/jarias/stormpath-sdk-go
+import:
+- package: github.com/dmotylev/goproperties
+- package: github.com/hashicorp/logutils
+- package: github.com/nu7hatch/gouuid
+- package: github.com/spf13/viper
+- package: gopkg.in/dgrijalva/jwt-go.v3
+testImport:
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
