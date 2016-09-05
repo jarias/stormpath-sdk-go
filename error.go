@@ -21,7 +21,7 @@ func (e Error) Error() string {
 }
 
 func (e Error) String() string {
-	return e.Message
+	return e.Message + " " + e.DeveloperMessage
 }
 
 func handleResponseError(req *http.Request, resp *http.Response, err error) error {

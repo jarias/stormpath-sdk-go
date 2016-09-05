@@ -10,10 +10,10 @@ import (
 func TestGetAPIKey(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	apiKey, _ := account.CreateAPIKey()
 
@@ -26,10 +26,10 @@ func TestGetAPIKey(t *testing.T) {
 func TestDeleteAPIKey(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	apiKey, _ := account.CreateAPIKey()
 
@@ -47,10 +47,10 @@ func TestDeleteAPIKey(t *testing.T) {
 func TestUpdateAPIKey(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	apiKey, _ := account.CreateAPIKey()
 
