@@ -49,7 +49,7 @@ func TestOAuthStormpathTokenAuthenticatorInvalidToken(t *testing.T) {
 	authResult, err := authenticator.Authenticate("I'm not a JWT token really")
 
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Token is invalid")
+	assert.EqualError(t, err, "Token is invalid Token is invalid because verifying the signature of a JWT failed.")
 	assert.Nil(t, authResult)
 }
 
@@ -247,7 +247,7 @@ func TestOAuthPasswordAuthenticatorInvalidCredentials(t *testing.T) {
 	authResult, err := authenticator.Authenticate(account.Username, "foo")
 
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Invalid username or password.")
+	assert.EqualError(t, err, "Invalid username or password. Login attempt failed because the specified password is incorrect.")
 	assert.Nil(t, authResult)
 }
 
@@ -281,6 +281,6 @@ func TestOAuthRefreshTokenAuthenticatorInvalidToken(t *testing.T) {
 	authResult, err := authenticator.Authenticate("foo")
 
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Token is invalid")
+	assert.EqualError(t, err, "Token is invalid Token is invalid because verifying the signature of a JWT failed.")
 	assert.Nil(t, authResult)
 }
