@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+//AuthResult is implemented by any authentication result for any of the posible authenticators to retrieve
+//the authentication result account.
 type AuthResult interface {
 	GetAccount() *Account
 }
@@ -15,10 +17,13 @@ type AuthenticationResult struct {
 	Account *Account
 }
 
+//OAuthAccessTokenResult is the default OAuth response
 type OAuthAccessTokenResult OAuthResponse
 
+//OAuthClientCredentialsAuthenticationResult is the authentication result for the  OAuthClientCredentialsAuthenticator
 type OAuthClientCredentialsAuthenticationResult OAuthResponse
 
+//StormpathAssertionAuthenticationResult is the authentication result for the StormpathAssertionAuthenticator
 type StormpathAssertionAuthenticationResult CallbackResult
 
 //Authenticator is the base authenticator type
@@ -56,6 +61,7 @@ type OAuthClientCredentialsAuthenticator struct {
 	TTL          time.Duration
 }
 
+//ScopeFactoryFunc defines a function to valide scope for the cient credentials OAuth authentication
 type ScopeFactoryFunc func(string) bool
 
 //OAuthPasswordAuthenticator this authenticator accepts an account's username and password, and returns an access token response that is obtained by posting the username and password to the application's /oauth/token endpoint with the grant_type=password parameter.
@@ -101,12 +107,20 @@ func (a BasicAuthenticator) Authenticate(accountAPIKey, accountAPISecret string)
 	return &AuthenticationResult{Account: apiKey.Account}, nil
 }
 
+//NewOAuthRequestAuthenticator creates a new OAuthRequestAuthenticator for a given Application
 func NewOAuthRequestAuthenticator(application *Application) OAuthRequestAuthenticator {
 	authenticator := OAuthRequestAuthenticator{}
 	authenticator.Application = application
 	return authenticator
 }
 
+//Authenticate authenticates an http.Request value using the possible grant types that Stormpath supports,
+//it returns an error if the request is not authenticated.
+//
+//Supported grant types:
+// - password
+// - client_credentials
+// - refresh_token
 func (a OAuthRequestAuthenticator) Authenticate(r *http.Request) (*OAuthAccessTokenResult, error) {
 	err := r.ParseForm()
 	if err != nil {

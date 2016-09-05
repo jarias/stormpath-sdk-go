@@ -43,6 +43,7 @@ type CallbackResult struct {
 	Status  string
 }
 
+//IDSiteOptions represents the posible options to generate an new IDSite URL.
 type IDSiteOptions struct {
 	Logout      bool
 	Path        string
@@ -110,6 +111,7 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*Application
 	return accountStoreMappings, nil
 }
 
+//GetDefaultAccountStoreMapping retrieves the default ApplicationAccountStoreMapping for the given Application
 func (app *Application) GetDefaultAccountStoreMapping(criteria Criteria) (*ApplicationAccountStoreMapping, error) {
 	err := client.get(
 		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.ToQueryString()),
@@ -348,6 +350,7 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 	return app.getOAuthTokenCommon(values)
 }
 
+//GetOAuthTokenStormpathGrantType creates an OAuth2 token response for a given Stormpath token
 func (app *Application) GetOAuthTokenStormpathGrantType(token string) (*OAuthResponse, error) {
 	values := url.Values{
 		"grant_type": {"stormpath_token"},
@@ -434,6 +437,7 @@ func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
 	return response, nil
 }
 
+//GetAPIKey retrives an APIKey from the given Application by its ID and optional criteria
 func (app *Application) GetAPIKey(apiKeyID string, criteria APIKeyCriteria) (*APIKey, error) {
 	apiKeys := &APIKeys{}
 

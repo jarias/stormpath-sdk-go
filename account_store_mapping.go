@@ -4,7 +4,7 @@ import "strings"
 
 //ApplicationAccountStoreMapping represents an Stormpath account store mapping
 //
-//See: http://docs.stormpath.com/rest/product-guide/#account-store-mappings
+//See: https://docs.stormpath.com/rest/product-guide/latest/reference.html#account-store-mapping
 type ApplicationAccountStoreMapping struct {
 	resource
 	ListIndex             *int         `json:"collectionResourceIndex,omitempty"`
@@ -14,6 +14,9 @@ type ApplicationAccountStoreMapping struct {
 	AccountStore          *resource    `json:"accountStore,omitempty"`
 }
 
+//OrganizationAccountStoreMapping represents an Stormpath account store mapping for an Organization resource
+//
+//See: https://docs.stormpath.com/rest/product-guide/latest/reference.html?organization-account-store-mapping-operations
 type OrganizationAccountStoreMapping struct {
 	resource
 	ListIndex             *int          `json:"collectionResourceIndex,omitempty"`
@@ -31,12 +34,13 @@ type ApplicationAccountStoreMappings struct {
 	Items []ApplicationAccountStoreMapping `json:"items,omitempty"`
 }
 
+//OrganizationAccountStoreMappings represents a collection of OrganizationAccountStoreMapping
 type OrganizationAccountStoreMappings struct {
 	collectionResource
 	Items []OrganizationAccountStoreMapping `json:"items,omitempty"`
 }
 
-//NewAccountStoreMapping creates a new account store mappings
+//NewApplicationAccountStoreMapping creates a new account store mapping for the Application resource
 func NewApplicationAccountStoreMapping(applicationHref string, accountStoreHref string) *ApplicationAccountStoreMapping {
 	app := Application{}
 	app.Href = applicationHref
@@ -46,6 +50,7 @@ func NewApplicationAccountStoreMapping(applicationHref string, accountStoreHref 
 	}
 }
 
+//NewOrganizationAccountStoreMapping creates a new account mapping for the Organization resource
 func NewOrganizationAccountStoreMapping(organizationHref string, accountStoreHref string) *OrganizationAccountStoreMapping {
 	org := Organization{}
 	org.Href = organizationHref
@@ -55,7 +60,7 @@ func NewOrganizationAccountStoreMapping(organizationHref string, accountStoreHre
 	}
 }
 
-//Save saves the given account store mapping
+//Save saves the given ApplicationAccountStoreMapping
 func (mapping *ApplicationAccountStoreMapping) Save() error {
 	url := buildRelativeURL("accountStoreMappings")
 	if mapping.Href != "" {
@@ -65,6 +70,7 @@ func (mapping *ApplicationAccountStoreMapping) Save() error {
 	return client.post(url, mapping, mapping)
 }
 
+//Save saves the given OrganizationAccountStoreMapping
 func (mapping *OrganizationAccountStoreMapping) Save() error {
 	url := buildRelativeURL("organizationAccountStoreMappings")
 	if mapping.Href != "" {
@@ -74,26 +80,32 @@ func (mapping *OrganizationAccountStoreMapping) Save() error {
 	return client.post(url, mapping, mapping)
 }
 
+//IsAccountStoreDirectory checks if a given ApplicationAccountStoreMapping maps an Application to a Directory
 func (mapping *ApplicationAccountStoreMapping) IsAccountStoreDirectory() bool {
 	return strings.Contains(mapping.AccountStore.Href, "/directories/")
 }
 
+//IsAccountStoreGroup checks if a given ApplicationAccountStoreMapping maps an Application to a Group
 func (mapping *ApplicationAccountStoreMapping) IsAccountStoreGroup() bool {
 	return strings.Contains(mapping.AccountStore.Href, "/groups/")
 }
 
+//IsAccountStoreOrganization checks if a given ApplicationAccountStoreMapping maps an Application to an Organization
 func (mapping *ApplicationAccountStoreMapping) IsAccountStoreOrganization() bool {
 	return strings.Contains(mapping.AccountStore.Href, "/organizations/")
 }
 
+//IsAccountStoreDirectory checks if a given OrganizationAccountStoreMapping maps an Application to a Directory
 func (mapping *OrganizationAccountStoreMapping) IsAccountStoreDirectory() bool {
 	return strings.Contains(mapping.AccountStore.Href, "/directories/")
 }
 
+//IsAccountStoreGroup checks if a given OrganizationAccountStoreMapping maps an Application to a Directory
 func (mapping *OrganizationAccountStoreMapping) IsAccountStoreGroup() bool {
 	return strings.Contains(mapping.AccountStore.Href, "/groups/")
 }
 
+//IsAccountStoreOrganization checks if a given ApplicationAccountStoreMapping maps an Application to an Organization
 func (mapping *OrganizationAccountStoreMapping) IsAccountStoreOrganization() bool {
 	return strings.Contains(mapping.AccountStore.Href, "/organizations/")
 }

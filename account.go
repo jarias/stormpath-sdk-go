@@ -196,6 +196,7 @@ func (account *Account) GetAccessTokens(criteria OAuthTokenCriteria) (*OAuthToke
 	return accessTokens, nil
 }
 
+//CreateAPIKey creates a new API key pair for the given account, it returns a pointer to the APIKey pair.
 func (account *Account) CreateAPIKey() (*APIKey, error) {
 	apiKey := &APIKey{}
 

@@ -2,37 +2,45 @@ package stormpath
 
 import "net/url"
 
+//ApplicationAccountStoreMappingCriteria is the criteria type for the ApplicationAccountStoreMapping resource
 type ApplicationAccountStoreMappingCriteria struct {
 	baseCriteria
 }
 
+//OrganizationAccountStoreMappingCriteria is the criteria type for OrganizationAccountStoreMapping
 type OrganizationAccountStoreMappingCriteria struct {
 	baseCriteria
 }
 
+//MakeApplicationAccountStoreMappingCriteria creates a default ApplicationAccountStoreMappingCriteria for a single ApplicationAccountStoreMapping resource
 func MakeApplicationAccountStoreMappingCriteria() ApplicationAccountStoreMappingCriteria {
 	return ApplicationAccountStoreMappingCriteria{baseCriteria{filter: url.Values{}}}
 }
 
+//MakeApplicationAccountStoreMappingsCriteria creates a default ApplicationAccountStoreMappingCriteria for a ApplicationAccountStoreMappings collection resource
 func MakeApplicationAccountStoreMappingsCriteria() ApplicationAccountStoreMappingCriteria {
 	return ApplicationAccountStoreMappingCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
+//MakeOrganizationAccountStoreMappingCriteria creates a default OrganizationAccountStoreMappingCriteria for a single OrganizationAccountStoreMapping resource
 func MakeOrganizationAccountStoreMappingCriteria() OrganizationAccountStoreMappingCriteria {
 	return OrganizationAccountStoreMappingCriteria{baseCriteria{filter: url.Values{}}}
 }
 
+//MakeOrganizationAccountStoreMappingsCriteria creates a default OrganizationAccountStoreMappingCriteria for a OrganizationAccountStoreMappings collection resource
 func MakeOrganizationAccountStoreMappingsCriteria() OrganizationAccountStoreMappingCriteria {
 	return OrganizationAccountStoreMappingCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
 //Expansion related functions
 
+//WithApplication adds the application expansion to the given ApplicationAccountStoreMappingCriteria
 func (c ApplicationAccountStoreMappingCriteria) WithApplication() ApplicationAccountStoreMappingCriteria {
 	c.expandedAttributes = append(c.expandedAttributes, "application")
 	return c
 }
 
+//WithOrganization adds the organization expansion to the given OrganizationAccountStoreMappingCriteria
 func (c OrganizationAccountStoreMappingCriteria) WithOrganization() OrganizationAccountStoreMappingCriteria {
 	c.expandedAttributes = append(c.expandedAttributes, "organization")
 	return c
