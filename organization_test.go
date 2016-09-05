@@ -20,7 +20,7 @@ func TestOrganizationJsonMarshaling(t *testing.T) {
 func TestUpdateOrganization(t *testing.T) {
 	t.Parallel()
 
-	org := createTestOrganization()
+	org := createTestOrganization(t)
 	defer org.Delete()
 
 	org.Name = "new-name" + randomName()
@@ -37,7 +37,7 @@ func TestUpdateOrganization(t *testing.T) {
 func TestRefreshOrganization(t *testing.T) {
 	t.Parallel()
 
-	org := createTestOrganization()
+	org := createTestOrganization(t)
 	defer org.Delete()
 
 	newName := "new-name" + randomName()
@@ -51,10 +51,10 @@ func TestRefreshOrganization(t *testing.T) {
 func TestGetOrganizationDefaultAccountStoreMapping(t *testing.T) {
 	t.Parallel()
 
-	org := createTestOrganization()
+	org := createTestOrganization(t)
 	defer org.Delete()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	mapping := NewOrganizationAccountStoreMapping(org.Href, directory.Href)
@@ -73,10 +73,10 @@ func TestGetOrganizationDefaultAccountStoreMapping(t *testing.T) {
 func TestOrganizationRegisterAccount(t *testing.T) {
 	t.Parallel()
 
-	org := createTestOrganization()
+	org := createTestOrganization(t)
 	defer org.Delete()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	mapping := NewOrganizationAccountStoreMapping(org.Href, directory.Href)

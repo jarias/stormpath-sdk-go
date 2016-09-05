@@ -10,7 +10,7 @@ import (
 func TestGetApplicationOAuthPolicy(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	policy, err := application.GetOAuthPolicy()
@@ -23,7 +23,7 @@ func TestGetApplicationOAuthPolicy(t *testing.T) {
 func TestUpdateApplicationOAuthPolicy(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	policy, _ := application.GetOAuthPolicy()
@@ -43,7 +43,7 @@ func TestUpdateApplicationOAuthPolicy(t *testing.T) {
 func TestUpdateApplicationOAuthPolicyInvalidTTL(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	policy, _ := application.GetOAuthPolicy()

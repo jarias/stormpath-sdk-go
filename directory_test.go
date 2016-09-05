@@ -21,7 +21,7 @@ func TestDirectoryJsonMarshaling(t *testing.T) {
 func TestGetDirectory(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	d, err := GetDirectory(directory.Href, MakeDirectoryCriteria())
@@ -44,7 +44,7 @@ func TestGetDirectoryNotFound(t *testing.T) {
 func TestUpdateDirectory(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	directory.Name = "newName" + randomName()
@@ -59,7 +59,7 @@ func TestUpdateDirectory(t *testing.T) {
 func TestDeleteDirectory(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 
 	err := directory.Delete()
 
@@ -69,7 +69,7 @@ func TestDeleteDirectory(t *testing.T) {
 func TestGetAccountCreationPolicy(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, err := directory.GetAccountCreationPolicy()
@@ -84,7 +84,7 @@ func TestGetAccountCreationPolicy(t *testing.T) {
 func TestGetDirectoryEmptyGroupsCollection(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	groups, err := directory.GetGroups(MakeGroupsCriteria())
@@ -99,7 +99,7 @@ func TestGetDirectoryEmptyGroupsCollection(t *testing.T) {
 func TestGetDirectoryEmptyAccountsCollection(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	accounts, err := directory.GetAccounts(MakeAccountsCriteria())
@@ -114,7 +114,7 @@ func TestGetDirectoryEmptyAccountsCollection(t *testing.T) {
 func TestDirectoryCreateGroup(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	group := newTestGroup()
@@ -127,7 +127,7 @@ func TestDirectoryCreateGroup(t *testing.T) {
 func TestDirectoryRegisterAccount(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	account := newTestAccount()

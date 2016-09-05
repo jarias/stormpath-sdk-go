@@ -9,7 +9,7 @@ import (
 func TestGetEmailTemplate(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()
@@ -25,7 +25,7 @@ func TestGetEmailTemplate(t *testing.T) {
 func TestUpdateEmailTemplate(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()
@@ -47,7 +47,7 @@ func TestUpdateEmailTemplate(t *testing.T) {
 func TestRefreshEmailTemplate(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()

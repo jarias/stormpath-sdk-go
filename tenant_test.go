@@ -53,6 +53,8 @@ func TestGetCurrentTenant(t *testing.T) {
 	assert.NotEmpty(t, currentTenant.Directories.Href)
 }
 
+//TODO: Fix panic: runtime error: invalid memory address or nil pointer dereference
+// This error is caused by Purge() method when there were errors during application creation.
 func TestTenantCreateApplication(t *testing.T) {
 	t.Parallel()
 

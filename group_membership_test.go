@@ -10,13 +10,13 @@ import (
 func TestGetGroupMembershipAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	groupMembership, _ := account.AddToGroup(group)
 
@@ -42,13 +42,13 @@ func TestGetGroupMembershipAccountNotFound(t *testing.T) {
 func TestGetGroupMembershipGroup(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	groupMembership, _ := account.AddToGroup(group)
 
