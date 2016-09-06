@@ -132,6 +132,20 @@ func (dir *Directory) GetGroups(criteria Criteria) (*Groups, error) {
 	return dir.Groups, nil
 }
 
+//GetAccounts returns all the accounts from a directory
+func (dir *Directory) GetAccounts(criteria Criteria) (*Accounts, error) {
+	err := client.get(
+		buildAbsoluteURL(dir.Accounts.Href, criteria.ToQueryString()),
+		dir.Accounts,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return dir.Accounts, nil
+}
+
 //CreateGroup creates a new group in the directory
 func (dir *Directory) CreateGroup(group *Group) error {
 	return client.post(dir.Groups.Href, group, group)
