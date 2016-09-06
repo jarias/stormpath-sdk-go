@@ -2,17 +2,17 @@ package stormpath
 
 import "net/url"
 
-//ApplicationCriteria rerpresents the criteria object for an Application or Applications resources
+//ApplicationCriteria rerpresents the criteria object for an application or an applications collection.
 type ApplicationCriteria struct {
 	baseCriteria
 }
 
-//MakeApplicationCriteria an empty ApplicationCriteria for a single Application resource
+//MakeApplicationCriteria an empty ApplicationCriteria for an application.
 func MakeApplicationCriteria() ApplicationCriteria {
 	return ApplicationCriteria{baseCriteria{filter: url.Values{}}}
 }
 
-//MakeApplicationsCriteria an empty ApplicationCriteria for a Applications collection resource
+//MakeApplicationsCriteria an empty ApplicationCriteria for an applications collection.
 func MakeApplicationsCriteria() ApplicationCriteria {
 	return ApplicationCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }

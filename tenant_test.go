@@ -1,6 +1,8 @@
 package stormpath
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,6 +40,15 @@ func BenchmarkUpdateCustomData(b *testing.B) {
 			panic(err)
 		}
 	}
+}
+
+func ExampleCurrentTenant() {
+	tenant, err := CurrentTenant()
+	if err != nil {
+		log.Panicf("Couldn't get the current tenant %s", err)
+	}
+
+	fmt.Printf("tenant = %+v\n", tenant)
 }
 
 func TestGetCurrentTenant(t *testing.T) {

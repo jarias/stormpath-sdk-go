@@ -81,6 +81,13 @@ func NewLinkedInDirectory(name string, clientID string, clientSecret string, red
 	return newSocialDirectory(name, clientID, clientSecret, redirectURI, LinkedIn)
 }
 
+//CreateDirectory creates a new directory for the given tenant
+//
+//See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
+func CreateDirectory(dir *Directory) error {
+	return client.post(buildRelativeURL("directories"), dir, dir)
+}
+
 //GetDirectory loads a directory by href and criteria
 func GetDirectory(href string, criteria Criteria) (*Directory, error) {
 	directory := &Directory{}

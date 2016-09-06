@@ -25,6 +25,11 @@ func NewOrganization(name string, nameKey string) *Organization {
 	return &Organization{Name: name, NameKey: nameKey}
 }
 
+//CreateOrganization creates new organization for the given tenant
+func (tenant *Tenant) CreateOrganization(org *Organization) error {
+	return client.post(buildRelativeURL("organizations"), org, org)
+}
+
 //GetOrganization loads an organization by href and criteria
 func GetOrganization(href string, criteria Criteria) (*Organization, error) {
 	organization := &Organization{}

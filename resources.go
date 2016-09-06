@@ -12,6 +12,7 @@ type collectionResource struct {
 	ModifiedAt *time.Time `json:"modifiedAt,omitempty"`
 	Offset     *int       `json:"offset,omitempty"`
 	Limit      *int       `json:"limit,omitempty"`
+	Size       *int       `json:"size,omitempty"`
 }
 
 func (r collectionResource) IsCacheable() bool {
@@ -24,6 +25,10 @@ func (r collectionResource) GetOffset() int {
 
 func (r collectionResource) GetLimit() int {
 	return *r.Limit
+}
+
+func (r collectionResource) GetSize() int {
+	return *r.Size
 }
 
 //resource resprents the basic attributes of any resource (Application, Group, Account, etc.)
