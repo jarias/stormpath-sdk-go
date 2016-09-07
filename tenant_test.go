@@ -227,10 +227,10 @@ func TestTenantGetAccountsByCusotmData(t *testing.T) {
 
 	cdKey := "customId"
 	cdValue := "myCustomDataValue"
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	customData, err := account.UpdateCustomData(map[string]interface{}{cdKey: cdValue})
 
 	assert.NoError(t, err)
