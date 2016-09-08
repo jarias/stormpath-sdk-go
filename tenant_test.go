@@ -221,3 +221,36 @@ func TestTenantGetDirectoriesFiltered(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Stormpath Administrators", directories.Items[0].Name)
 }
+
+func TestTenantGetAccountsByCusotmData(t *testing.T) {
+	t.Parallel()
+
+	cdKey := "customId"
+	cdValue := "myCustomDataValue"
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	account := createTestAccount(application, t)
+	customData, err := account.UpdateCustomData(map[string]interface{}{cdKey: cdValue})
+
+	assert.NoError(t, err)
+	assert.Equal(t, cdValue, customData[cdKey])
+
+	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria())
+	assert.NoError(t, err)
+
+	found := false
+	for _, dir := range directories.Items {
+		accounts, err := dir.GetAccounts(MakeAccountCriteria().CustomDataEq(cdKey, cdValue))
+		assert.NoError(t, err)
+		if len(accounts.Items) > 0 {
+			assert.Equal(t, 1, len(accounts.Items))
+			cd, err := accounts.Items[0].GetCustomData()
+			assert.NoError(t, err)
+			assert.Equal(t, cdValue, cd[cdKey])
+			found = true
+		}
+	}
+
+	assert.Equal(t, found, true)
+}

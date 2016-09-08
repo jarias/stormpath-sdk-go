@@ -47,9 +47,10 @@ type accountStoreResource struct {
 	Accounts *Accounts `json:"accounts,omitempty"`
 }
 
-//GetAccounts returns all the accounts of the application
+//GetAccounts returns the accounts within a context of:
+//application, directory, group, organization.
 //
-//See: http://docs.stormpath.com/rest/product-guide/#application-accounts
+//See: http://docs.stormpath.com/rest/product-guide/latest/accnt_mgmt.html#how-to-search-accounts
 func (r *accountStoreResource) GetAccounts(criteria Criteria) (*Accounts, error) {
 	accounts := &Accounts{}
 
