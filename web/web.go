@@ -24,20 +24,11 @@ type StormpathMiddleware struct {
 	next http.Handler
 	//Configured application
 	Application *stormpath.Application
-	//Integration handlers
-	meHandler               meHandler
-	loginHandler            loginHandler
-	logoutHandler           logoutHandler
-	registerHandler         registerHandler
-	forgotPasswordHandler   forgotPasswordHandler
-	changePasswordHandler   changePasswordHandler
-	emailVerifyHandler      emailVerifyHandler
-	facebookCallbackHandler facebookCallbackHandler
-	googleCallbackHandler   googleCallbackHandler
-	linkedinCallbackHandler linkedinCallbackHandler
-	githubCallbackHandler   githubCallbackHandler
-	callbackHandler         callbackHandler
-	oauthHandler            oauthHandler
+	routes      map[string]stormpathHandler
+}
+
+type stormpathHandler interface {
+	serveHTTP(http.ResponseWriter, *http.Request, webContext)
 }
 
 //UserHandler type to handle pre/post register or pre/post login define by the user
@@ -58,48 +49,94 @@ func NewStormpathMiddleware(next http.Handler, cache stormpath.Cache) *Stormpath
 	if err != nil {
 		stormpath.Logger.Panicf("[ERROR] Couldn't load Stormpath client configuration: %s", err)
 	}
-
 	stormpath.Init(clientConfig, cache)
 
 	application := resolveApplication()
 	resolveAccountStores(application)
 
-	h := &StormpathMiddleware{
-		next:                  next,
-		Application:           application,
-		meHandler:             meHandler{application: application},
-		registerHandler:       registerHandler{application: application},
-		loginHandler:          loginHandler{application: application},
-		logoutHandler:         logoutHandler{application: application},
-		forgotPasswordHandler: forgotPasswordHandler{application: application},
-		changePasswordHandler: changePasswordHandler{application: application},
-		emailVerifyHandler:    emailVerifyHandler{application: application},
-		oauthHandler:          oauthHandler{application: application},
-		callbackHandler:       callbackHandler{application: application},
+	routes := map[string]stormpathHandler{}
+
+	if Config.LoginEnabled {
+		lh := loginHandler{application: application}
+		routes[Config.LoginURI] = lh
+		routes[Config.FacebookCallbackURI] = facebookCallbackHandler{defaultSocialHandler{application, lh}}
+		routes[Config.GoogleCallbackURI] = googleCallbackHandler{defaultSocialHandler{application, lh}}
+		routes[Config.LinkedinCallbackURI] = linkedinCallbackHandler{defaultSocialHandler{application, lh}}
+		routes[Config.GithubCallbackURI] = githubCallbackHandler{defaultSocialHandler{application, lh}}
+
+	}
+	if Config.LogoutEnabled {
+		lgh := logoutHandler{application: application}
+		routes[Config.LogoutURI] = lgh
+	}
+	if Config.RegisterEnabled {
+		rh := registerHandler{application: application}
+		routes[Config.RegisterURI] = rh
+	}
+	if Config.MeEnabled {
+		mh := meHandler{application: application}
+		routes[Config.MeURI] = mh
+	}
+	if isForgotPasswordEnabled(application) {
+		cph := changePasswordHandler{application: application}
+		routes[Config.ChangePasswordURI] = cph
+	}
+	if isForgotPasswordEnabled(application) {
+		fph := forgotPasswordHandler{application: application}
+		routes[Config.ForgotPasswordURI] = fph
+	}
+	if isVerifyEnabled(application) {
+		evh := emailVerifyHandler{application: application}
+		routes[Config.VerifyURI] = evh
+	}
+	if Config.CallbackEnabled {
+		ch := callbackHandler{application: application}
+		routes[Config.CallbackURI] = ch
+	}
+	if Config.OAuth2Enabled {
+		oh := oauthHandler{application: application}
+		routes[Config.OAuth2URI] = oh
 	}
 
-	h.facebookCallbackHandler = facebookCallbackHandler{defaultSocialHandler{application, h.loginHandler}}
-	h.googleCallbackHandler = googleCallbackHandler{defaultSocialHandler{application, h.loginHandler}}
-	h.linkedinCallbackHandler = linkedinCallbackHandler{defaultSocialHandler{application, h.loginHandler}}
-	h.githubCallbackHandler = githubCallbackHandler{defaultSocialHandler{application, h.loginHandler}}
+	h := &StormpathMiddleware{
+		next:        next,
+		routes:      routes,
+		Application: application,
+	}
 
 	return h
 }
 
 func (h *StormpathMiddleware) SetPreLoginHandler(uh UserHandler) {
-	h.loginHandler.preLoginHandler = uh
+	if Config.LoginEnabled {
+		lh := h.routes[Config.LoginURI].(loginHandler)
+		lh.preLoginHandler = uh
+		h.routes[Config.LoginURI] = lh
+	}
 }
 
 func (h *StormpathMiddleware) SetPostLoginHandler(uh UserHandler) {
-	h.loginHandler.postLoginHandler = uh
+	if Config.LoginEnabled {
+		lh := h.routes[Config.LoginURI].(loginHandler)
+		lh.postLoginHandler = uh
+		h.routes[Config.LoginURI] = lh
+	}
 }
 
 func (h *StormpathMiddleware) SetPreRegisterHandler(uh UserHandler) {
-	h.registerHandler.preRegisterHandler = uh
+	if Config.RegisterEnabled {
+		rh := h.routes[Config.RegisterURI].(registerHandler)
+		rh.preRegisterHandler = uh
+		h.routes[Config.RegisterURI] = rh
+	}
 }
 
 func (h *StormpathMiddleware) SetPostRegisterHandler(uh UserHandler) {
-	h.registerHandler.postRegisterHandler = uh
+	if Config.RegisterEnabled {
+		rh := h.routes[Config.RegisterURI].(registerHandler)
+		rh.postRegisterHandler = uh
+		h.routes[Config.RegisterURI] = rh
+	}
 }
 
 func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -114,8 +151,6 @@ func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	stormpath.GetClient().WebSDKToken = xStormpathAgent
 
-	path := r.URL.Path
-
 	if strings.HasPrefix(r.URL.Path, "/stormpath/assets/") {
 		assetsHandler(w, r)
 		return
@@ -123,74 +158,10 @@ func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	account := isAuthenticated(w, r, h.Application)
 
-	switch path {
-	case Config.MeURI:
-		if Config.MeEnabled {
-			h.meHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.LoginURI:
-		if Config.LoginEnabled {
-			h.loginHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.RegisterURI:
-		if Config.RegisterEnabled {
-			h.registerHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.LogoutURI:
-		if Config.LogoutEnabled {
-			h.logoutHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.ForgotPasswordURI:
-		if isForgotPasswordEnabled(h.Application) {
-			h.forgotPasswordHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.ChangePasswordURI:
-		if isForgotPasswordEnabled(h.Application) {
-			h.changePasswordHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.VerifyURI:
-		if isVerifyEnabled(h.Application) {
-			h.emailVerifyHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.FacebookCallbackURI:
-		if Config.LoginEnabled {
-			h.facebookCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.GoogleCallbackURI:
-		if Config.LoginEnabled {
-			h.googleCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.LinkedinCallbackURI:
-		if Config.LoginEnabled {
-			h.linkedinCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.GithubCallbackURI:
-		if Config.LoginEnabled {
-			h.githubCallbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.CallbackURI:
-		if Config.CallbackEnabled {
-			h.callbackHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
-	case Config.OAuth2URI:
-		if Config.OAuth2Enabled {
-			h.oauthHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
-			return
-		}
+	if handler, ok := h.routes[r.URL.Path]; ok {
+		handler.serveHTTP(w, r, newContext(resolvedContentType, account))
+		return
 	}
-
 	h.next.ServeHTTP(w, r)
 	return
 }
@@ -211,92 +182,6 @@ func assetsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(stormpath.ContentTypeHeader, ApplicationJavascript)
 	}
 	w.Write(data)
-}
-
-func isAuthenticated(w http.ResponseWriter, r *http.Request, application *stormpath.Application) *stormpath.Account {
-	//Cookie
-	authResult := isCookieAuthenticated(r, application)
-	if authResult != nil {
-		saveAuthenticationResult(w, r, authResult, application)
-		return authResult.GetAccount()
-	}
-	//Token
-	tokenAuthResult := isTokenBearerAuthenticated(r, application)
-	if tokenAuthResult != nil {
-		saveAuthenticationResult(w, r, tokenAuthResult, application)
-		return tokenAuthResult.GetAccount()
-	}
-	//Basic
-	basicAuthResult := isHTTPBasicAuthenticated(r, application)
-	if basicAuthResult != nil {
-		saveAuthenticationResult(w, r, basicAuthResult, application)
-		return basicAuthResult.GetAccount()
-	}
-
-	clearAuthentication(w, r, application)
-	return nil
-}
-
-func isHTTPBasicAuthenticated(r *http.Request, application *stormpath.Application) stormpath.AuthResult {
-	username, password, ok := r.BasicAuth()
-	if !ok {
-		return nil
-	}
-
-	authenticationResult, err := stormpath.NewBasicAuthenticator(application).Authenticate(username, password)
-	if err != nil {
-		return nil
-	}
-
-	return authenticationResult
-}
-
-func isTokenBearerAuthenticated(r *http.Request, application *stormpath.Application) stormpath.AuthResult {
-	authorizationHeader := r.Header.Get("Authorization")
-	if authorizationHeader == "" {
-		return nil
-	}
-
-	token := authorizationHeader[strings.Index(authorizationHeader, "Bearer ")+7:]
-
-	authenticationResult, err := stormpath.NewOAuthBearerAuthenticator(application).Authenticate(token)
-	if err != nil {
-		return nil
-	}
-
-	return authenticationResult
-}
-
-func isCookieAuthenticated(r *http.Request, application *stormpath.Application) stormpath.AuthResult {
-	isRefresh := false
-
-	cookie, err := r.Cookie(Config.AccessTokenCookieName)
-	if err == http.ErrNoCookie {
-		cookie, err = r.Cookie(Config.RefreshTokenCookieName)
-		if err != nil {
-			return nil
-		}
-		isRefresh = true
-	}
-
-	if isRefresh {
-		authenticationResult, err := stormpath.NewOAuthRefreshTokenAuthenticator(application).Authenticate(cookie.Value)
-		if err != nil {
-			return nil
-		}
-		return authenticationResult
-	}
-	//Validate the token to make sure it hasn't expire yet
-	authenticationResult, err := stormpath.NewOAuthBearerAuthenticator(application).Authenticate(cookie.Value)
-	if err != nil {
-		return nil
-	}
-
-	return authenticationResult
-}
-
-func (h *StormpathMiddleware) GetAuthenticatedAccount(w http.ResponseWriter, r *http.Request) *stormpath.Account {
-	return isAuthenticated(w, r, h.Application)
 }
 
 func resolveContentType(r *http.Request) string {
@@ -433,24 +318,4 @@ func baseURL(r *http.Request) string {
 		scheme = "https"
 	}
 	return fmt.Sprintf("%s://%s", scheme, r.Host)
-}
-
-func transientAuthenticationResult(account *stormpath.Account) *stormpath.AuthenticationResult {
-	return &stormpath.AuthenticationResult{Account: account}
-}
-
-func handleError(w http.ResponseWriter, r *http.Request, ctx webContext, h internalHandler) {
-	contentType := ctx.contentType
-
-	if contentType == stormpath.TextHTML {
-		if r.Method == http.MethodGet {
-			r.URL.RawQuery = ""
-		}
-		h(w, r, ctx)
-		return
-	}
-
-	if contentType == stormpath.ApplicationJSON {
-		badRequest(w, r, ctx.originalError)
-	}
 }
