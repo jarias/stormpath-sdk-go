@@ -65,11 +65,11 @@ func NewAccount(username, password, email, givenName, surname string) *Account {
 }
 
 //GetAccount fetches an account by href and criteria
-func GetAccount(href string, criteria Criteria) (*Account, error) {
+func GetAccount(href string, criteria AccountCriteria) (*Account, error) {
 	account := &Account{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		account,
 	)
 
@@ -132,13 +132,13 @@ func (account *Account) RemoveFromGroup(group *Group) error {
 }
 
 //GetGroupMemberships returns a paged result of the group memeberships of the given account
-func (account *Account) GetGroupMemberships(criteria Criteria) (*GroupMemberships, error) {
+func (account *Account) GetGroupMemberships(criteria GroupMembershipCriteria) (*GroupMemberships, error) {
 	groupMemberships := &GroupMemberships{}
 
 	err := client.get(
 		buildAbsoluteURL(
 			account.GroupMemberships.Href,
-			criteria.ToQueryString(),
+			criteria.toQueryString(),
 		),
 		groupMemberships,
 	)
@@ -169,7 +169,7 @@ func (account *Account) GetRefreshTokens(criteria OAuthTokenCriteria) (*OAuthTok
 	refreshTokens := &OAuthTokens{}
 
 	err := client.get(
-		buildAbsoluteURL(account.RefreshTokens.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(account.RefreshTokens.Href, criteria.toQueryString()),
 		refreshTokens,
 	)
 
@@ -185,7 +185,7 @@ func (account *Account) GetAccessTokens(criteria OAuthTokenCriteria) (*OAuthToke
 	accessTokens := &OAuthTokens{}
 
 	err := client.get(
-		buildAbsoluteURL(account.AccessTokens.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(account.AccessTokens.Href, criteria.toQueryString()),
 		accessTokens,
 	)
 

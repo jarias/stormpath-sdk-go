@@ -20,7 +20,7 @@ func BenchmarkGetCurrentTenant(b *testing.B) {
 func BenchmarkCreateApplication(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		application := newTestApplication()
-		err := tenant.CreateApplication(application)
+		err := CreateApplication(application)
 		defer application.Purge()
 		if err != nil {
 			panic(err)
@@ -72,7 +72,7 @@ func TestTenantCreateApplication(t *testing.T) {
 	application := newTestApplication()
 	defer application.Purge()
 
-	err := tenant.CreateApplication(application)
+	err := CreateApplication(application)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, application.Href)
@@ -179,7 +179,7 @@ func TestTenantCreateDirectory(t *testing.T) {
 	dir := newTestDirectory()
 	defer dir.Delete()
 
-	err := tenant.CreateDirectory(dir)
+	err := CreateDirectory(dir)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, dir.Href)

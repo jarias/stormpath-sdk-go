@@ -89,11 +89,11 @@ func CreateDirectory(dir *Directory) error {
 }
 
 //GetDirectory loads a directory by href and criteria
-func GetDirectory(href string, criteria Criteria) (*Directory, error) {
+func GetDirectory(href string, criteria DirectoryCriteria) (*Directory, error) {
 	directory := &Directory{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		directory,
 	)
 
@@ -126,9 +126,9 @@ func (dir *Directory) GetAccountCreationPolicy() (*AccountCreationPolicy, error)
 }
 
 //GetGroups returns all the groups from a directory
-func (dir *Directory) GetGroups(criteria Criteria) (*Groups, error) {
+func (dir *Directory) GetGroups(criteria GroupCriteria) (*Groups, error) {
 	err := client.get(
-		buildAbsoluteURL(dir.Groups.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(dir.Groups.Href, criteria.toQueryString()),
 		dir.Groups,
 	)
 

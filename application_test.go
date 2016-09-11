@@ -86,7 +86,7 @@ func TestValidateOAuthInvalidAccessToken(t *testing.T) {
 func TestApplicationJsonMarshaling(t *testing.T) {
 	t.Parallel()
 
-	application := NewApplication("name")
+	application := Application{Name: "name"}
 
 	jsonData, _ := json.Marshal(application)
 

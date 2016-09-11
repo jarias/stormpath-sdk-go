@@ -25,11 +25,11 @@ func NewGroup(name string) *Group {
 }
 
 //GetGroup loads a group by href and criteria
-func GetGroup(href string, criteria Criteria) (*Group, error) {
+func GetGroup(href string, criteria GroupCriteria) (*Group, error) {
 	group := &Group{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		group,
 	)
 
@@ -51,9 +51,9 @@ func (group *Group) Update() error {
 }
 
 //GetGroupAccountMemberships loads the given group memeberships
-func (group *Group) GetGroupAccountMemberships(criteria Criteria) (*GroupMemberships, error) {
+func (group *Group) GetGroupAccountMemberships(criteria GroupMembershipCriteria) (*GroupMemberships, error) {
 	err := client.get(
-		buildAbsoluteURL(group.AccountMemberships.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(group.AccountMemberships.Href, criteria.toQueryString()),
 		group.AccountMemberships,
 	)
 

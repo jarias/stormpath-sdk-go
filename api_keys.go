@@ -36,11 +36,11 @@ func MakeAPIKeysCriteria() APIKeyCriteria {
 }
 
 //GetAPIKey retrives an APIKey resource by href and optional criteria
-func GetAPIKey(href string, criteria Criteria) (*APIKey, error) {
+func GetAPIKey(href string, criteria APIKeyCriteria) (*APIKey, error) {
 	apiKey := &APIKey{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		apiKey,
 	)
 	if err != nil {

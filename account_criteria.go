@@ -20,6 +20,18 @@ func MakeAccountsCriteria() AccountCriteria {
 	return AccountCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
+//Pagination
+
+func (c AccountCriteria) Limit(limit int) AccountCriteria {
+	c.limit = limit
+	return c
+}
+
+func (c AccountCriteria) Offset(offset int) AccountCriteria {
+	c.offset = offset
+	return c
+}
+
 //Filter related functions
 
 //Possible filters:

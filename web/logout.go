@@ -10,7 +10,7 @@ type logoutHandler struct {
 	application *stormpath.Application
 }
 
-func (h logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h logoutHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if Config.IDSiteEnabled {
 		options := stormpath.IDSiteOptions{
 			CallbackURL: baseURL(r) + Config.CallbackURI,

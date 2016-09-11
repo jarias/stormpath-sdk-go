@@ -32,6 +32,26 @@ func MakeOrganizationAccountStoreMappingsCriteria() OrganizationAccountStoreMapp
 	return OrganizationAccountStoreMappingCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
+//Pagination
+func (c ApplicationAccountStoreMappingCriteria) Limit(limit int) ApplicationAccountStoreMappingCriteria {
+	c.limit = limit
+	return c
+}
+func (c ApplicationAccountStoreMappingCriteria) Offset(offset int) ApplicationAccountStoreMappingCriteria {
+	c.offset = offset
+	return c
+}
+
+func (c OrganizationAccountStoreMappingCriteria) Limit(limit int) OrganizationAccountStoreMappingCriteria {
+	c.limit = limit
+	return c
+}
+
+func (c OrganizationAccountStoreMappingCriteria) Offset(offset int) OrganizationAccountStoreMappingCriteria {
+	c.offset = offset
+	return c
+}
+
 //Expansion related functions
 
 //WithApplication adds the application expansion to the given ApplicationAccountStoreMappingCriteria

@@ -143,7 +143,7 @@ func TestCreateGoogleDirectory(t *testing.T) {
 	directory := NewGoogleDirectory("google-"+randomName(), "ClientID", "ClientSercret", "http://localhost:8080")
 	defer directory.Delete()
 
-	err := tenant.CreateDirectory(directory)
+	err := CreateDirectory(directory)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, directory.Href)
@@ -163,7 +163,7 @@ func TestCreateLinkedInDirectory(t *testing.T) {
 	directory := NewLinkedInDirectory("linkedin-"+randomName(), "ClientID", "ClientSercret", "http://localhost:8080")
 	defer directory.Delete()
 
-	err := tenant.CreateDirectory(directory)
+	err := CreateDirectory(directory)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, directory.Href)
@@ -183,7 +183,7 @@ func TestCreateFacebookDirectory(t *testing.T) {
 	directory := NewFacebookDirectory("facebook-"+randomName(), "ClientID", "ClientSercret")
 	defer directory.Delete()
 
-	err := tenant.CreateDirectory(directory)
+	err := CreateDirectory(directory)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, directory.Href)
@@ -203,7 +203,7 @@ func TestCreateGithubDirectory(t *testing.T) {
 	directory := NewGithubDirectory("github-"+randomName(), "ClientID", "ClientSercret")
 	defer directory.Delete()
 
-	err := tenant.CreateDirectory(directory)
+	err := CreateDirectory(directory)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, directory.Href)

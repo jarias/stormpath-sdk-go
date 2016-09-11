@@ -29,7 +29,7 @@ func CurrentTenant() (*Tenant, error) {
 func (tenant *Tenant) GetApplications(criteria ApplicationCriteria) (*Applications, error) {
 	apps := &Applications{}
 
-	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.ToQueryString()), apps)
+	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.toQueryString()), apps)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (tenant *Tenant) GetApplications(criteria ApplicationCriteria) (*Applicatio
 func (tenant *Tenant) GetAccounts(criteria AccountCriteria) (*Accounts, error) {
 	accounts := &Accounts{}
 
-	err := client.get(buildAbsoluteURL(tenant.Accounts.Href, criteria.ToQueryString()), accounts)
+	err := client.get(buildAbsoluteURL(tenant.Accounts.Href, criteria.toQueryString()), accounts)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (tenant *Tenant) GetAccounts(criteria AccountCriteria) (*Accounts, error) {
 func (tenant *Tenant) GetGroups(criteria GroupCriteria) (*Groups, error) {
 	groups := &Groups{}
 
-	err := client.get(buildAbsoluteURL(tenant.Groups.Href, criteria.ToQueryString()), groups)
+	err := client.get(buildAbsoluteURL(tenant.Groups.Href, criteria.toQueryString()), groups)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (tenant *Tenant) GetGroups(criteria GroupCriteria) (*Groups, error) {
 func (tenant *Tenant) GetDirectories(criteria DirectoryCriteria) (*Directories, error) {
 	directories := &Directories{}
 
-	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.ToQueryString()), directories)
+	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.toQueryString()), directories)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (tenant *Tenant) GetDirectories(criteria DirectoryCriteria) (*Directories, 
 func (tenant *Tenant) GetOrganizations(criteria OrganizationCriteria) (*Organizations, error) {
 	organizations := &Organizations{}
 
-	err := client.get(buildAbsoluteURL(tenant.Organizations.Href, criteria.ToQueryString()), organizations)
+	err := client.get(buildAbsoluteURL(tenant.Organizations.Href, criteria.toQueryString()), organizations)
 	if err != nil {
 		return nil, err
 	}

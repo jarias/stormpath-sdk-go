@@ -131,7 +131,7 @@ func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	case Config.LoginURI:
 		if Config.LoginEnabled {
-			h.loginHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.loginHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.RegisterURI:
@@ -141,7 +141,7 @@ func (h *StormpathMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	case Config.LogoutURI:
 		if Config.LogoutEnabled {
-			h.logoutHandler.ServeHTTP(w, r, newContext(resolvedContentType, account))
+			h.logoutHandler.serveHTTP(w, r, newContext(resolvedContentType, account))
 			return
 		}
 	case Config.ForgotPasswordURI:

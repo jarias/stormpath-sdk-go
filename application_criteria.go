@@ -17,6 +17,18 @@ func MakeApplicationsCriteria() ApplicationCriteria {
 	return ApplicationCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
+//Pagination
+
+func (c ApplicationCriteria) Limit(limit int) ApplicationCriteria {
+	c.limit = limit
+	return c
+}
+
+func (c ApplicationCriteria) Offset(offset int) ApplicationCriteria {
+	c.offset = offset
+	return c
+}
+
 //Filter related functions
 
 //Possible filters:

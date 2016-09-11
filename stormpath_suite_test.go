@@ -72,15 +72,15 @@ func randomName() string {
 }
 
 func newTestApplication() *Application {
-	return NewApplication("go-sdk-app-" + randomName())
+	return &Application{Name: "go-sdk-app-" + randomName()}
 }
 
 func newTestGroup() *Group {
-	return NewGroup("go-sdk-group-" + randomName())
+	return &Group{Name: "go-sdk-group-" + randomName()}
 }
 
 func newTestDirectory() *Directory {
-	return NewDirectory("go-sdk-directory-" + randomName())
+	return &Directory{Name: "go-sdk-directory-" + randomName()}
 }
 
 func newTestAccount() *Account {
@@ -95,7 +95,7 @@ func newTestOrganization() *Organization {
 
 func createTestApplication(t *testing.T) *Application {
 	application := newTestApplication()
-	e := tenant.CreateApplication(application)
+	e := CreateApplication(application)
 	failOnError(e, t)
 	return application
 }
@@ -123,7 +123,7 @@ func createTestGroup(application *Application, t *testing.T) *Group {
 
 func createTestDirectory(t *testing.T) *Directory {
 	directory := newTestDirectory()
-	e := tenant.CreateDirectory(directory)
+	e := CreateDirectory(directory)
 	failOnError(e, t)
 	return directory
 }

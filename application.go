@@ -65,7 +65,7 @@ func GetApplication(href string, criteria ApplicationCriteria) (*Application, er
 	application := &Application{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		application,
 	)
 	if err != nil {
@@ -106,7 +106,7 @@ func (app *Application) GetAccountStoreMappings(criteria ApplicationAccountStore
 	accountStoreMappings := &ApplicationAccountStoreMappings{}
 
 	err := client.get(
-		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.toQueryString()),
 		accountStoreMappings,
 	)
 
@@ -122,7 +122,7 @@ func (app *Application) GetAccountStoreMappings(criteria ApplicationAccountStore
 //It can optionally have its attributes expanded depending on the ApplicationAccountStoreMappingCriteria value.
 func (app *Application) GetDefaultAccountStoreMapping(criteria ApplicationAccountStoreMappingCriteria) (*ApplicationAccountStoreMapping, error) {
 	err := client.get(
-		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.toQueryString()),
 		app.DefaultAccountStoreMapping,
 	)
 
@@ -257,7 +257,7 @@ func (app *Application) GetGroups(criteria GroupCriteria) (*Groups, error) {
 	groups := &Groups{}
 
 	err := client.get(
-		buildAbsoluteURL(app.Groups.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(app.Groups.Href, criteria.toQueryString()),
 		groups,
 	)
 
@@ -453,7 +453,7 @@ func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
 func (app *Application) GetAPIKey(apiKeyID string, criteria APIKeyCriteria) (*APIKey, error) {
 	apiKeys := &APIKeys{}
 
-	err := client.get(buildAbsoluteURL(app.APIKeys.Href, criteria.IDEq(apiKeyID).ToQueryString()), apiKeys)
+	err := client.get(buildAbsoluteURL(app.APIKeys.Href, criteria.IDEq(apiKeyID).toQueryString()), apiKeys)
 	if err != nil {
 		return nil, err
 	}
