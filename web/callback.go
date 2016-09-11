@@ -12,7 +12,7 @@ type callbackHandler struct {
 
 func (h callbackHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
-		authenticationResult, err := stormpath.NewStormpathAssertionAuthenticator(h.application).Authenticate(r.URL.Query().Get("jwtResponse"))
+		authenticationResult, err := stormpath.NewOAuthStormpathTokenAuthenticator(h.application).Authenticate(r.URL.Query().Get("jwtResponse"))
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
