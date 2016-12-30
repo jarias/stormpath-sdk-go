@@ -65,3 +65,14 @@ func (tenant *Tenant) GetDirectories(criteria Criteria) (*Directories, error) {
 
 	return directories, err
 }
+
+//GetOrganizations returns all the organisations for the given tenant
+//
+//See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
+func (tenant *Tenant) GetOrganizations(criteria Criteria) (*Organizations, error) {
+	organizations := &Organizations{}
+
+	err := client.get(buildAbsoluteURL(tenant.Href, "organizations", criteria.ToQueryString()), organizations)
+
+	return organizations, err
+}
