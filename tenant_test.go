@@ -53,6 +53,8 @@ func TestGetCurrentTenant(t *testing.T) {
 	assert.NotEmpty(t, currentTenant.Directories.Href)
 }
 
+//TODO: Fix panic: runtime error: invalid memory address or nil pointer dereference
+// This error is caused by Purge() method when there were errors during application creation.
 func TestTenantCreateApplication(t *testing.T) {
 	t.Parallel()
 
@@ -220,6 +222,39 @@ func TestTenantGetDirectoriesFiltered(t *testing.T) {
 	assert.Equal(t, "Stormpath Administrators", directories.Items[0].Name)
 }
 
+func TestTenantGetAccountsByCusotmData(t *testing.T) {
+	t.Parallel()
+
+	cdKey := "customId"
+	cdValue := "myCustomDataValue"
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	account := createTestAccount(application, t)
+	customData, err := account.UpdateCustomData(map[string]interface{}{cdKey: cdValue})
+
+	assert.NoError(t, err)
+	assert.Equal(t, cdValue, customData[cdKey])
+
+	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria())
+	assert.NoError(t, err)
+
+	found := false
+	for _, dir := range directories.Items {
+		accounts, err := dir.GetAccounts(MakeAccountCriteria().CustomDataEq(cdKey, cdValue))
+		assert.NoError(t, err)
+		if len(accounts.Items) > 0 {
+			assert.Equal(t, 1, len(accounts.Items))
+			cd, err := accounts.Items[0].GetCustomData()
+			assert.NoError(t, err)
+			assert.Equal(t, cdValue, cd[cdKey])
+			found = true
+		}
+	}
+
+	assert.Equal(t, found, true)
+}
+
 func TestTenantGetOrganizations(t *testing.T) {
 	t.Skip("Skiping until I figure out the issue with this API call")
 
@@ -233,4 +268,3 @@ func TestTenantGetOrganizations(t *testing.T) {
 	assert.Equal(t, 0, organizations.GetOffset())
 	assert.Equal(t, 25, organizations.GetLimit())
 }
-

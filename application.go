@@ -357,6 +357,16 @@ func (app *Application) GetOAuthTokenStormpathGrantType(token string) (*OAuthRes
 	return app.getOAuthTokenCommon(values)
 }
 
+func (app *Application) GetOAuthTokenClientCredentialsGrantType(apiKeyID, apiKeySecret string) (*OAuthResponse, error) {
+	values := url.Values{
+		"grant_type":   {"client_credentials"},
+		"apiKeyId":     {apiKeyID},
+		"apiKeySecret": {apiKeySecret},
+	}
+
+	return app.getOAuthTokenCommon(values)
+}
+
 //GetOAuthTokenSocialGrantType creates a OAuth2 token response for a given social provider token
 func (app *Application) GetOAuthTokenSocialGrantType(providerID string, token string) (*OAuthResponse, error) {
 	values := url.Values{

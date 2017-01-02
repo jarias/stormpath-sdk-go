@@ -10,10 +10,10 @@ import (
 func TestGetAccountRefreshTokens(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	application.GetOAuthToken(account.Username, "1234567z!A89")
 
@@ -29,10 +29,10 @@ func TestGetAccountRefreshTokens(t *testing.T) {
 func TestGetAccountAccessTokens(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	application.GetOAuthToken(account.Username, "1234567z!A89")
 
@@ -48,10 +48,10 @@ func TestGetAccountAccessTokens(t *testing.T) {
 func TestRevokeAccountAccessToken(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	application.GetOAuthToken(account.Username, "1234567z!A89")
 
@@ -87,10 +87,10 @@ func TestGetAccountNoExists(t *testing.T) {
 func TestGetAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	newAccount := createTestAccount(application)
+	newAccount := createTestAccount(application, t)
 
 	account, err := GetAccount(newAccount.Href, MakeAccountCriteria())
 
@@ -111,7 +111,7 @@ func TestVerifyInvalidEmailToken(t *testing.T) {
 func TestVerifyValidEmailToken(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()
@@ -135,10 +135,10 @@ func TestVerifyValidEmailToken(t *testing.T) {
 func TestAccountUpdate(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	account.GivenName = "julio"
 	err := account.Update()
@@ -154,10 +154,10 @@ func TestAccountUpdate(t *testing.T) {
 func TestAccountDelete(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	err := account.Delete()
 
@@ -167,13 +167,13 @@ func TestAccountDelete(t *testing.T) {
 func TestAddAccountToGroup(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	_, err := account.AddToGroup(group)
 
@@ -188,14 +188,14 @@ func TestAddAccountToGroup(t *testing.T) {
 func TestRemoveAccountFromGroup(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	var groupCountBefore int
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
 	groupCountBefore = len(gm.Items)
@@ -212,13 +212,13 @@ func TestRemoveAccountFromGroup(t *testing.T) {
 func TestExpandGroupMembershipsAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	groupMemberships, err := account.GetGroupMemberships(MakeGroupMemershipCriteria().WithAccount().Offset(0).Limit(25))
 
@@ -232,10 +232,10 @@ func TestExpandGroupMembershipsAccount(t *testing.T) {
 func TestGetAccountCustomData(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	customData, err := account.GetCustomData()
 
@@ -259,10 +259,10 @@ func TestGetNoExistsAccountCustomData(t *testing.T) {
 func TestUpdateAccountCustomData(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	customData, err := account.UpdateCustomData(map[string]interface{}{"custom": "data"})
 

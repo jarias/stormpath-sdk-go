@@ -21,6 +21,12 @@ func (e Error) Error() string {
 }
 
 func (e Error) String() string {
+	//The autopsy shows that most of the time Message == DeveloperMessage thus.
+	//If Message has different content than DeveloperMessage
+	//return the combined message - hopefully the moste informative one.
+	if e.Message != e.DeveloperMessage && e.DeveloperMessage != "" {
+		return e.Message + " " + e.DeveloperMessage
+	}
 	return e.Message
 }
 

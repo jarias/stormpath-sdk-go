@@ -1,6 +1,9 @@
 package stormpath
 
-import "net/url"
+import (
+	"fmt"
+	"net/url"
+)
 
 type AccountCriteria struct {
 	baseCriteria
@@ -23,6 +26,7 @@ func MakeAccountsCriteria() AccountCriteria {
 //* username
 //* middleName
 //* status
+//* customData
 
 func (c AccountCriteria) GivenNameEq(givenName string) AccountCriteria {
 	c.filter.Add("givenName", givenName)
@@ -51,6 +55,11 @@ func (c AccountCriteria) MiddleNameEq(middleName string) AccountCriteria {
 
 func (c AccountCriteria) StatusEq(status string) AccountCriteria {
 	c.filter.Add("status", status)
+	return c
+}
+
+func (c AccountCriteria) CustomDataEq(k string, v string) AccountCriteria {
+	c.filter.Add(fmt.Sprintf("customData.%s", k), v)
 	return c
 }
 

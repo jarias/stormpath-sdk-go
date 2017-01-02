@@ -158,25 +158,14 @@ func (a OAuthClientCredentialsAuthenticator) Authenticate(accountAPIKeyID, accou
 		}
 	}
 
-	_, err := NewBasicAuthenticator(a.Application).Authenticate(accountAPIKeyID, accountAPIKeySecret)
+	oAuthResponse, err := a.Application.GetOAuthTokenClientCredentialsGrantType(accountAPIKeyID, accountAPIKeySecret)
 	if err != nil {
 		return nil, fmt.Errorf("invalid_client")
 	}
 
-	claims := GrantTypeClientCredentialsTokenClaims{}
-	claims.IssuedAt = time.Now().Unix()
-	claims.ExpiresAt = time.Now().Add(a.TTL).Unix()
-	claims.Issuer = a.Application.Href
-	claims.Subject = accountAPIKeyID
-	claims.Scope = scope
+	oauthResult := OAuthClientCredentialsAuthenticationResult(*oAuthResponse)
 
-	jwtString := JWT(claims, map[string]interface{}{})
-
-	return &OAuthClientCredentialsAuthenticationResult{
-		AccessToken: jwtString,
-		ExpiresIn:   int(a.TTL.Seconds()),
-		TokenType:   "bearer",
-	}, nil
+	return &oauthResult, nil
 }
 
 func NewOAuthPasswordAuthenticator(application *Application) OAuthPasswordAuthenticator {
@@ -275,21 +264,11 @@ func (ar *OAuthAccessTokenResult) GetAccount() *Account {
 }
 
 func (ar *OAuthClientCredentialsAuthenticationResult) GetAccount() *Account {
-	claims := &GrantTypeClientCredentialsTokenClaims{}
+	claims := &AccessTokenClaims{}
 
 	ParseJWT(ar.AccessToken, claims)
 
-	application, err := GetApplication(claims.Issuer, MakeApplicationCriteria())
-	if err != nil {
-		return nil
-	}
-
-	apiKey, err := application.GetAPIKey(claims.Subject, MakeAPIKeysCriteria())
-	if err != nil {
-		return nil
-	}
-
-	account, err := GetAccount(apiKey.Account.Href, MakeAccountCriteria().WithProviderData().WithDirectory())
+	account, err := GetAccount(claims.Subject, MakeAccountCriteria().WithProviderData().WithDirectory())
 	if err != nil {
 		return nil
 	}

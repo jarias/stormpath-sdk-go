@@ -21,10 +21,10 @@ func TestGroupJsonMarshaling(t *testing.T) {
 func TestGetGroup(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
 	existingGroup, err := GetGroup(group.Href, MakeGroupCriteria())
@@ -46,10 +46,10 @@ func TestGetGroupNotFound(t *testing.T) {
 func TestGroupRefresh(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
 	g := &Group{}
@@ -75,10 +75,10 @@ func TestGroupRefreshNotFound(t *testing.T) {
 func TestUpdateGroup(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
 	group.Name = "newName" + randomName()
@@ -93,10 +93,10 @@ func TestUpdateGroup(t *testing.T) {
 func TestGetGroupAccountMemberships(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
 	gm, err := group.GetGroupAccountMemberships(MakeGroupMemershipsCriteria())

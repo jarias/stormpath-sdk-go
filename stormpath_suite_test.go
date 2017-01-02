@@ -93,32 +93,43 @@ func newTestOrganization() *Organization {
 	return NewOrganization("go-sdk-org-"+randomName(), "go-sdk-org-"+randomName())
 }
 
-func createTestApplication() *Application {
+func createTestApplication(t *testing.T) *Application {
 	application := newTestApplication()
-	tenant.CreateApplication(application)
+	e := tenant.CreateApplication(application)
+	failOnError(e, t)
 	return application
 }
 
-func createTestOrganization() *Organization {
+func createTestOrganization(t *testing.T) *Organization {
 	organization := newTestOrganization()
-	tenant.CreateOrganization(organization)
+	e := tenant.CreateOrganization(organization)
+	failOnError(e, t)
 	return organization
 }
 
-func createTestAccount(application *Application) *Account {
+func createTestAccount(application *Application, t *testing.T) *Account {
 	account := newTestAccount()
-	application.RegisterAccount(account)
+	e := application.RegisterAccount(account)
+	failOnError(e, t)
 	return account
 }
 
-func createTestGroup(application *Application) *Group {
+func createTestGroup(application *Application, t *testing.T) *Group {
 	group := newTestGroup()
-	application.CreateGroup(group)
+	e := application.CreateGroup(group)
+	failOnError(e, t)
 	return group
 }
 
-func createTestDirectory() *Directory {
+func createTestDirectory(t *testing.T) *Directory {
 	directory := newTestDirectory()
-	tenant.CreateDirectory(directory)
+	e := tenant.CreateDirectory(directory)
+	failOnError(e, t)
 	return directory
+}
+
+func failOnError(e error, t *testing.T) {
+	if e != nil {
+		t.Fatal(e)
+	}
 }

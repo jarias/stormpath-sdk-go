@@ -10,10 +10,10 @@ import (
 func TestOAuthStormpathTokenAuthenticator(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	claims := GrantTypeStormpathTokenClaims{}
 	claims.IssuedAt = time.Now().Unix()
@@ -41,7 +41,7 @@ func TestOAuthStormpathTokenAuthenticator(t *testing.T) {
 func TestOAuthStormpathTokenAuthenticatorInvalidToken(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	authenticator := NewOAuthStormpathTokenAuthenticator(application)
@@ -49,17 +49,17 @@ func TestOAuthStormpathTokenAuthenticatorInvalidToken(t *testing.T) {
 	authResult, err := authenticator.Authenticate("I'm not a JWT token really")
 
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Token is invalid")
+	assert.EqualError(t, err, "Token is invalid Token is invalid because verifying the signature of a JWT failed.")
 	assert.Nil(t, authResult)
 }
 
 func TestOAuthClientCredentialsAuthenticator(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	apiKey, _ := account.CreateAPIKey()
 
 	authenticator := NewOAuthClientCredentialsAuthenticator(application)
@@ -75,7 +75,7 @@ func TestOAuthClientCredentialsAuthenticator(t *testing.T) {
 func TestOAuthClientCredentialsAuthenticatorInvalidCredentials(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	authenticator := NewOAuthClientCredentialsAuthenticator(application)
@@ -90,7 +90,7 @@ func TestOAuthClientCredentialsAuthenticatorInvalidCredentials(t *testing.T) {
 func TestOAuthClientCredentialsAuthenticatorScopeFactory(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	authenticator := NewOAuthClientCredentialsAuthenticator(application)
@@ -108,10 +108,10 @@ func TestOAuthClientCredentialsAuthenticatorScopeFactory(t *testing.T) {
 func TestOAuthClientCredentialsAuthenticatorScopeFactoryValidScope(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	apiKey, _ := account.CreateAPIKey()
 
 	authenticator := NewOAuthClientCredentialsAuthenticator(application)
@@ -130,10 +130,10 @@ func TestOAuthClientCredentialsAuthenticatorScopeFactoryValidScope(t *testing.T)
 func TestBasicAuthenticator(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	apiKey, _ := account.CreateAPIKey()
 
 	authenticator := NewBasicAuthenticator(application)
@@ -147,7 +147,7 @@ func TestBasicAuthenticator(t *testing.T) {
 func TestBasicAuthenticatorInvalidCredentials(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	authenticator := NewBasicAuthenticator(application)
@@ -161,10 +161,10 @@ func TestBasicAuthenticatorInvalidCredentials(t *testing.T) {
 func TestBasicAuthenticatorDisabledCredentials(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	apiKey, _ := account.CreateAPIKey()
 	apiKey.Status = Disabled
 	apiKey.Update()
@@ -181,10 +181,10 @@ func TestBasicAuthenticatorDisabledCredentials(t *testing.T) {
 func TestBasicAuthenticatorDisabledAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	apiKey, _ := account.CreateAPIKey()
 	account.Status = Disabled
 	account.Update()
@@ -201,10 +201,10 @@ func TestBasicAuthenticatorDisabledAccount(t *testing.T) {
 func TestBasicAuthenticatorInvalidSecret(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	apiKey, _ := account.CreateAPIKey()
 
 	authenticator := NewBasicAuthenticator(application)
@@ -219,10 +219,10 @@ func TestBasicAuthenticatorInvalidSecret(t *testing.T) {
 func TestOAuthPasswordAuthenticator(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	authenticator := NewOAuthPasswordAuthenticator(application)
 
@@ -237,27 +237,27 @@ func TestOAuthPasswordAuthenticator(t *testing.T) {
 func TestOAuthPasswordAuthenticatorInvalidCredentials(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	authenticator := NewOAuthPasswordAuthenticator(application)
 
 	authResult, err := authenticator.Authenticate(account.Username, "foo")
 
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Invalid username or password.")
+	assert.EqualError(t, err, "Invalid username or password. Login attempt failed because the specified password is incorrect.")
 	assert.Nil(t, authResult)
 }
 
 func TestOAuthRefreshTokenAuthenticator(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 	oauthResponse, _ := application.GetOAuthToken(account.Username, "1234567z!A89")
 
 	authenticator := NewOAuthRefreshTokenAuthenticator(application)
@@ -273,7 +273,7 @@ func TestOAuthRefreshTokenAuthenticator(t *testing.T) {
 func TestOAuthRefreshTokenAuthenticatorInvalidToken(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	authenticator := NewOAuthRefreshTokenAuthenticator(application)
@@ -281,6 +281,6 @@ func TestOAuthRefreshTokenAuthenticatorInvalidToken(t *testing.T) {
 	authResult, err := authenticator.Authenticate("foo")
 
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Token is invalid")
+	assert.EqualError(t, err, "Token is invalid Token is invalid because verifying the signature of a JWT failed.")
 	assert.Nil(t, authResult)
 }
