@@ -39,7 +39,7 @@ var mainTemplate = `
 </head>
 
 <body>
-    <div class="container">		
+    <div class="container">
 		{{ if .account }}
 		<h1>Hello {{ .account.FullName }}</h1>
 		<h4>Provider: {{ .account.ProviderData.ProviderID }}</h4>     

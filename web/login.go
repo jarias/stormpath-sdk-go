@@ -117,6 +117,14 @@ func (h loginHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webCont
 			return
 		}
 		authenticationResult = transientAuthenticationResult(account)
+	} else if _, exists := postedData["providerId"]; exists {
+		oauthResponse, err := h.application.GetOAuthTokenSocialGrantType(postedData["providerId"], postedData["accessToken"])
+		if err != nil {
+			handleError(w, r, ctx.withError(postedData, err), h.doGET)
+			return
+		}
+		oauthAccessTokenResult := stormpath.OAuthAccessTokenResult(*oauthResponse)
+		authenticationResult = &oauthAccessTokenResult
 	} else {
 		err := validateForm(Config.LoginForm, postedData)
 		if err != nil {
