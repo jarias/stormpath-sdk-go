@@ -139,6 +139,13 @@ func (a OAuthRequestAuthenticator) Authenticate(r *http.Request) (*OAuthAccessTo
 			return nil, err
 		}
 		return authResult, nil
+	case "stormpath_social":
+		oauthResponse, err := a.Application.GetOAuthTokenSocialGrantType(r.Form.Get("providerId"), r.Form.Get("accessToken"))
+		if err != nil {
+			return nil, err
+		}
+		result := OAuthAccessTokenResult(*oauthResponse)
+		return &result, nil
 	}
 
 	return nil, fmt.Errorf("unsupported_grant_type")
