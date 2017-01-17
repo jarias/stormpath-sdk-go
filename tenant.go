@@ -7,6 +7,7 @@ type Tenant struct {
 	customDataAwareResource
 	Name          string         `json:"name,omitempty"`
 	Key           string         `json:"key,omitempty"`
+	Accounts      *Accounts      `json:"accounts,omitempty"`
 	Applications  *Applications  `json:"applications,omitempty"`
 	Directories   *Directories   `json:"directories,omitempty"`
 	Groups        *Groups        `json:"groups,omitempty"`
@@ -42,6 +43,15 @@ func (tenant *Tenant) CreateDirectory(dir *Directory) error {
 //CreateOrganization creates new organization for the given tenant
 func (tenant *Tenant) CreateOrganization(org *Organization) error {
 	return client.post(buildRelativeURL("organizations"), org, org)
+}
+
+//GetAccounts returns all the accounts for the given tenant
+func (tenant *Tenant) GetAccounts(criteria Criteria) (*Accounts, error) {
+	accounts := &Accounts{}
+
+	err := client.get(buildAbsoluteURL(tenant.Accounts.Href, criteria.ToQueryString()), accounts)
+
+	return accounts, err
 }
 
 //GetApplications returns all the applications for the given tenant

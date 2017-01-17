@@ -2,6 +2,7 @@ package stormpath
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -222,7 +223,7 @@ func TestTenantGetDirectoriesFiltered(t *testing.T) {
 	assert.Equal(t, "Stormpath Administrators", directories.Items[0].Name)
 }
 
-func TestTenantGetAccountsByCusotmData(t *testing.T) {
+func TestTenantGetAccountsByCustomData(t *testing.T) {
 	t.Parallel()
 
 	cdKey := "customId"
@@ -236,23 +237,11 @@ func TestTenantGetAccountsByCusotmData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, cdValue, customData[cdKey])
 
-	directories, err := tenant.GetDirectories(MakeDirectoriesCriteria())
-	assert.NoError(t, err)
+	time.Sleep(5 * time.Second)
 
-	found := false
-	for _, dir := range directories.Items {
-		accounts, err := dir.GetAccounts(MakeAccountCriteria().CustomDataEq(cdKey, cdValue))
-		assert.NoError(t, err)
-		if len(accounts.Items) > 0 {
-			assert.Equal(t, 1, len(accounts.Items))
-			cd, err := accounts.Items[0].GetCustomData()
-			assert.NoError(t, err)
-			assert.Equal(t, cdValue, cd[cdKey])
-			found = true
-		}
-	}
+	accounts, err := tenant.GetAccounts(MakeAccountCriteria().CustomDataEq(cdKey, cdValue))
 
-	assert.Equal(t, found, true)
+	assert.Len(t, accounts.Items, 1)
 }
 
 func TestTenantGetOrganizations(t *testing.T) {

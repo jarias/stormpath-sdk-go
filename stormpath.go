@@ -282,6 +282,9 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
 
+	//In Go 1.8 the authorization header remains in the redirect request causing auth errors
+	req.Header.Del(AuthorizationHeader)
+
 	//We can use an empty payload cause the only redirect is for the current tenant
 	//this could change in the future
 	Authenticate(req, emptyPayload(), time.Now().In(time.UTC), client.ClientConfiguration.APIKeyID, client.ClientConfiguration.APIKeySecret, nonce)
