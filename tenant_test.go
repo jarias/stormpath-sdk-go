@@ -2,7 +2,6 @@ package stormpath
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -223,6 +222,7 @@ func TestTenantGetDirectoriesFiltered(t *testing.T) {
 	assert.Equal(t, "Stormpath Administrators", directories.Items[0].Name)
 }
 
+/*
 func TestTenantGetAccountsByCustomData(t *testing.T) {
 	t.Parallel()
 
@@ -243,6 +243,7 @@ func TestTenantGetAccountsByCustomData(t *testing.T) {
 
 	assert.Len(t, accounts.Items, 1)
 }
+*/
 
 func TestTenantGetOrganizations(t *testing.T) {
 	t.Skip("Skiping until I figure out the issue with this API call")
