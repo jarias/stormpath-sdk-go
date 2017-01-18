@@ -32,7 +32,7 @@ func TestDirectoryCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -59,7 +59,7 @@ func TestDirectoriesCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -87,7 +87,7 @@ func TestAccountCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -109,7 +109,7 @@ func TestGroupCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -135,7 +135,7 @@ func TestApplicationCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -159,7 +159,7 @@ func TestOrganizationCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -176,7 +176,7 @@ func TestGroupMembershipCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -193,7 +193,7 @@ func TestAPIKeyCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -209,7 +209,7 @@ func TestApplicationAccountStoreMappingCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }
 
@@ -225,6 +225,6 @@ func TestOrganizationAccountStoreMappingCriteria(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		assert.Equal(t, c.expected, c.actual.ToQueryString())
+		assert.Equal(t, c.expected, c.actual.toQueryString())
 	}
 }

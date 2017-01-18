@@ -1,8 +1,8 @@
 package stormpath
 
-import "net/url"
-
-//Tenant represents a Stormpath tennat see http://docs.stormpath.com/rest/product-guide/#tenants
+//Tenant
+//
+//When you sign up for Stormpath, a private data space is created for you. This space is represented as a Tenant resource in the Stormpath REST API. Your Tenant resource can be thought of as your global starting point. You can access everything in your space by accessing your Tenant resource first and then interacting with its other linked resources (Applications, Directories, etc).
 type Tenant struct {
 	customDataAwareResource
 	Name          string         `json:"name,omitempty"`
@@ -14,7 +14,7 @@ type Tenant struct {
 	Organizations *Organizations `json:"organizations,omitempty"`
 }
 
-//CurrentTenant returns the current tenant see http://docs.stormpath.com/rest/product-guide/#retrieve-the-current-tenant
+//CurrentTenant retrieves the Tenant associated with the current API key.
 func CurrentTenant() (*Tenant, error) {
 	tenant := &Tenant{}
 
@@ -23,66 +23,72 @@ func CurrentTenant() (*Tenant, error) {
 	return tenant, err
 }
 
-//CreateApplication creates a new application for the given tenant
+//GetApplications retrieves the collection of all the applications associated with the Tenant.
 //
-//See: http://docs.stormpath.com/rest/product-guide/#tenant-applications
-func (tenant *Tenant) CreateApplication(app *Application) error {
-	var extraParams = url.Values{}
-	extraParams.Add("createDirectory", "true")
-
-	return client.post(buildRelativeURL("applications", requestParams(extraParams)), app, app)
-}
-
-//CreateDirectory creates a new directory for the given tenant
-//
-//See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
-func (tenant *Tenant) CreateDirectory(dir *Directory) error {
-	return client.post(buildRelativeURL("directories"), dir, dir)
-}
-
-//CreateOrganization creates new organization for the given tenant
-func (tenant *Tenant) CreateOrganization(org *Organization) error {
-	return client.post(buildRelativeURL("organizations"), org, org)
-}
-
-//GetAccounts returns all the accounts for the given tenant
-func (tenant *Tenant) GetAccounts(criteria Criteria) (*Accounts, error) {
-	accounts := &Accounts{}
-
-	err := client.get(buildAbsoluteURL(tenant.Accounts.Href, criteria.ToQueryString()), accounts)
-
-	return accounts, err
-}
-
-//GetApplications returns all the applications for the given tenant
-//
-//See: http://docs.stormpath.com/rest/product-guide/#tenant-applications
-func (tenant *Tenant) GetApplications(criteria Criteria) (*Applications, error) {
+//The collection can be filtered and/or paginated by passing the desire ApplicationCriteria value.
+func (tenant *Tenant) GetApplications(criteria ApplicationCriteria) (*Applications, error) {
 	apps := &Applications{}
 
-	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.ToQueryString()), apps)
+	err := client.get(buildAbsoluteURL(tenant.Applications.Href, criteria.toQueryString()), apps)
+	if err != nil {
+		return nil, err
+	}
 
-	return apps, err
+	return apps, nil
 }
 
-//GetDirectories returns all the directories for the given tenant
+//GetAccounts retrieves the collection of all the accounts associated with the Tenant.
 //
-//See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
-func (tenant *Tenant) GetDirectories(criteria Criteria) (*Directories, error) {
+//The collection can be filtered and/or paginated by passing the desire AccountCriteria value.
+func (tenant *Tenant) GetAccounts(criteria AccountCriteria) (*Accounts, error) {
+	accounts := &Accounts{}
+
+	err := client.get(buildAbsoluteURL(tenant.Accounts.Href, criteria.toQueryString()), accounts)
+	if err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+}
+
+//GetGroups retrieves the collection of all the groups associated with the Tenant.
+//
+//The collection can be filtered and/or paginated by passing the desire GroupCriteria value.
+func (tenant *Tenant) GetGroups(criteria GroupCriteria) (*Groups, error) {
+	groups := &Groups{}
+
+	err := client.get(buildAbsoluteURL(tenant.Groups.Href, criteria.toQueryString()), groups)
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+//GetDirectories retrieves the collection of all the directories associated with the Tenant.
+//
+//The collection can be filtered and/or paginated by passing the desire DirectoryCriteria value
+func (tenant *Tenant) GetDirectories(criteria DirectoryCriteria) (*Directories, error) {
 	directories := &Directories{}
 
-	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.ToQueryString()), directories)
+	err := client.get(buildAbsoluteURL(tenant.Directories.Href, criteria.toQueryString()), directories)
+	if err != nil {
+		return nil, err
+	}
 
-	return directories, err
+	return directories, nil
 }
 
-//GetOrganizations returns all the organisations for the given tenant
+//GetOrganizations retrieves the collection of all the organizations associated with the Tenant.
 //
-//See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
-func (tenant *Tenant) GetOrganizations(criteria Criteria) (*Organizations, error) {
+//The collection can be filtered and/or paginated by passing the desire OrganizationCriteria value
+func (tenant *Tenant) GetOrganizations(criteria OrganizationCriteria) (*Organizations, error) {
 	organizations := &Organizations{}
 
-	err := client.get(buildAbsoluteURL(tenant.Href, "organizations", criteria.ToQueryString()), organizations)
+	err := client.get(buildAbsoluteURL(tenant.Organizations.Href, criteria.toQueryString()), organizations)
+	if err != nil {
+		return nil, err
+	}
 
-	return organizations, err
+	return organizations, nil
 }

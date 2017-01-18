@@ -98,16 +98,8 @@ func (client *Client) execute(method string, urlStr string, body interface{}, re
 }
 
 func buildRelativeURL(parts ...string) string {
-	buffer := bytes.NewBufferString(client.ClientConfiguration.BaseURL)
-
-	for i, part := range parts {
-		buffer.WriteString(part)
-		if !strings.HasSuffix(part, "/") && i+1 < len(parts) {
-			buffer.WriteString("/")
-		}
-	}
-
-	return buffer.String()
+	p := append([]string{client.ClientConfiguration.BaseURL}, parts...)
+	return buildAbsoluteURL(p...)
 }
 
 func buildAbsoluteURL(parts ...string) string {

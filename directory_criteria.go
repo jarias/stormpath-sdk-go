@@ -16,6 +16,18 @@ func MakeDirectoriesCriteria() DirectoryCriteria {
 	return DirectoryCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
+//Pagination
+
+func (c DirectoryCriteria) Limit(limit int) DirectoryCriteria {
+	c.limit = limit
+	return c
+}
+
+func (c DirectoryCriteria) Offset(offset int) DirectoryCriteria {
+	c.offset = offset
+	return c
+}
+
 //Filter related functions
 
 //Possible filters:

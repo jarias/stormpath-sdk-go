@@ -197,13 +197,13 @@ func TestRemoveAccountFromGroup(t *testing.T) {
 
 	account := createTestAccount(application, t)
 
-	gm, _ := account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
+	gm, _ := account.GetGroupMemberships(MakeGroupMemershipsCriteria().Offset(0).Limit(25))
 	groupCountBefore = len(gm.Items)
 
 	account.AddToGroup(group)
 
 	err := account.RemoveFromGroup(group)
-	gm, _ = account.GetGroupMemberships(MakeAccountCriteria().Offset(0).Limit(25))
+	gm, _ = account.GetGroupMemberships(MakeGroupMemershipsCriteria().Offset(0).Limit(25))
 
 	assert.NoError(t, err)
 	assert.Len(t, gm.Items, groupCountBefore)

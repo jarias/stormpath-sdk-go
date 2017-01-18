@@ -10,7 +10,7 @@ type meHandler struct {
 	application *stormpath.Application
 }
 
-func (h meHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h meHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	if r.Method == http.MethodGet {
 		if ctx.account != nil {
 			w.Header().Set("Cache-Control", "no-store, no-cache")

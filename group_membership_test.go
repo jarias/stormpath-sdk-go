@@ -64,7 +64,7 @@ func TestGetGroupMembershipGroupNotFound(t *testing.T) {
 
 	gm := NewGroupMembership(client.ClientConfiguration.BaseURL+"/accounts/XXX", client.ClientConfiguration.BaseURL+"/groups/XXX")
 
-	group, err := gm.GetGroup(MakeAccountCriteria())
+	group, err := gm.GetGroup(MakeGroupCriteria())
 
 	assert.Error(t, err)
 	assert.Nil(t, group)

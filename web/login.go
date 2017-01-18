@@ -16,7 +16,7 @@ type loginHandler struct {
 	application      *stormpath.Application
 }
 
-func (h loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
+func (h loginHandler) serveHTTP(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	ctx.next = r.URL.Query().Get(NextKey)
 
 	if ctx.account != nil {

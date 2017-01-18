@@ -1,6 +1,8 @@
 package stormpath
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +20,7 @@ func BenchmarkGetCurrentTenant(b *testing.B) {
 func BenchmarkCreateApplication(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		application := newTestApplication()
-		err := tenant.CreateApplication(application)
+		err := CreateApplication(application)
 		defer application.Purge()
 		if err != nil {
 			panic(err)
@@ -38,6 +40,15 @@ func BenchmarkUpdateCustomData(b *testing.B) {
 			panic(err)
 		}
 	}
+}
+
+func ExampleCurrentTenant() {
+	tenant, err := CurrentTenant()
+	if err != nil {
+		log.Panicf("Couldn't get the current tenant %s", err)
+	}
+
+	fmt.Printf("tenant = %+v\n", tenant)
 }
 
 func TestGetCurrentTenant(t *testing.T) {
@@ -61,7 +72,7 @@ func TestTenantCreateApplication(t *testing.T) {
 	application := newTestApplication()
 	defer application.Purge()
 
-	err := tenant.CreateApplication(application)
+	err := CreateApplication(application)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, application.Href)
@@ -168,7 +179,7 @@ func TestTenantCreateDirectory(t *testing.T) {
 	dir := newTestDirectory()
 	defer dir.Delete()
 
-	err := tenant.CreateDirectory(dir)
+	err := CreateDirectory(dir)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, dir.Href)

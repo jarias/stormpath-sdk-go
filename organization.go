@@ -25,12 +25,17 @@ func NewOrganization(name string, nameKey string) *Organization {
 	return &Organization{Name: name, NameKey: nameKey}
 }
 
+//CreateOrganization creates new organization for the given tenant
+func (tenant *Tenant) CreateOrganization(org *Organization) error {
+	return client.post(buildRelativeURL("organizations"), org, org)
+}
+
 //GetOrganization loads an organization by href and criteria
-func GetOrganization(href string, criteria Criteria) (*Organization, error) {
+func GetOrganization(href string, criteria OrganizationCriteria) (*Organization, error) {
 	organization := &Organization{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		organization,
 	)
 
@@ -48,11 +53,11 @@ func (org *Organization) Update() error {
 }
 
 //GetAccountStoreMappings returns all the applications account store mappings
-func (org *Organization) GetAccountStoreMappings(criteria Criteria) (*OrganizationAccountStoreMappings, error) {
+func (org *Organization) GetAccountStoreMappings(criteria OrganizationAccountStoreMappingCriteria) (*OrganizationAccountStoreMappings, error) {
 	accountStoreMappings := &OrganizationAccountStoreMappings{}
 
 	err := client.get(
-		buildAbsoluteURL(org.AccountStoreMappings.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(org.AccountStoreMappings.Href, criteria.toQueryString()),
 		accountStoreMappings,
 	)
 
@@ -63,9 +68,9 @@ func (org *Organization) GetAccountStoreMappings(criteria Criteria) (*Organizati
 	return accountStoreMappings, nil
 }
 
-func (org *Organization) GetDefaultAccountStoreMapping(criteria Criteria) (*OrganizationAccountStoreMapping, error) {
+func (org *Organization) GetDefaultAccountStoreMapping(criteria OrganizationAccountStoreMappingCriteria) (*OrganizationAccountStoreMapping, error) {
 	err := client.get(
-		buildAbsoluteURL(org.DefaultAccountStoreMapping.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(org.DefaultAccountStoreMapping.Href, criteria.toQueryString()),
 		org.DefaultAccountStoreMapping,
 	)
 

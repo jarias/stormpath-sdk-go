@@ -10,8 +10,20 @@ func MakeGroupMemershipCriteria() GroupMembershipCriteria {
 	return GroupMembershipCriteria{baseCriteria{filter: url.Values{}}}
 }
 
-func MakeGroupMemershipsCriteria() GroupCriteria {
-	return GroupCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
+func MakeGroupMemershipsCriteria() GroupMembershipCriteria {
+	return GroupMembershipCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
+}
+
+//Pagination
+
+func (c GroupMembershipCriteria) Limit(limit int) GroupMembershipCriteria {
+	c.limit = limit
+	return c
+}
+
+func (c GroupMembershipCriteria) Offset(offset int) GroupMembershipCriteria {
+	c.offset = offset
+	return c
 }
 
 //Expansion related functions

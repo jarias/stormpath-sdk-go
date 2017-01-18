@@ -1,7 +1,6 @@
 package stormpath
 
 import (
-	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -11,9 +10,7 @@ import (
 	"github.com/nu7hatch/gouuid"
 )
 
-//Application represents a Stormpath application object
-//
-//See: http://docs.stormpath.com/rest/product-guide/#applications
+//Application is resource in Stormpath contains information about any real-world software that communicates with Stormpath via REST APIs. You control who may log in to an application by assigning (or ‘mapping’) one or more Directory, Group, or Organization resources (generically called Account Stores) to an Application resource. The Accounts in these associated Account Stores collectively form the application’s user base.
 type Application struct {
 	accountStoreResource
 	Name                       string                           `json:"name,omitempty"`
@@ -29,13 +26,15 @@ type Application struct {
 	APIKeys                    *APIKeys                         `json:"apiKeys,omitempty"`
 }
 
-//Applications represents a paged result or applications
+//Applications is the collection resource of applications.
+//
+//For more on Stormpath collection resources see: http://docs.stormpath.com/rest/product-guide/latest/reference.html#collection-resource
 type Applications struct {
 	collectionResource
 	Items []Application `json:"items,omitempty"`
 }
 
-//CallbackResult holds the ID Site callback parsed JWT token information + the acccount if one was given
+//CallbackResult is the parsed IDSite callback JWT token information and an optional account if the tocken contain one.
 type CallbackResult struct {
 	Account *Account
 	State   string
@@ -43,6 +42,7 @@ type CallbackResult struct {
 	Status  string
 }
 
+//IDSiteOptions represents the posible options to generate an new IDSite URL.
 type IDSiteOptions struct {
 	Logout      bool
 	Path        string
@@ -50,41 +50,48 @@ type IDSiteOptions struct {
 	State       string
 }
 
-//NewApplication creates a new application
-func NewApplication(name string) *Application {
-	return &Application{Name: name}
+//CreateApplication creates a new application in Stormpath.
+//It also passes the createDirectory param as true so the default directory would be created and mapped to the application.
+func CreateApplication(app *Application) error {
+	var extraParams = url.Values{}
+	extraParams.Add("createDirectory", "true")
+
+	return client.post(buildRelativeURL("applications", requestParams(extraParams)), app, app)
 }
 
-//GetApplication loads an application by href and criteria
-func GetApplication(href string, criteria Criteria) (*Application, error) {
+//GetApplication loads an application by href.
+//It can optionally have its attributes expanded depending on the ApplicationCriteria value.
+func GetApplication(href string, criteria ApplicationCriteria) (*Application, error) {
 	application := &Application{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		application,
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	return application, err
+	return application, nil
 }
 
-//Refresh refreshes the resource by doing a GET to the resource href endpoint
+//Refresh refreshes the application based on the latest state from Stormpath.
 func (app *Application) Refresh() error {
 	return client.get(app.Href, app)
 }
 
-//Update updates the given resource, by doing a POST to the resource Href
+//Update updates the application in Stormpath.
 func (app *Application) Update() error {
 	return client.post(app.Href, app, app)
 }
 
-//Purge deletes all the account stores before deleting the application
-//
-//See: http://docs.stormpath.com/rest/product-guide/#delete-an-application
+//Purge deletes the application and all its account stores.
 func (app *Application) Purge() error {
-	accountStoreMappings, err := app.GetAccountStoreMappings(MakeApplicationAccountStoreMappingCriteria().Offset(0).Limit(25))
+	accountStoreMappings, err := app.GetAccountStoreMappings(MakeApplicationAccountStoreMappingsCriteria())
 	if err != nil {
 		return err
 	}
+
 	for _, m := range accountStoreMappings.Items {
 		client.delete(m.AccountStore.Href)
 	}
@@ -92,14 +99,14 @@ func (app *Application) Purge() error {
 	return app.Delete()
 }
 
-//GetAccountStoreMappings returns all the applications account store mappings
+//GetAccountStoreMappings retrives the collection of all account store mappings associated with the Application.
 //
-//See: http://docs.stormpath.com/rest/product-guide/#application-account-store-mappings
-func (app *Application) GetAccountStoreMappings(criteria Criteria) (*ApplicationAccountStoreMappings, error) {
+//The collection can be filtered and/or paginated by passing the desire ApplicationAccountStoreMappingCriteria value
+func (app *Application) GetAccountStoreMappings(criteria ApplicationAccountStoreMappingCriteria) (*ApplicationAccountStoreMappings, error) {
 	accountStoreMappings := &ApplicationAccountStoreMappings{}
 
 	err := client.get(
-		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(app.AccountStoreMappings.Href, criteria.toQueryString()),
 		accountStoreMappings,
 	)
 
@@ -110,9 +117,12 @@ func (app *Application) GetAccountStoreMappings(criteria Criteria) (*Application
 	return accountStoreMappings, nil
 }
 
-func (app *Application) GetDefaultAccountStoreMapping(criteria Criteria) (*ApplicationAccountStoreMapping, error) {
+//GetDefaultAccountStoreMapping retrieves the application default application account store mapping.
+//
+//It can optionally have its attributes expanded depending on the ApplicationAccountStoreMappingCriteria value.
+func (app *Application) GetDefaultAccountStoreMapping(criteria ApplicationAccountStoreMappingCriteria) (*ApplicationAccountStoreMapping, error) {
 	err := client.get(
-		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(app.DefaultAccountStoreMapping.Href, criteria.toQueryString()),
 		app.DefaultAccountStoreMapping,
 	)
 
@@ -123,9 +133,7 @@ func (app *Application) GetDefaultAccountStoreMapping(criteria Criteria) (*Appli
 	return app.DefaultAccountStoreMapping, nil
 }
 
-//RegisterAccount registers a new account into the application
-//
-//See: http://docs.stormpath.com/rest/product-guide/#application-accounts
+//RegisterAccount registers a new account into the application.
 func (app *Application) RegisterAccount(account *Account) error {
 	err := client.post(app.Accounts.Href, account, account)
 	if err == nil {
@@ -135,9 +143,7 @@ func (app *Application) RegisterAccount(account *Account) error {
 	return err
 }
 
-//RegisterSocialAccount registers a new account into the application using an external provider Google, Facebook
-//
-//See: http://docs.stormpath.com/rest/product-guide/#accessing-accounts-with-google-authorization-codes-or-an-access-tokens
+//RegisterSocialAccount registers a new account into the application using an external social provider Google, Facebook, GitHub or LinkedIn.
 func (app *Application) RegisterSocialAccount(socialAccount *SocialAccount) (*Account, error) {
 	account := &Account{}
 
@@ -150,9 +156,8 @@ func (app *Application) RegisterSocialAccount(socialAccount *SocialAccount) (*Ac
 	return account, nil
 }
 
-//AuthenticateAccount authenticates an account against the application
-//
-//See: http://docs.stormpath.com/rest/product-guide/#authenticate-an-account
+//AuthenticateAccount authenticates an account against the application, using its username and password.
+//It can also include an optional account store HREF, if the accountStoreHref is a zero value string, then it won't be used.
 func (app *Application) AuthenticateAccount(username string, password string, accountStoreHref string) (*Account, error) {
 	accountRef := &accountRef{Account: &Account{}}
 
@@ -166,12 +171,12 @@ func (app *Application) AuthenticateAccount(username string, password string, ac
 	}
 
 	err := client.post(buildAbsoluteURL(app.Href, "loginAttempts"), loginAttemptPayload, accountRef)
-
 	if err != nil {
 		return nil, err
 	}
 
 	account := accountRef.Account
+	//Refresh the account since we only get the account href from the loginAttempts endpoit.
 	err = account.Refresh()
 	if err != nil {
 		return nil, err
@@ -180,9 +185,9 @@ func (app *Application) AuthenticateAccount(username string, password string, ac
 	return account, nil
 }
 
-//ResendVerificationEmail resends the verification email to the given email address
+//ResendVerificationEmail triggers a resend of the account verification email in Stormpath for a given email address.
 //
-//See: https://docs.stormpath.com/rest/product-guide/latest/accnt_mgmt.html#how-to-verify-an-account-s-email
+//For more info on the Stormpath verification workflow see: http://docs.stormpath.com/rest/product-guide/latest/accnt_mgmt.html#how-to-verify-an-account-s-email
 func (app *Application) ResendVerificationEmail(email string) error {
 	resendVerificationEmailPayload := map[string]string{
 		"login": email,
@@ -190,9 +195,9 @@ func (app *Application) ResendVerificationEmail(email string) error {
 	return client.post(buildAbsoluteURL(app.Href, "verificationEmails"), resendVerificationEmailPayload, nil)
 }
 
-//SendPasswordResetEmail sends a password reset email to the given user
+//SendPasswordResetEmail triggers a send of the password reset email in Stormpath for a given email address.
 //
-//See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
+//For more info on the Stormpath password reset workflow see: http://docs.stormpath.com/rest/product-guide/latest/accnt_mgmt.html#password-reset-flow
 func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
@@ -208,9 +213,7 @@ func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordRe
 	return passwordResetToken, nil
 }
 
-//ValidatePasswordResetToken validates a password reset token
-//
-//See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
+//ValidatePasswordResetToken validates the given password reset token against Stormpath.
 func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
@@ -223,9 +226,7 @@ func (app *Application) ValidatePasswordResetToken(token string) (*AccountPasswo
 	return passwordResetToken, nil
 }
 
-//ResetPassword resets a user password based on the reset token
-//
-//See: http://docs.stormpath.com/rest/product-guide/#reset-an-accounts-password
+//ResetPassword resets a user password based on the reset password token.
 func (app *Application) ResetPassword(token string, newPassword string) (*Account, error) {
 	accountRef := &accountRef{}
 	account := &Account{}
@@ -243,21 +244,20 @@ func (app *Application) ResetPassword(token string, newPassword string) (*Accoun
 	return account, nil
 }
 
-//CreateGroup creates a new group in the application
-//
-//See: http://docs.stormpath.com/rest/product-guide/#application-groups
+//CreateGroup creates a new application group.
+//Creating a group for an application automatically creates the proper account store mapping between the group and the application.
 func (app *Application) CreateGroup(group *Group) error {
 	return client.post(app.Groups.Href, group, group)
 }
 
-//GetGroups returns all the application groups
+//GetGroups retrives the collection of all groups associated with the Application.
 //
-//See: http://docs.stormpath.com/rest/product-guide/#application-groups
-func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
+//The collection can be filtered and/or paginated by passing the desire GroupCriteria value.
+func (app *Application) GetGroups(criteria GroupCriteria) (*Groups, error) {
 	groups := &Groups{}
 
 	err := client.get(
-		buildAbsoluteURL(app.Groups.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(app.Groups.Href, criteria.toQueryString()),
 		groups,
 	)
 
@@ -268,7 +268,10 @@ func (app *Application) GetGroups(criteria Criteria) (*Groups, error) {
 	return groups, nil
 }
 
-//CreateIDSiteURL creates the IDSite URL for the application
+//CreateIDSiteURL generates the IDSite URL for the application. This URL is used to initiate an IDSite workflow.
+//You can pass an IDSiteOptions values to customize the IDSite workflow.
+//
+//For more information on Stormpath's IDSite feature see: http://docs.stormpath.com/rest/product-guide/latest/idsite.html
 func (app *Application) CreateIDSiteURL(options IDSiteOptions) (string, error) {
 	nonce, _ := uuid.NewV4()
 
@@ -299,8 +302,8 @@ func (app *Application) CreateIDSiteURL(options IDSiteOptions) (string, error) {
 	return ssoURL, nil
 }
 
-//HandleCallback handles the URL from an ID Site callback or SAML callback it parses the JWT token
-//validates it and return an CallbackResult with the token info + the Account if the sub was given
+//HandleCallback handles the URL from an ID Site or SAML callback it parses the JWT token
+//validates it and returns a CallbackResult, if the JWT was valid.
 func (app *Application) HandleCallback(URL string) (*CallbackResult, error) {
 	result := &CallbackResult{}
 
@@ -337,7 +340,7 @@ func (app *Application) HandleCallback(URL string) (*CallbackResult, error) {
 	return result, nil
 }
 
-//GetOAuthToken creates a OAuth2 token response for a given user credentials
+//GetOAuthToken creates a OAuth2 token response for an account, using the password grant type.
 func (app *Application) GetOAuthToken(username string, password string) (*OAuthResponse, error) {
 	values := url.Values{
 		"grant_type": {"password"},
@@ -348,6 +351,10 @@ func (app *Application) GetOAuthToken(username string, password string) (*OAuthR
 	return app.getOAuthTokenCommon(values)
 }
 
+//GetOAuthTokenStormpathGrantType creates an OAuth2 token response, for a given Stormpath JWT, using the stormpath_token grant type.
+//This grant type is use together with IDSite.
+//
+//For more information on the stormpath_token grant type see: http://docs.stormpath.com/rest/product-guide/latest/idsite.html#exchanging-the-id-site-jwt-for-an-oauth-token
 func (app *Application) GetOAuthTokenStormpathGrantType(token string) (*OAuthResponse, error) {
 	values := url.Values{
 		"grant_type": {"stormpath_token"},
@@ -367,12 +374,42 @@ func (app *Application) GetOAuthTokenClientCredentialsGrantType(apiKeyID, apiKey
 	return app.getOAuthTokenCommon(values)
 }
 
-//GetOAuthTokenSocialGrantType creates a OAuth2 token response for a given social provider token
-func (app *Application) GetOAuthTokenSocialGrantType(providerID string, token string) (*OAuthResponse, error) {
+//GetOAuthTokenSocialGrantType creates a OAuth2 token response, for an account using a socical provider via the stormpath_social grant type.
+//This grant type supports exchanging a social provider accessToken or code for a Stormpath access/refresh tokens.
+//You can either pass an accessToken or code but not both, the one that is not used should be pass as a zero value string.
+//If both values are empty or both values are not empty an error is return.
+//
+//For more information on the stormpath_social grant type see: http://docs.stormpath.com/rest/product-guide/latest/auth_n.html#social
+func (app *Application) GetOAuthTokenSocialGrantType(providerID, accessToken, code string) (*OAuthResponse, error) {
 	values := url.Values{
-		"grant_type":  {"stormpath_social"},
-		"providerId":  {providerID},
-		"accessToken": {token},
+		"grant_type": {"stormpath_social"},
+		"providerId": {providerID},
+	}
+
+	if accessToken == "" && code == "" {
+		return nil, fmt.Errorf("You must either pass a valid accessToken or code.")
+	}
+
+	if accessToken != "" && code != "" {
+		return nil, fmt.Errorf("You must either pass a valid accessToken or code but not both.")
+	}
+
+	if accessToken != "" {
+		values.Add("accessToken", accessToken)
+	}
+
+	if code != "" {
+		values.Add("code", code)
+	}
+
+	return app.getOAuthTokenCommon(values)
+}
+
+//RefreshOAuthToken creates an OAuth2 response using the refresh_token grant type.
+func (app *Application) RefreshOAuthToken(refreshToken string) (*OAuthResponse, error) {
+	values := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {refreshToken},
 	}
 
 	return app.getOAuthTokenCommon(values)
@@ -394,31 +431,7 @@ func (app *Application) getOAuthTokenCommon(values url.Values) (*OAuthResponse, 
 	return response, nil
 }
 
-//RefreshOAuthToken refreshes an OAuth2 token using the provided refresh_token and returns a new OAuth reponse
-func (app *Application) RefreshOAuthToken(refreshToken string) (*OAuthResponse, error) {
-	response := &OAuthResponse{}
-
-	values := url.Values{
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {refreshToken},
-	}
-	body := &bytes.Buffer{}
-	canonicalizeQueryString(body, values)
-
-	err := client.postURLEncodedForm(
-		buildAbsoluteURL(app.Href, "oauth/token"),
-		body.String(),
-		response,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-//ValidateToken against the application
+//ValidateToken validates either an OAuth2 access or refresh token against Stormpath.
 func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
 	response := &OAuthToken{}
 
@@ -434,10 +447,13 @@ func (app *Application) ValidateToken(token string) (*OAuthToken, error) {
 	return response, nil
 }
 
+//GetAPIKey retrives an APIKey from the application by its ID.
+//
+//It can optionally have its attributes expanded depending on the APIKeyCriteria value.
 func (app *Application) GetAPIKey(apiKeyID string, criteria APIKeyCriteria) (*APIKey, error) {
 	apiKeys := &APIKeys{}
 
-	err := client.get(buildAbsoluteURL(app.APIKeys.Href, criteria.idEq(apiKeyID).ToQueryString()), apiKeys)
+	err := client.get(buildAbsoluteURL(app.APIKeys.Href, criteria.IDEq(apiKeyID).toQueryString()), apiKeys)
 	if err != nil {
 		return nil, err
 	}
