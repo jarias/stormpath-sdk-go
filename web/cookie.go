@@ -142,4 +142,13 @@ func clearAuthentication(w http.ResponseWriter, r *http.Request, application *st
 
 	http.SetCookie(w, &http.Cookie{Name: Config.AccessTokenCookieName, Expires: time.Now().Add(-1 * time.Second)})
 	http.SetCookie(w, &http.Cookie{Name: Config.RefreshTokenCookieName, Expires: time.Now().Add(-1 * time.Second)})
+
+	//Check Authorization header and revoke that token too
+	authorizationHeader := r.Header.Get("Authorization")
+	if authorizationHeader != "" {
+		token := authorizationHeader[strings.Index(authorizationHeader, "bearer ")+7:]
+		accessToken := &stormpath.OAuthToken{}
+		accessToken.Href = stormpath.GetClient().ClientConfiguration.BaseURL + "accessTokens/" + getJwtID(token)
+		accessToken.Delete()
+	}
 }
