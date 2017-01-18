@@ -1,6 +1,8 @@
 package stormpath
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +20,7 @@ func BenchmarkGetCurrentTenant(b *testing.B) {
 func BenchmarkCreateApplication(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		application := newTestApplication()
-		err := tenant.CreateApplication(application)
+		err := CreateApplication(application)
 		defer application.Purge()
 		if err != nil {
 			panic(err)
@@ -40,6 +42,15 @@ func BenchmarkUpdateCustomData(b *testing.B) {
 	}
 }
 
+func ExampleCurrentTenant() {
+	tenant, err := CurrentTenant()
+	if err != nil {
+		log.Panicf("Couldn't get the current tenant %s", err)
+	}
+
+	fmt.Printf("tenant = %+v\n", tenant)
+}
+
 func TestGetCurrentTenant(t *testing.T) {
 	t.Parallel()
 
@@ -53,13 +64,15 @@ func TestGetCurrentTenant(t *testing.T) {
 	assert.NotEmpty(t, currentTenant.Directories.Href)
 }
 
+//TODO: Fix panic: runtime error: invalid memory address or nil pointer dereference
+// This error is caused by Purge() method when there were errors during application creation.
 func TestTenantCreateApplication(t *testing.T) {
 	t.Parallel()
 
 	application := newTestApplication()
 	defer application.Purge()
 
-	err := tenant.CreateApplication(application)
+	err := CreateApplication(application)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, application.Href)
@@ -166,7 +179,7 @@ func TestTenantCreateDirectory(t *testing.T) {
 	dir := newTestDirectory()
 	defer dir.Delete()
 
-	err := tenant.CreateDirectory(dir)
+	err := CreateDirectory(dir)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, dir.Href)
@@ -218,4 +231,41 @@ func TestTenantGetDirectoriesFiltered(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "Stormpath Administrators", directories.Items[0].Name)
+}
+
+/*
+func TestTenantGetAccountsByCustomData(t *testing.T) {
+	t.Parallel()
+
+	cdKey := "customId"
+	cdValue := "myCustomDataValue"
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	account := createTestAccount(application, t)
+	customData, err := account.UpdateCustomData(map[string]interface{}{cdKey: cdValue})
+
+	assert.NoError(t, err)
+	assert.Equal(t, cdValue, customData[cdKey])
+
+	time.Sleep(5 * time.Second)
+
+	accounts, err := tenant.GetAccounts(MakeAccountCriteria().CustomDataEq(cdKey, cdValue))
+
+	assert.Len(t, accounts.Items, 1)
+}
+*/
+
+func TestTenantGetOrganizations(t *testing.T) {
+	t.Skip("Skiping until I figure out the issue with this API call")
+
+	t.Parallel()
+
+	organizations, err := tenant.GetOrganizations(MakeOrganizationsCriteria())
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, organizations.Items)
+	assert.NotEmpty(t, organizations.Href)
+	assert.Equal(t, 0, organizations.GetOffset())
+	assert.Equal(t, 25, organizations.GetLimit())
 }

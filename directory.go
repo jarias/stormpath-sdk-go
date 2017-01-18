@@ -81,12 +81,19 @@ func NewLinkedInDirectory(name string, clientID string, clientSecret string, red
 	return newSocialDirectory(name, clientID, clientSecret, redirectURI, LinkedIn)
 }
 
+//CreateDirectory creates a new directory for the given tenant
+//
+//See: http://docs.stormpath.com/rest/product-guide/#tenant-directories
+func CreateDirectory(dir *Directory) error {
+	return client.post(buildRelativeURL("directories"), dir, dir)
+}
+
 //GetDirectory loads a directory by href and criteria
-func GetDirectory(href string, criteria Criteria) (*Directory, error) {
+func GetDirectory(href string, criteria DirectoryCriteria) (*Directory, error) {
 	directory := &Directory{}
 
 	err := client.get(
-		buildAbsoluteURL(href, criteria.ToQueryString()),
+		buildAbsoluteURL(href, criteria.toQueryString()),
 		directory,
 	)
 
@@ -119,9 +126,9 @@ func (dir *Directory) GetAccountCreationPolicy() (*AccountCreationPolicy, error)
 }
 
 //GetGroups returns all the groups from a directory
-func (dir *Directory) GetGroups(criteria Criteria) (*Groups, error) {
+func (dir *Directory) GetGroups(criteria GroupCriteria) (*Groups, error) {
 	err := client.get(
-		buildAbsoluteURL(dir.Groups.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(dir.Groups.Href, criteria.toQueryString()),
 		dir.Groups,
 	)
 

@@ -12,13 +12,13 @@ Master:
 
 ## Core
 
-```go get github.com/jarias/stormpath-sdk-go```
+`go get github.com/jarias/stormpath-sdk-go`
 
 ```go
 import "github.com/jarias/stormpath-sdk-go"
 import "fmt"
 
-//Load the configuration according to the StormPath framework spec 
+//Load the configuration according to the StormPath framework spec
 //See: https://github.com/stormpath/stormpath-sdk-spec/blob/master/specifications/config.md
 clientConfig, err := stormpath.LoadConfiguration()
 
@@ -26,7 +26,7 @@ if err != nil {
     stormpath.Logger.Panicf("[ERROR] Couldn't load Stormpath client configuration: %s", err)
 }
 
-//Init the client with the loaded config and no specific cache, 
+//Init the client with the loaded config and no specific cache,
 //note that if the cache is enabled via config the default local cache would be used
 stormpath.Init(clientConfig, nil)
 
@@ -65,14 +65,21 @@ by setting the environment variable STORMPATH_LOG_LEVEL=DEBUG the default level 
 
 # Contributing
 
-Pull request are more than welcome, all pull requests should be from and directed to the ```develop``` branch **NOT** ```master```.
+Pull request are more than welcome, please follow this sample workflow, make sure you work out of
+the develop branch.
+
+- Fork
+- Clone `git clone YOUR_USERNAME/stormpath-sdk-go`
+- Checkout develop branch `git checkout -t origin/develop`
+- Create a feature branch `git checkout -b YOUR_FEATURE_OR_BUG_FIX`
+- Create a PR to jarias/develop `hub pull-request -b jarias/stormpath-sdk-go:develop`
 
 Please make sure you add tests ;)
 
 Development requirements:
 
-- Go 1.6+
-- [Testify](https://github.com/stretchr/testify) ```go get github.com/stretchr/testify/assert```
+- Go 1.7+
+- [Testify](https://github.com/stretchr/testify) `go get github.com/stretchr/testify/assert`
 - An [Stormpath](https://stormpath.com) account (for integration testing)
 
 Running the test suite

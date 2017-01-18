@@ -14,6 +14,18 @@ func MakeOrganizationsCriteria() OrganizationCriteria {
 	return OrganizationCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
+//Pagination
+
+func (c OrganizationCriteria) Limit(limit int) OrganizationCriteria {
+	c.limit = limit
+	return c
+}
+
+func (c OrganizationCriteria) Offset(offset int) OrganizationCriteria {
+	c.offset = offset
+	return c
+}
+
 //Filter related functions
 
 //Possible filters:

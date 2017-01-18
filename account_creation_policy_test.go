@@ -22,7 +22,7 @@ func TestGetVerificationEmailTemplatesPolicyNoExists(t *testing.T) {
 func TestGetVerificationEmailTemplates(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()
@@ -49,7 +49,7 @@ func TestGetVerificationSuccessEmailTemplatesPolicyNoExists(t *testing.T) {
 func TestGetVerificationSuccessEmailTemplates(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()
@@ -76,7 +76,7 @@ func TestGetWelcomeEmailTemplatesPolicyNoExists(t *testing.T) {
 func TestGetWelcomeEmailTemplates(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()
@@ -90,7 +90,7 @@ func TestGetWelcomeEmailTemplates(t *testing.T) {
 func TestUpdateAccountCreationPolicy(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()
@@ -116,7 +116,7 @@ func TestUpdateAccountCreationPolicyNoExists(t *testing.T) {
 func TestRefreshAccountCreationPolicy(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	policy, _ := directory.GetAccountCreationPolicy()

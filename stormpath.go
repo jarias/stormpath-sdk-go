@@ -19,7 +19,7 @@ import (
 )
 
 //Version is the current SDK Version
-const version = "0.1.0-beta.22"
+const version = "0.1.0-beta.23"
 
 const (
 	Enabled                   = "ENABLED"
@@ -98,16 +98,8 @@ func (client *Client) execute(method string, urlStr string, body interface{}, re
 }
 
 func buildRelativeURL(parts ...string) string {
-	buffer := bytes.NewBufferString(client.ClientConfiguration.BaseURL)
-
-	for i, part := range parts {
-		buffer.WriteString(part)
-		if !strings.HasSuffix(part, "/") && i+1 < len(parts) {
-			buffer.WriteString("/")
-		}
-	}
-
-	return buffer.String()
+	p := append([]string{client.ClientConfiguration.BaseURL}, parts...)
+	return buildAbsoluteURL(p...)
 }
 
 func buildAbsoluteURL(parts ...string) string {
@@ -281,6 +273,9 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 	// Re-Authenticate the redirect request
 	uuid, _ := uuid.NewV4()
 	nonce := uuid.String()
+
+	//In Go 1.8 the authorization header remains in the redirect request causing auth errors
+	req.Header.Del(AuthorizationHeader)
 
 	//We can use an empty payload cause the only redirect is for the current tenant
 	//this could change in the future

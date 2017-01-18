@@ -14,10 +14,10 @@ import (
 func TestGetOAuthTokenValidAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	oauthResponse, err := application.GetOAuthToken(account.Username, "1234567z!A89")
 
@@ -31,10 +31,10 @@ func TestGetOAuthTokenValidAccount(t *testing.T) {
 func TestRefreshOAuthTokenValidAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	oauthResponse, err := application.GetOAuthToken(account.Username, "1234567z!A89")
 
@@ -58,10 +58,10 @@ func TestRefreshOAuthTokenValidAccount(t *testing.T) {
 func TestValidateOAuthAccessToken(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	response, err := application.GetOAuthToken(account.Username, "1234567z!A89")
 	token, err := application.ValidateToken(response.AccessToken)
@@ -74,7 +74,7 @@ func TestValidateOAuthAccessToken(t *testing.T) {
 func TestValidateOAuthInvalidAccessToken(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	_, err := application.ValidateToken("anInvalidToken")
@@ -86,7 +86,7 @@ func TestValidateOAuthInvalidAccessToken(t *testing.T) {
 func TestApplicationJsonMarshaling(t *testing.T) {
 	t.Parallel()
 
-	application := NewApplication("name")
+	application := Application{Name: "name"}
 
 	jsonData, _ := json.Marshal(application)
 
@@ -96,7 +96,7 @@ func TestApplicationJsonMarshaling(t *testing.T) {
 func TestUpdateApplication(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	application.Name = "new-name" + randomName()
@@ -113,7 +113,7 @@ func TestUpdateApplication(t *testing.T) {
 func TestApplicationRegisterAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	account := newTestAccount()
@@ -126,10 +126,10 @@ func TestApplicationRegisterAccount(t *testing.T) {
 func TestAuthenticateAccount(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	authenticatedAccount, err := application.AuthenticateAccount(account.Email, "1234567z!A89", "")
 
@@ -143,7 +143,7 @@ func TestAuthenticateAccount(t *testing.T) {
 func TestApplicationCreateInvalidGroup(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	err := application.CreateGroup(&Group{})
@@ -155,7 +155,7 @@ func TestApplicationCreateInvalidGroup(t *testing.T) {
 func TestApplicationCreateGroup(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	group := newTestGroup()
@@ -171,10 +171,10 @@ func TestApplicationCreateGroup(t *testing.T) {
 func TestGetApplicationGroups(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	group := createTestGroup(application)
+	group := createTestGroup(application, t)
 	defer group.Delete()
 
 	groups, err := application.GetGroups(MakeGroupCriteria())
@@ -189,10 +189,10 @@ func TestGetApplicationGroups(t *testing.T) {
 func TestSendPasswordResetEmail(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	token, err := application.SendPasswordResetEmail(account.Email)
 
@@ -203,10 +203,10 @@ func TestSendPasswordResetEmail(t *testing.T) {
 func TestResetPassword(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	token, _ := application.SendPasswordResetEmail(account.Email)
 
@@ -221,10 +221,10 @@ func TestResetPassword(t *testing.T) {
 func TestValidatePasswordResetToken(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	token, _ := application.SendPasswordResetEmail(account.Email)
 
@@ -239,7 +239,7 @@ func TestValidatePasswordResetToken(t *testing.T) {
 func TestValidateInvalidPasswordResetToken(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	_, err := application.ValidatePasswordResetToken("invalid token")
@@ -250,7 +250,7 @@ func TestValidateInvalidPasswordResetToken(t *testing.T) {
 func TestCreateIDSiteURL(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	idSiteOptions := IDSiteOptions{
@@ -286,7 +286,7 @@ func TestCreateIDSiteURL(t *testing.T) {
 func TestCreateIDSiteLogoutURL(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	idSiteOptions := IDSiteOptions{
@@ -323,7 +323,7 @@ func TestCreateIDSiteLogoutURL(t *testing.T) {
 func TestGetApplicationDefaultAccountStoreMapping(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	defaultMapping, err := application.GetDefaultAccountStoreMapping(MakeApplicationAccountStoreMappingCriteria())
@@ -335,10 +335,10 @@ func TestGetApplicationDefaultAccountStoreMapping(t *testing.T) {
 func TestGetOAuthTokenStormpathGrantType(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	claims := GrantTypeStormpathTokenClaims{}
 	claims.IssuedAt = time.Now().Unix()
@@ -364,10 +364,10 @@ func TestGetOAuthTokenStormpathGrantType(t *testing.T) {
 func TestApplicationGetAPIKey(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	account := createTestAccount(application)
+	account := createTestAccount(application, t)
 
 	apiKey, err := account.CreateAPIKey()
 	assert.NoError(t, err)

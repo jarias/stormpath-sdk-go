@@ -22,9 +22,9 @@ func NewGroupMembership(accountHref string, groupHref string) *GroupMembership {
 	}
 }
 
-func (groupmembership *GroupMembership) GetAccount(criteria Criteria) (*Account, error) {
+func (groupmembership *GroupMembership) GetAccount(criteria AccountCriteria) (*Account, error) {
 	err := client.get(
-		buildAbsoluteURL(groupmembership.Account.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(groupmembership.Account.Href, criteria.toQueryString()),
 		groupmembership.Account,
 	)
 
@@ -35,9 +35,9 @@ func (groupmembership *GroupMembership) GetAccount(criteria Criteria) (*Account,
 	return groupmembership.Account, nil
 }
 
-func (groupmembership *GroupMembership) GetGroup(criteria Criteria) (*Group, error) {
+func (groupmembership *GroupMembership) GetGroup(criteria GroupCriteria) (*Group, error) {
 	err := client.get(
-		buildAbsoluteURL(groupmembership.Group.Href, criteria.ToQueryString()),
+		buildAbsoluteURL(groupmembership.Group.Href, criteria.toQueryString()),
 		groupmembership.Group,
 	)
 

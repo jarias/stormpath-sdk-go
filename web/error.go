@@ -89,3 +89,18 @@ func buildErrorModelWithCode(err error, status int) errorModel {
 func buildErrorModel(err error) errorModel {
 	return buildErrorModelWithCode(err, http.StatusBadRequest)
 }
+func handleError(w http.ResponseWriter, r *http.Request, ctx webContext, h internalHandler) {
+	contentType := ctx.contentType
+
+	if contentType == stormpath.TextHTML {
+		if r.Method == http.MethodGet {
+			r.URL.RawQuery = ""
+		}
+		h(w, r, ctx)
+		return
+	}
+
+	if contentType == stormpath.ApplicationJSON {
+		badRequest(w, r, ctx.originalError)
+	}
+}

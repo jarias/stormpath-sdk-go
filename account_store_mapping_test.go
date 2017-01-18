@@ -21,10 +21,10 @@ func TestAccountStoreMappingJsonMarshaling(t *testing.T) {
 func TestSaveAccountStoreMapping(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	asm := NewApplicationAccountStoreMapping(application.Href, directory.Href)
@@ -37,7 +37,7 @@ func TestSaveAccountStoreMapping(t *testing.T) {
 func TestSaveAccountStoreMappingApplicationNoExists(t *testing.T) {
 	t.Parallel()
 
-	directory := createTestDirectory()
+	directory := createTestDirectory(t)
 	defer directory.Delete()
 
 	asm := NewApplicationAccountStoreMapping(GetClient().ClientConfiguration.BaseURL+"applications/XXX", directory.Href)
@@ -51,7 +51,7 @@ func TestSaveAccountStoreMappingApplicationNoExists(t *testing.T) {
 func TestSaveAccountStoreMappingDirectoryNoExists(t *testing.T) {
 	t.Parallel()
 
-	application := createTestApplication()
+	application := createTestApplication(t)
 	defer application.Purge()
 
 	asm := NewApplicationAccountStoreMapping(application.Href, GetClient().ClientConfiguration.BaseURL+"directories/XXX")

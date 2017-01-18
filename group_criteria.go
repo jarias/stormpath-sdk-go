@@ -14,6 +14,18 @@ func MakeGroupsCriteria() GroupCriteria {
 	return GroupCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
+//Pagination
+
+func (c GroupCriteria) Limit(limit int) GroupCriteria {
+	c.limit = limit
+	return c
+}
+
+func (c GroupCriteria) Offset(offset int) GroupCriteria {
+	c.offset = offset
+	return c
+}
+
 //Filter related functions
 
 //Possible filters:

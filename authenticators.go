@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+//AuthResult is implemented by any authentication result for any of the posible authenticators to retrieve
+//the authentication result account.
 type AuthResult interface {
 	GetAccount() *Account
 }
@@ -15,10 +17,13 @@ type AuthenticationResult struct {
 	Account *Account
 }
 
+//OAuthAccessTokenResult is the default OAuth response
 type OAuthAccessTokenResult OAuthResponse
 
+//OAuthClientCredentialsAuthenticationResult is the authentication result for the  OAuthClientCredentialsAuthenticator
 type OAuthClientCredentialsAuthenticationResult OAuthResponse
 
+//StormpathAssertionAuthenticationResult is the authentication result for the StormpathAssertionAuthenticator
 type StormpathAssertionAuthenticationResult CallbackResult
 
 //Authenticator is the base authenticator type
@@ -56,6 +61,7 @@ type OAuthClientCredentialsAuthenticator struct {
 	TTL          time.Duration
 }
 
+//ScopeFactoryFunc defines a function to valide scope for the cient credentials OAuth authentication
 type ScopeFactoryFunc func(string) bool
 
 //OAuthPasswordAuthenticator this authenticator accepts an account's username and password, and returns an access token response that is obtained by posting the username and password to the application's /oauth/token endpoint with the grant_type=password parameter.
@@ -101,12 +107,20 @@ func (a BasicAuthenticator) Authenticate(accountAPIKey, accountAPISecret string)
 	return &AuthenticationResult{Account: apiKey.Account}, nil
 }
 
+//NewOAuthRequestAuthenticator creates a new OAuthRequestAuthenticator for a given Application
 func NewOAuthRequestAuthenticator(application *Application) OAuthRequestAuthenticator {
 	authenticator := OAuthRequestAuthenticator{}
 	authenticator.Application = application
 	return authenticator
 }
 
+//Authenticate authenticates an http.Request value using the possible grant types that Stormpath supports,
+//it returns an error if the request is not authenticated.
+//
+//Supported grant types:
+// - password
+// - client_credentials
+// - refresh_token
 func (a OAuthRequestAuthenticator) Authenticate(r *http.Request) (*OAuthAccessTokenResult, error) {
 	err := r.ParseForm()
 	if err != nil {
@@ -139,6 +153,13 @@ func (a OAuthRequestAuthenticator) Authenticate(r *http.Request) (*OAuthAccessTo
 			return nil, err
 		}
 		return authResult, nil
+	case "stormpath_social":
+		oauthResponse, err := a.Application.GetOAuthTokenSocialGrantType(r.Form.Get("providerId"), r.Form.Get("accessToken"), "")
+		if err != nil {
+			return nil, err
+		}
+		result := OAuthAccessTokenResult(*oauthResponse)
+		return &result, nil
 	}
 
 	return nil, fmt.Errorf("unsupported_grant_type")
@@ -158,25 +179,14 @@ func (a OAuthClientCredentialsAuthenticator) Authenticate(accountAPIKeyID, accou
 		}
 	}
 
-	_, err := NewBasicAuthenticator(a.Application).Authenticate(accountAPIKeyID, accountAPIKeySecret)
+	oAuthResponse, err := a.Application.GetOAuthTokenClientCredentialsGrantType(accountAPIKeyID, accountAPIKeySecret)
 	if err != nil {
 		return nil, fmt.Errorf("invalid_client")
 	}
 
-	claims := GrantTypeClientCredentialsTokenClaims{}
-	claims.IssuedAt = time.Now().Unix()
-	claims.ExpiresAt = time.Now().Add(a.TTL).Unix()
-	claims.Issuer = a.Application.Href
-	claims.Subject = accountAPIKeyID
-	claims.Scope = scope
+	oauthResult := OAuthClientCredentialsAuthenticationResult(*oAuthResponse)
 
-	jwtString := JWT(claims, map[string]interface{}{})
-
-	return &OAuthClientCredentialsAuthenticationResult{
-		AccessToken: jwtString,
-		ExpiresIn:   int(a.TTL.Seconds()),
-		TokenType:   "bearer",
-	}, nil
+	return &oauthResult, nil
 }
 
 func NewOAuthPasswordAuthenticator(application *Application) OAuthPasswordAuthenticator {
@@ -275,21 +285,11 @@ func (ar *OAuthAccessTokenResult) GetAccount() *Account {
 }
 
 func (ar *OAuthClientCredentialsAuthenticationResult) GetAccount() *Account {
-	claims := &GrantTypeClientCredentialsTokenClaims{}
+	claims := &AccessTokenClaims{}
 
 	ParseJWT(ar.AccessToken, claims)
 
-	application, err := GetApplication(claims.Issuer, MakeApplicationCriteria())
-	if err != nil {
-		return nil
-	}
-
-	apiKey, err := application.GetAPIKey(claims.Subject, MakeAPIKeysCriteria())
-	if err != nil {
-		return nil
-	}
-
-	account, err := GetAccount(apiKey.Account.Href, MakeAccountCriteria().WithProviderData().WithDirectory())
+	account, err := GetAccount(claims.Subject, MakeAccountCriteria().WithProviderData().WithDirectory())
 	if err != nil {
 		return nil
 	}
