@@ -257,7 +257,7 @@ func isTokenBearerAuthenticated(r *http.Request, application *stormpath.Applicat
 		return nil
 	}
 
-	token := authorizationHeader[strings.Index(authorizationHeader, "bearer ")+7:]
+	token := authorizationHeader[strings.Index(authorizationHeader, "Bearer ")+7:]
 
 	authenticationResult, err := stormpath.NewOAuthBearerAuthenticator(application).Authenticate(token)
 	if err != nil {

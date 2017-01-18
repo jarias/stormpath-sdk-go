@@ -37,7 +37,7 @@ var helloTemplate = `
 </head>
 
 <body>
-    <div class="container">		
+    <div class="container">
 		{{ if .account }}
 		<h1>Hello {{ .account.FullName }}</h1>
 		<h4>Provider: {{ .account.ProviderData.ProviderID }}</h4>     
@@ -110,6 +110,6 @@ func main() {
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
-
+	fmt.Println("Starting example in port 8080 CTRL+C to stop")
 	log.Fatal(http.ListenAndServe(":8080", stormpathMiddleware))
 }

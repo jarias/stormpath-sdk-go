@@ -125,6 +125,14 @@ func getJwtID(jwtString string) string {
 	return claims.Id
 }
 
+func getJwtClaim(claim, jwtString string) string {
+	claims := &stormpath.AccessTokenClaims{}
+
+	stormpath.ParseJWT(jwtString, claims)
+
+	return claims.RefreshTokenID
+}
+
 func clearAuthentication(w http.ResponseWriter, r *http.Request, application *stormpath.Application) {
 	accessTokenCookie, err := r.Cookie(Config.AccessTokenCookieName)
 	if err == nil {
@@ -142,4 +150,17 @@ func clearAuthentication(w http.ResponseWriter, r *http.Request, application *st
 
 	http.SetCookie(w, &http.Cookie{Name: Config.AccessTokenCookieName, Expires: time.Now().Add(-1 * time.Second)})
 	http.SetCookie(w, &http.Cookie{Name: Config.RefreshTokenCookieName, Expires: time.Now().Add(-1 * time.Second)})
+
+	//Check Authorization header and revoke that token too
+	authorizationHeader := r.Header.Get("Authorization")
+	if authorizationHeader != "" && strings.Contains(authorizationHeader, "Bearer") {
+		token := authorizationHeader[strings.Index(authorizationHeader, "Bearer ")+7:]
+		accessToken := &stormpath.OAuthToken{}
+		accessToken.Href = stormpath.GetClient().ClientConfiguration.BaseURL + "accessTokens/" + getJwtID(token)
+		accessToken.Delete()
+
+		refreshToken := &stormpath.OAuthToken{}
+		refreshToken.Href = stormpath.GetClient().ClientConfiguration.BaseURL + "refreshTokens/" + getJwtClaim("rti", token)
+		refreshToken.Delete()
+	}
 }
