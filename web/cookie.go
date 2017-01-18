@@ -146,7 +146,7 @@ func clearAuthentication(w http.ResponseWriter, r *http.Request, application *st
 	//Check Authorization header and revoke that token too
 	authorizationHeader := r.Header.Get("Authorization")
 	if authorizationHeader != "" {
-		token := authorizationHeader[strings.Index(authorizationHeader, "bearer ")+7:]
+		token := authorizationHeader[strings.Index(authorizationHeader, "Bearer ")+7:]
 		accessToken := &stormpath.OAuthToken{}
 		accessToken.Href = stormpath.GetClient().ClientConfiguration.BaseURL + "accessTokens/" + getJwtID(token)
 		accessToken.Delete()
