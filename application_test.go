@@ -194,7 +194,7 @@ func TestSendPasswordResetEmail(t *testing.T) {
 
 	account := createTestAccount(application, t)
 
-	token, err := application.SendPasswordResetEmail(account.Email)
+	token, err := application.SendPasswordResetEmail(account.Email, "")
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
@@ -208,7 +208,7 @@ func TestResetPassword(t *testing.T) {
 
 	account := createTestAccount(application, t)
 
-	token, _ := application.SendPasswordResetEmail(account.Email)
+	token, _ := application.SendPasswordResetEmail(account.Email, "")
 
 	re := regexp.MustCompile("[^\\/]+$")
 
@@ -226,7 +226,7 @@ func TestValidatePasswordResetToken(t *testing.T) {
 
 	account := createTestAccount(application, t)
 
-	token, _ := application.SendPasswordResetEmail(account.Email)
+	token, _ := application.SendPasswordResetEmail(account.Email, "")
 
 	re := regexp.MustCompile("[^\\/]+$")
 
