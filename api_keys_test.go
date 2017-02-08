@@ -17,10 +17,30 @@ func TestGetAPIKey(t *testing.T) {
 
 	apiKey, _ := account.CreateAPIKey()
 
-	k, err := GetAPIKey(apiKey.Href, MakeAPIKeyCriteria())
+	k := &APIKey{}
+	err := GetAPIKeys(apiKey.Href, MakeAPIKeyCriteria(), k)
 
 	assert.NoError(t, err)
 	assert.Equal(t, apiKey, k)
+}
+
+func TestGetAPIKeys(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	account := createTestAccount(application, t)
+
+	apiKey1, _ := account.CreateAPIKey()
+	apiKey2, _ := account.CreateAPIKey()
+
+	keys := &APIKeys{}
+	err := GetAPIKeys(account.APIKeys.Href, MakeAPIKeyCriteria(), keys)
+
+	assert.NoError(t, err)
+	assert.Equal(t, apiKey1, &keys.Items[0])
+	assert.Equal(t, apiKey2, &keys.Items[1])
 }
 
 func TestDeleteAPIKey(t *testing.T) {
@@ -36,11 +56,12 @@ func TestDeleteAPIKey(t *testing.T) {
 	err := apiKey.Delete()
 
 	assert.NoError(t, err)
+	k := &APIKey{}
 
-	k, err := GetAPIKey(apiKey.Href, MakeAPIKeyCriteria())
+	err = GetAPIKeys(apiKey.Href, MakeAPIKeyCriteria(), k)
 
 	assert.Error(t, err)
-	assert.Nil(t, k)
+	assert.Equal(t, &APIKey{}, k)
 	assert.Equal(t, http.StatusNotFound, err.(Error).Status)
 }
 
@@ -59,6 +80,7 @@ func TestUpdateAPIKey(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	updatedAPIKey, _ := GetAPIKey(apiKey.Href, MakeAPIKeyCriteria())
+	updatedAPIKey := &APIKey{}
+	GetAPIKeys(apiKey.Href, MakeAPIKeyCriteria(), updatedAPIKey)
 	assert.Equal(t, Disabled, updatedAPIKey.Status)
 }
