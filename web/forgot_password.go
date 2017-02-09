@@ -65,7 +65,7 @@ func (h forgotPasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ct
 		return
 	}
 
-	h.application.SendPasswordResetEmail(data["email"])
+	h.application.SendPasswordResetEmail(data["email"], "")
 
 	if contentType == stormpath.ApplicationJSON {
 		respondJSON(w, nil, http.StatusOK)
