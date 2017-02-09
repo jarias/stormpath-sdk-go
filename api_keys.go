@@ -35,19 +35,36 @@ func MakeAPIKeysCriteria() APIKeyCriteria {
 	return APIKeyCriteria{baseCriteria{limit: 25, filter: url.Values{}}}
 }
 
-//GetAPIKeys retrives an APIKey resource by href and optional criteria
-//Pass in either *APIKey for a singular key, or *APIKeys for all keys for an account
-func GetAPIKeys(href string, criteria APIKeyCriteria, keyInterface interface{}) (error) {
+//GetAPIKey retrives an APIKey resource by href and optional criteria
+func GetAPIKey(href string, criteria APIKeyCriteria) (*APIKey, error) {
+	apiKey := &APIKey{}
+
 	err := client.get(
 		buildAbsoluteURL(href, criteria.toQueryString()),
-		keyInterface,
+		apiKey,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return apiKey, nil
 }
+
+//GetAPIKey retrives an APIKey resource by href and optional criteria
+func GetAPIKeys(href string, criteria APIKeyCriteria) (*APIKeys, error) {
+	apiKeys := &APIKeys{}
+
+	err := client.get(
+		buildAbsoluteURL(href, criteria.toQueryString()),
+		apiKeys,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiKeys, nil
+}
+
 
 //Delete deletes a given APIKey
 func (k *APIKey) Delete() error {
