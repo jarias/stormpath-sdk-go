@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"regexp"
 )
 
 func TestGetAccountRefreshTokens(t *testing.T) {
@@ -268,4 +269,41 @@ func TestUpdateAccountCustomData(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "data", customData["custom"])
+}
+
+func TestPasswordResetWithAccStore(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	//default password for test account: "1234567z!A89"
+	newAccount := createTestAccount(application, t)
+
+	directory1 := createTestDirectory(t)
+	defer directory1.Delete()
+
+	directory1.RegisterAccount(newAccount)
+
+	directory2 := createTestDirectory(t)
+	defer directory2.Delete()
+
+	directory2.RegisterAccount(newAccount)
+
+	token, err := application.SendPasswordResetEmail(newAccount.Email, directory1.Href)
+	assert.NoError(t, err)
+
+	re := regexp.MustCompile("[^\\/]+$")
+
+	a, err := application.ResetPassword(re.FindString(token.Href), "8787987!kJKJdfW")
+	assert.NoError(t, err)
+	assert.Equal(t, newAccount.Href, a.Href)
+
+	authenticatedAccForDir1, err := application.AuthenticateAccount(newAccount.Email, "8787987!kJKJdfW", directory1.Href)
+	assert.NoError(t, err)
+	assert.Equal(t, authenticatedAccForDir1.Directory.Href, directory1.Href)
+
+	authenticatedAccForDir2, err := application.AuthenticateAccount(newAccount.Email, "1234567z!A89", directory2.Href)
+	assert.NoError(t, err)
+	assert.Equal(t, authenticatedAccForDir2.Directory.Href, directory2.Href)
 }

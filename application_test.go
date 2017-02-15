@@ -200,6 +200,21 @@ func TestSendPasswordResetEmail(t *testing.T) {
 	assert.NotEmpty(t, token)
 }
 
+func TestSendPasswordResetEmailWithAccStore(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	account := createTestAccount(application, t)
+
+	//account store: Organization, Directory or Group
+	token, err := application.SendPasswordResetEmail(account.Email, account.Directory.Href)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, token)
+}
+
 func TestResetPassword(t *testing.T) {
 	t.Parallel()
 
@@ -218,6 +233,25 @@ func TestResetPassword(t *testing.T) {
 	assert.Equal(t, account.Href, a.Href)
 }
 
+func TestResetPasswordWithAccStore(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	account := createTestAccount(application, t)
+
+	//account store: Organization, Directory or Group
+	token, _ := application.SendPasswordResetEmail(account.Email, account.Directory.Href)
+
+	re := regexp.MustCompile("[^\\/]+$")
+
+	a, err := application.ResetPassword(re.FindString(token.Href), "8787987!kJKJdfW")
+
+	assert.NoError(t, err)
+	assert.Equal(t, account.Href, a.Href)
+}
+
 func TestValidatePasswordResetToken(t *testing.T) {
 	t.Parallel()
 
@@ -227,6 +261,25 @@ func TestValidatePasswordResetToken(t *testing.T) {
 	account := createTestAccount(application, t)
 
 	token, _ := application.SendPasswordResetEmail(account.Email, "")
+
+	re := regexp.MustCompile("[^\\/]+$")
+
+	validatedToken, err := application.ValidatePasswordResetToken(re.FindString(token.Href))
+
+	assert.NoError(t, err)
+	assert.Equal(t, token.Href, validatedToken.Href)
+}
+
+func TestValidatePasswordResetTokenWithAccStore(t *testing.T) {
+	t.Parallel()
+
+	application := createTestApplication(t)
+	defer application.Purge()
+
+	account := createTestAccount(application, t)
+
+	//account store: Organization, Directory or Group
+	token, _ := application.SendPasswordResetEmail(account.Email, account.Directory.Href)
 
 	re := regexp.MustCompile("[^\\/]+$")
 
