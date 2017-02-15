@@ -198,11 +198,16 @@ func (app *Application) ResendVerificationEmail(email string) error {
 //SendPasswordResetEmail triggers a send of the password reset email in Stormpath for a given email address.
 //
 //For more info on the Stormpath password reset workflow see: http://docs.stormpath.com/rest/product-guide/latest/accnt_mgmt.html#password-reset-flow
-func (app *Application) SendPasswordResetEmail(email string) (*AccountPasswordResetToken, error) {
+func (app *Application) SendPasswordResetEmail(email, accountStoreHref string) (*AccountPasswordResetToken, error) {
 	passwordResetToken := &AccountPasswordResetToken{}
 
-	passwordResetPayload := make(map[string]string)
+	passwordResetPayload := make(map[string]interface{})
 	passwordResetPayload["email"] = email
+	if accountStoreHref != "" {
+		passwordResetPayload["accountStore"] = map[string]string{
+			"href": accountStoreHref,
+		}
+	}
 
 	err := client.post(buildAbsoluteURL(app.Href, "passwordResetTokens"), passwordResetPayload, passwordResetToken)
 

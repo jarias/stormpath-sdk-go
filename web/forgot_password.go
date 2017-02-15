@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"bytes"
+	"encoding/json"
 	"github.com/jarias/stormpath-sdk-go"
 )
 
@@ -58,14 +60,16 @@ func (h forgotPasswordHandler) doGET(w http.ResponseWriter, r *http.Request, ctx
 func (h forgotPasswordHandler) doPOST(w http.ResponseWriter, r *http.Request, ctx webContext) {
 	contentType := ctx.contentType
 
-	data, _ := getPostedData(r)
+	data, originalData := getPostedData(r)
 
 	if data["email"] == "" {
 		handleError(w, r, ctx.withError(nil, fmt.Errorf("email is required")), h.doGET)
 		return
 	}
 
-	h.application.SendPasswordResetEmail(data["email"])
+	accStoreHref := getAccStoreHref(originalData)
+
+	h.application.SendPasswordResetEmail(data["email"], accStoreHref)
 
 	if contentType == stormpath.ApplicationJSON {
 		respondJSON(w, nil, http.StatusOK)
@@ -88,4 +92,27 @@ func resolveForgotPasswordStatus(status string) string {
 	}
 
 	return statusMessage
+}
+
+func getAccStoreHref(originalData []byte) string {
+	data := make(map[string]interface{})
+	if err := json.NewDecoder(bytes.NewBuffer(originalData)).Decode(&data); err != nil {
+		//log if necessary
+		return ""
+	}
+
+	if v, ok := data["accountStore"]; !ok {
+		//log if necessary
+		return ""
+	} else {
+		if accStoreMap, ok := v.(map[string]string); ok {
+			if href, ok := accStoreMap["href"]; ok {
+				return href
+			} else {
+				return ""
+			}
+		} else {
+			return ""
+		}
+	}
 }
