@@ -1,3 +1,10 @@
+```
+
+Due to this announcement https://stormpath.com/blog/stormpaths-new-path 
+this project is no longer maintain
+
+```
+
 Go SDK for the [Stormpath](http://stormpath.com/) API
 
 Develop:
