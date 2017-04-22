@@ -50,6 +50,22 @@ func GetAPIKey(href string, criteria APIKeyCriteria) (*APIKey, error) {
 	return apiKey, nil
 }
 
+//GetAPIKey retrives an APIKey resource by href and optional criteria
+func GetAPIKeys(href string, criteria APIKeyCriteria) (*APIKeys, error) {
+	apiKeys := &APIKeys{}
+
+	err := client.get(
+		buildAbsoluteURL(href, criteria.toQueryString()),
+		apiKeys,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiKeys, nil
+}
+
+
 //Delete deletes a given APIKey
 func (k *APIKey) Delete() error {
 	return client.delete(k.Href)
